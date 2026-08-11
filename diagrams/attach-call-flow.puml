@@ -1,0 +1,78 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "UE" as UE
+participant "eNodeB" as ENB
+participant "New MME" as NMME
+participant "Old MME/SGSN" as OMME
+participant "EIR" as EIR
+participant "HSS" as HSS
+participant "S-GW" as SGW
+participant "P-GW" as PGW
+participant "PCRF" as PCRF
+
+== Identification and Security ==
+UE -> ENB: RRC Connection Setup / Attach Request (NAS)
+ENB -> NMME: S1AP: Initial UE Message (Attach Request)
+
+opt UE identifies with old GUTI and MME changed
+    NMME -> OMME: GTPv2: Identification Request
+    OMME -> NMME: GTPv2: Identification Response
+end
+
+opt IMSI unknown to MME and HSS
+    NMME -> UE: NAS: Identity Request
+    UE -> NMME: NAS: Identity Response
+end
+
+NMME <-> UE: NAS: Authentication and Security Procedures
+
+opt Optional check for ME Identity
+    NMME -> EIR: Diameter (S13): ME-Identity-Check-Request (ECR)
+    EIR -> NMME: Diameter (S13): ME-Identity-Check-Answer (ECA)
+end
+
+== Location Update and Session Creation ==
+opt Active bearer contexts exist in New MME for this UE
+    NMME -> SGW: GTPv2: Delete Session Request
+    SGW -> PGW: GTPv2: Delete Session Request
+    PGW -> SGW: GTPv2: Delete Session Response
+    SGW -> NMME: GTPv2: Delete Session Response
+end
+
+group Update Location Procedure [If MME changed or no context exists]
+    NMME -> HSS: Diameter (S6a): Update-Location-Request (ULR)
+    opt Old node registration exists
+        HSS -> OMME: Diameter (S6a): Cancel-Location-Request (CLR)
+        OMME -> HSS: Diameter (S6a): Cancel-Location-Answer (CLA)
+    end
+    HSS -> NMME: Diameter (S6a): Update-Location-Answer (ULA)
+end
+
+NMME -> SGW: GTPv2: Create Session Request
+SGW -> PGW: GTPv2: Create Session Request
+
+opt Dynamic PCC is deployed
+    PGW -> PCRF: Diameter (Gx): Credit-Control-Request (CCR) INITIAL_REQUEST
+    PCRF -> PGW: Diameter (Gx): Credit-Control-Answer (CCA)
+end
+
+PGW -> SGW: GTPv2: Create Session Response
+SGW -> NMME: GTPv2: Create Session Response
+
+== Radio Bearer Setup ==
+NMME -> ENB: S1AP: Initial Context Setup Request (Attach Accept)
+ENB -> UE: RRC Connection Reconfiguration (Attach Accept)
+UE -> ENB: RRC Connection Reconfiguration Complete
+ENB -> NMME: S1AP: Initial Context Setup Response
+
+== Attach Completion ==
+UE -> ENB: RRC: Direct Transfer (Attach Complete)
+ENB -> NMME: S1AP: Uplink NAS Transport (Attach Complete)
+
+NMME -> SGW: GTPv2: Modify Bearer Request
+SGW -> NMME: GTPv2: Modify Bearer Response
+
+NMME -> HSS: Diameter (S6a): Notify-Request (NOR)
+HSS -> NMME: Diameter (S6a): Notify-Answer (NOA)
+@enduml
