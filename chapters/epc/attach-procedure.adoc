@@ -1,6 +1,6 @@
-== Attach Procedure
+=== Attach Procedure
 
-=== Technical Overview
+==== Technical Overview
 
 The Attach procedure registers a User Equipment (UE) with the network. The UE
 needs this registration before it can use services that require registration.
@@ -14,7 +14,7 @@ The procedure moves the UE from the EMM-DEREGISTERED state to the
 EMM-REGISTERED state. During the procedure, the network authenticates the UE,
 sets up security, and allocates an IP address to the UE.
 
-=== Call Flow
+==== Call Flow
 
 The call flow has four phases: Identification and Security, Location Update and
 Session Creation, Radio Bearer Setup, and Attach Completion.
@@ -22,7 +22,7 @@ Session Creation, Radio Bearer Setup, and Attach Completion.
 .Attach procedure call flow
 plantuml::diagrams/attach-call-flow.puml[svg]
 
-=== Step-by-Step Description
+==== Step-by-Step Description
 
 . The *UE* sends an `Attach Request` message to the *eNodeB (Evolved Node B)*.
 The UE carries this Non-Access Stratum (NAS) message inside the Radio Resource
@@ -39,10 +39,11 @@ sequence number, and the NAS Message Authentication Code (NAS-MAC).
 address from the old Globally Unique MME Identifier (GUMMEI). If no association
 exists, the eNodeB selects a new MME. The eNodeB forwards the NAS message to
 the *New MME* over the S1-MME interface, inside an S1 Application Protocol
-(S1AP) `Initial UE Message`. This message carries the NAS-PDU with the Attach
-Request, the Selected Network, the TAI, and the E-UTRAN Cell Global Identifier
-(ECGI). The message also carries the SAE Temporary Mobile Subscriber Identity
-(S-TMSI), the GUMMEI, and the RRC establishment cause.
+(S1AP) `Initial UE Message`. This message carries the NAS Protocol Data
+Unit (NAS-PDU) with the Attach Request, the Selected Network, the TAI, and
+the E-UTRAN Cell Global Identifier (ECGI). The message also carries the
+SAE Temporary Mobile Subscriber Identity (S-TMSI), the GUMMEI, and the RRC
+establishment cause.
 
 . The UE can identify itself with an old GUTI. If the MME changed since the
 last detach, the *New MME* sends a GPRS Tunnelling Protocol version 2 (GTPv2)
@@ -217,7 +218,7 @@ PDN connection, so that the HSS can store the P-GW identity and the APN.
 (NOA) message, carrying a Result-Code, to the *New MME*. The Attach procedure
 is now complete.
 
-=== References
+==== References
 
 [cols="1,4",options="header"]
 |===

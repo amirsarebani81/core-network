@@ -1,0 +1,5 @@
+== Functional Description and Information Flows
+
+include::attach-procedure.adoc[]
+
+include::detach-procedure.adoc[]
