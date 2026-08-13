@@ -62,6 +62,9 @@ Treat the documentation as living, not archival:
 - `diagrams/*.puml` — PlantUML sequence diagrams, rendered via the Kroki
   service referenced in `main.adoc`'s `:kroki-server-url:` attribute.
 - `theme/core-network-theme.yml` — PDF theme (asciidoctor-pdf).
+- `theme/docinfo.html` — HTML head overrides (`:docinfo:`/`:docinfodir:` in
+  `main.adoc`); keeps HTML colors in sync with `core-network-theme.yml`.
+  Only affects the HTML backend, not the PDF.
 - `output/` — build output (gitignored).
 
 ## Build
