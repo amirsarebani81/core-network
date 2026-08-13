@@ -1,0 +1,163 @@
+== UE-Initiated Detach Procedure
+
+=== Technical Overview
+
+The UE-initiated Detach procedure lets a User Equipment (UE) inform the
+network that it no longer needs access to the Evolved Packet System (EPS).
+The procedure deactivates all active EPS bearer contexts, including the
+default bearer.
+
+The procedure removes the UE's mobility management and security contexts
+from the Mobility Management Entity (MME) and from the UE. The procedure
+moves the UE to the EMM-DEREGISTERED state.
+
+The Evolved Packet Core (EPC) releases all associated user-plane and
+control-plane resources. The EPC releases these resources across the S1,
+S11, and S5/S8 interfaces.
+
+=== Call Flow
+
+The call flow has three phases: Detach Request, Resource Deactivation, and
+Detach Acceptance and S1 Release.
+
+.UE-initiated detach procedure call flow
+plantuml::diagrams/detach-call-flow.puml[svg]
+
+=== Step-by-Step Description
+
+. The *UE* sends a `Detach Request` message to the *eNodeB (Evolved Node
+B)*. The UE sends this Non-Access Stratum (NAS) message inside a Radio
+Resource Control (RRC) message. If the UE was in ECM-IDLE mode, this
+message triggers the establishment of a NAS signalling connection. The
+message carries the Globally Unique Temporary Identifier (GUTI), the
+Detach type, and the Switch off indicator. The Detach type shows the kind
+of detach, for example EPS detach or combined EPS/IMSI detach. The Switch
+off indicator shows if the UE is powering down. The message also carries
+the NAS key set identifier (eKSI).
+
+. The *eNodeB* forwards the NAS message to the *MME* inside an S1
+Application Protocol (S1AP) `Uplink NAS Transport` message. The eNodeB
+includes the User Location Information of the cell that serves the UE.
+This information carries the E-UTRAN Cell Global Identifier (ECGI) and the
+Tracking Area Identity (TAI). The message also carries the NAS Protocol
+Data Unit (NAS-PDU).
+
+. Idle mode Signalling Reduction (ISR) can be active for the UE. In this
+case, the *MME* sends a GPRS Tunnelling Protocol version 2 (GTPv2) `Detach
+Notification` message to the associated *SGSN (Serving GPRS Support
+Node)*. This message detaches the UE from GERAN/UTRAN access as well. The
+message carries a Cause value set to "Complete Detach" and the Detach
+Type.
+
+. The *SGSN* receives the Detach Notification. The SGSN deactivates the
+UE's active Packet Data Protocol (PDP) contexts. The SGSN sends a GTPv2
+`Delete Session Request` message to the *S-GW (Serving Gateway)*, carrying
+the Linked EPS Bearer Identity (LBI). The message also carries the User
+Location Information, that is the Cell Global Identity (CGI) and Service
+Area Identity (SAI), and the UE Time Zone.
+
+. The *S-GW* acknowledges the deletion of the SGSN-related bearer
+contexts. The S-GW returns a GTPv2 `Delete Session Response` message,
+carrying a Cause, to the *SGSN*.
+
+. The *SGSN* confirms the completion of its local detach procedure. The
+SGSN sends a GTPv2 `Detach Acknowledge` message, carrying a Cause, to the
+*MME*.
+
+. The *MME* sends a GTPv2 `Delete Session Request` message to the *S-GW*
+for each PDN connection, to deactivate all active EPS bearers. The message
+carries the LBI, the User Location Information (ECGI), the Secondary RAT
+usage data, and the UE Time Zone. If ISR was active, the S-GW does not
+release its control-plane Tunnel Endpoint Identifier (TEID) until it
+receives this message.
+
+. The *S-GW* sends a GTPv2 `Delete Session Request` message to the *P-GW
+(PDN Gateway)* for each Packet Data Network (PDN) connection that the
+procedure releases. This message tells the P-GW to delete all bearers for
+that PDN connection. The message carries the LBI, the User Location
+Information, and the Secondary RAT usage data.
+
+. The network can deploy dynamic Policy and Charging Control (PCC). In
+this case, the *P-GW* starts an IP Connectivity Access Network (IP-CAN)
+Session Termination procedure with the *PCRF (Policy and Charging Rules
+Function)*, using Diameter. This procedure lets the PCRF release the
+policy and charging rules for the session. The Diameter message carries a
+CC-Request-Type set to TERMINATION_REQUEST and the Used-Service-Unit, for
+usage monitoring reporting.
+
+. The *P-GW* acknowledges the session deletion. The P-GW returns a GTPv2
+`Delete Session Response` message to the *S-GW*, carrying a Cause and the
+Access Point Name (APN) Rate Control Status.
+
+. The *S-GW* forwards the acknowledgement to the *MME*. The S-GW releases
+the UE's context information. The S-GW sends a GTPv2 `Delete Session
+Response` message, carrying a Cause and the APN Rate Control Status, to
+the MME.
+
+. The UE can indicate that Switch off is false in the Detach Request. In
+this case, the *MME* sends a NAS `Detach Accept` message to the *eNodeB*,
+inside an S1AP `Downlink NAS Transport` message. The message carries the
+NAS-PDU and the MME UE S1AP ID.
+
+. The *eNodeB* delivers the Detach Accept message to the *UE* over the
+radio interface. The UE stops timer T3421 when it receives this message.
+
+. The *MME* starts the release of the S1-MME signalling connection. The
+MME sends an S1AP `UE Context Release Command` message to the *eNodeB*,
+carrying the UE S1AP IDs and a Cause set to "Detach".
+
+. The *eNodeB* sends an RRC `Connection Release` message to the *UE*. The
+eNodeB deletes the UE's Radio Access Network (RAN) context after the UE
+acknowledges this message.
+
+. The *eNodeB* confirms the release of the S1 connection and the
+user-plane resources. The eNodeB sends an S1AP `UE Context Release
+Complete` message to the *MME*, carrying the MME UE S1AP ID, the eNB UE
+S1AP ID, and the User Location Information.
+
+=== Possible Failures and Required Actions
+
+Authentication failure during S1 establishment:: The UE can be in
+ECM-IDLE mode and must set up the S1 connection to send the Detach
+Request. In this case, the MME can start authentication. If authentication
+fails, the UE receives a NAS `Authentication Reject` message. The UE stops
+the Detach procedure. The UE stops all related EPS Mobility Management
+(EMM) timers, for example T3421. The UE enters the EMM-DEREGISTERED state.
+The MME can deactivate all non-emergency bearers and mark the UE as
+detached.
+
+Detach through an unauthorized CSG cell:: The UE sends a Detach Request,
+without the Switch off indicator, while connected to a Closed Subscriber
+Group (CSG) cell. The UE's subscription for this CSG cell can be expired.
+In this case, the MME responds with EMM Cause #25, "Not authorized for
+this CSG". The MME starts a network-initiated detach procedure. The UE
+removes the CSG ID from its Allowed CSG list. The UE performs a new Public
+Land Mobile Network (PLMN) selection, if needed.
+
+T3421 timer expiry:: The UE sends a Detach Request, without the Switch off
+indicator, and does not receive a Detach Accept message before timer
+T3421 expires. The UE retransmits the Detach Request message, up to four
+times. On the fifth expiry, the UE stops the signalling procedure. The UE
+performs a local detach and enters the EMM-DEREGISTERED state.
+
+=== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.401
+| Clauses 5.3.8.1 (Detach procedure), 5.3.8.2.1 (UE-initiated detach), and 5.3.5 (ISR).
+
+| TS 24.301
+| Clauses 5.5.2.1 (Detach procedure), 5.5.2.2.1 (UE-initiated detach, general), 5.5.2.2.2 (UE-initiated detach procedure), and 8.2.11 (Detach Request message content).
+
+| TS 29.274
+| Clauses 7.2.9.1 (Delete Session Request), 7.2.10.1 (Delete Session Response), and 7.3.12 (Detach Notification/Acknowledge).
+
+| TS 29.213
+| Clause 4.2.2.1 (IP-CAN Session Termination).
+
+| TS 36.413
+| Clauses 8.3.3 (UE Context Release), 9.1.4.6 (UE Context Release Command), and 9.1.4.7 (UE Context Release Complete).
+|===

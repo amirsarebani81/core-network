@@ -1,7 +1,7 @@
 = Core Network: Architecture and Signaling Procedures
 Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :doctype: book
-:revnumber: 0.3.1
+:revnumber: 0.4.0
 :revdate: 2026-08-13
 :toc: left
 :toclevels: 3
@@ -18,3 +18,5 @@ Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 include::chapters/epc/architecture-and-specifications.adoc[]
 
 include::chapters/epc/attach-procedure.adoc[]
+
+include::chapters/epc/detach-procedure.adoc[]

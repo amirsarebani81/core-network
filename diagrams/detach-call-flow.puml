@@ -1,0 +1,44 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "UE" as UE
+participant "eNodeB" as ENB
+participant "MME" as MME
+participant "SGSN" as SGSN
+participant "S-GW" as SGW
+participant "P-GW" as PGW
+participant "PCRF" as PCRF
+
+== Detach Request ==
+UE -> ENB: RRC: Uplink NAS Transport (Detach Request)
+ENB -> MME: S1AP: Uplink NAS Transport (Detach Request)
+
+opt ISR active
+    MME -> SGSN: GTPv2: Detach Notification
+    SGSN -> SGW: GTPv2: Delete Session Request
+    SGW -> SGSN: GTPv2: Delete Session Response
+    SGSN -> MME: GTPv2: Detach Acknowledge
+end
+
+== Resource Deactivation ==
+MME -> SGW: GTPv2: Delete Session Request
+SGW -> PGW: GTPv2: Delete Session Request
+
+opt Dynamic PCC is deployed
+    PGW -> PCRF: Diameter (Gx): Credit-Control-Request (CCR) TERMINATION_REQUEST
+    PCRF -> PGW: Diameter (Gx): Credit-Control-Answer (CCA)
+end
+
+PGW -> SGW: GTPv2: Delete Session Response
+SGW -> MME: GTPv2: Delete Session Response
+
+== Detach Acceptance and S1 Release ==
+opt Switch off is false
+    MME -> ENB: S1AP: Downlink NAS Transport (Detach Accept)
+    ENB -> UE: RRC: Downlink Direct Transfer (Detach Accept)
+end
+
+MME -> ENB: S1AP: UE Context Release Command
+ENB -> UE: RRC: Connection Release
+ENB -> MME: S1AP: UE Context Release Complete
+@enduml
