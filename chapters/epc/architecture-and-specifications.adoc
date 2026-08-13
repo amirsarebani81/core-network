@@ -1,0 +1,18 @@
+== Architecture and Specifications
+
+.EPC architecture and Specification
+image::images/epc-architecture.svg[EPC Architecture]
+
+The figure above shows the EPC architecture and its technical specification.
+
+=== Network Elements
+
+MME (Mobility Management Entity):: The control-plane node of the EPC. It handles UE authentication, mobility management, tracking area management, paging, and bearer session signaling. It carries no user-plane traffic itself and relies on the SGW-C for session establishment towards the user plane.
+
+SGW-C (Serving Gateway - Control Plane):: The control-plane function of the Serving Gateway. It terminates S11 signaling from the MME and translates it into PFCP rules that configure the SGW-U, without handling any user data itself.
+
+SGW-U (Serving Gateway - User Plane):: The user-plane function of the Serving Gateway. It forwards user IP packets between the eNodeB and the PGW-U according to the forwarding rules provisioned by the SGW-C over Sxa, acting as the local mobility anchor for inter-eNodeB handovers.
+
+PGW-C (PDN Gateway - Control Plane):: The control-plane function of the PDN Gateway. It handles session establishment, IP address allocation, and QoS/policy signaling, then provisions the PGW-U with the corresponding PFCP rules.
+
+PGW-U (PDN Gateway - User Plane):: The user-plane function of the PDN Gateway. It routes user traffic between the SGW-U and the external packet data network (e.g. the internet), enforcing the QoS, charging, and packet-filtering rules provisioned by the PGW-C over Sxb.
