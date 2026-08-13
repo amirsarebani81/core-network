@@ -1,0 +1,157 @@
+==== HSS-Initiated Detach Procedure
+
+===== Technical Overview
+
+The HSS-initiated Detach procedure lets the HSS remove a subscriber's MM
+context and EPS bearer contexts from the network. The HSS triggers this
+procedure, not the UE.
+
+The HSS starts this procedure for operator-determined reasons. These
+reasons include a subscription withdrawal, a profile change that no
+longer allows Packet-Switched (PS) services, or a Core Network access
+restriction.
+
+The procedure removes the contexts from the MME. If the network deploys
+an SGSN for the subscriber, the procedure also removes the contexts from
+the SGSN.
+
+The procedure moves the UE to the EMM-DEREGISTERED state. The procedure
+releases all active PDN connections and their EPS bearers. The MME, the
+S-GW, and the P-GW remove the subscriber's session information.
+
+===== Call Flow
+
+The call flow has four phases: Cancellation at the MME, UE Notification,
+Resource Release, and Detach Acknowledgement and S1 Release.
+
+.HSS-initiated detach procedure call flow
+plantuml::diagrams/detach-hss-initiated-call-flow.puml[svg]
+
+===== Step-by-Step Description
+
+. The *HSS* starts the procedure. The HSS sends a Diameter
+`Cancel-Location-Request` (CLR) message to the *MME*, carrying the IMSI
+and the Cancellation-Type, for example "Subscription Withdrawal". The
+message can also carry the CLR-Flags, including a Reattach-Required
+indicator. This message asks the MME to delete the subscriber's MM
+context and EPS bearer contexts.
+
+. The *MME* verifies the IMSI. The MME returns a Diameter
+`Cancel-Location-Answer` (CLA) message to the *HSS*, carrying a
+Result-Code and the Supported-Features. This message confirms that the
+MME accepted the cancellation.
+
+. The UE can be in ECM-IDLE mode. In this case, the *MME* starts the
+Paging procedure. The MME sends an S1AP `Paging` message to the
+*eNodeB*, carrying the UE Identity Index Value and the Paging
+Discontinuous Reception (DRX) cycle. The message also carries the
+S-TMSI. The eNodeB pages the *UE* over the radio interface with an RRC
+`Paging` message.
+
+. The *UE* responds to the page. The UE sends an RRC `Service Request`
+message to the *eNodeB*. The eNodeB forwards this request to the *MME*
+inside an S1AP `Initial UE Message`, carrying the Service Request. This
+exchange establishes a NAS signalling connection.
+
+. The *MME* sends a NAS `Detach Request` message to the *eNodeB*, inside
+an S1AP `Downlink NAS Transport` message. The message carries the Detach
+type, which shows if the UE must reattach, and an EMM cause, for example
+cause #2, "IMSI unknown in HSS". The eNodeB delivers the Detach Request
+to the *UE* inside an RRC `Downlink Direct Transfer` message. This
+message tells the UE that the network detached it.
+
+. The *MME* sends a GTPv2 `Delete Session Request` message to the
+*S-GW*, for each active PDN connection, to deactivate the associated EPS
+bearers. The message carries the LBI, the User Location Information
+(ECGI), and the NAS Release Cause, if policy permits.
+
+. The *S-GW* forwards the GTPv2 `Delete Session Request` message to the
+*P-GW*, for each PDN connection that the procedure releases. The message
+carries the LBI, the User Location Information, and the Indication
+Flags, with the Operation Indication flag set.
+
+. The network can deploy dynamic PCC. In this case, the *P-GW* starts an
+IP-CAN Session Termination procedure with the *PCRF*. The P-GW sends a
+Diameter `Credit-Control-Request` (CCR) message, carrying a
+CC-Request-Type set to TERMINATION_REQUEST, the Subscription-Id, and the
+Used-Service-Unit, to report the final usage.
+
+. The *PCRF* acknowledges the termination. The PCRF returns a Diameter
+`Credit-Control-Answer` (CCA) message, carrying a Result-Code, to the
+*P-GW*. This message lets the P-GW release the session's policy and
+charging resources.
+
+. The *P-GW* acknowledges the deletion. The P-GW returns a GTPv2 `Delete
+Session Response` message to the *S-GW*, carrying a Cause set to
+"Request Accepted" and the APN Rate Control Status.
+
+. The *S-GW* releases its local context for the UE. The S-GW returns a
+GTPv2 `Delete Session Response` message to the *MME*, carrying a Cause
+and the Recovery counter.
+
+. The *UE* acknowledges the Detach Request. The UE sends a NAS `Detach
+Accept` message to the *eNodeB*, inside an RRC `Direct Transfer`
+message. The eNodeB forwards the message to the *MME* inside an S1AP
+`Uplink NAS Transport` message, carrying the NAS-PDU and the User
+Location Information.
+
+. The *MME* receives the Detach Accept and the Delete Session Response.
+The MME starts the release of the S1-MME signalling connection. The MME
+sends an S1AP `UE Context Release Command` message to the *eNodeB*,
+carrying the UE S1AP IDs and a Cause set to "Detach".
+
+. The *eNodeB* sends an RRC `Connection Release` message to the *UE*.
+The eNodeB deletes the UE's RAN context after the UE acknowledges this
+message.
+
+. The *eNodeB* confirms the release of the S1 connection. The eNodeB
+sends an S1AP `UE Context Release Complete` message to the *MME*,
+carrying the MME UE S1AP ID and the eNB UE S1AP ID.
+
+===== Possible Failures and Required Actions
+
+T3422 timer expiry:: The MME sends the Detach Request and starts timer
+T3422, with a default value of 6 seconds. The MME does not receive a
+Detach Accept message before the timer expires. The MME retransmits the
+Detach Request, up to four times. On the fifth expiry, the MME stops the
+signalling procedure. The MME enters the EMM-DEREGISTERED state for the
+UE.
+
+Detach in a forbidden satellite E-UTRAN area:: The network can use
+satellite E-UTRAN access. The MME can determine that the UE is in a
+location where the PLMN cannot operate. In this case, the MME sends the
+Detach Request with EMM Cause #78, "PLMN not allowed to operate at the
+present UE location". The UE enters the EMM-DEREGISTERED.LIMITED-SERVICE
+state. The UE searches for a new suitable cell.
+
+Detach procedure collision:: The UE can start a UE-initiated Detach
+procedure, for example due to power off, while an HSS-initiated Detach
+procedure is in progress at the MME. The UE can send a Detach Request
+with the Switch off indicator before the MME completes the HSS-initiated
+procedure. In this case, the MME considers both Detach procedures
+complete at the same time.
+
+===== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.401
+| Clauses 5.3.8.4 (HSS-initiated detach), 5.3.5 (S1 release), and 5.10.3 (satellite E-UTRAN access restrictions).
+
+| TS 24.301
+| Clauses 5.5.2.3 (Network-initiated detach procedure), 8.2.11 (Detach Request message content), and 9.9.3.7 (Detach type).
+
+| TS 29.272
+| Clauses 5.2.1.2 (Cancel Location procedure), 7.2.7 (CLR command), and 7.3.24 (Cancellation-Type values).
+
+| TS 29.274
+| Clauses 7.2.9.1 (Delete Session Request), 7.2.10.1 (Delete Session Response), and 8.4 (Cause values).
+
+| TS 29.213
+| Clause 4.2.2.1 (IP-CAN Session Termination).
+
+| TS 36.413
+| Clauses 8.3.3 (UE Context Release), 9.1.4.6 (UE Context Release Command), and 9.1.4.7 (UE Context Release Complete).
+|===

@@ -72,8 +72,8 @@ carries the LBI, the User Location Information, and the Secondary RAT
 usage data.
 
 . The network can deploy dynamic PCC. In this case, the *P-GW* starts an
-IP-CAN Session Termination procedure with the *PCRF (Policy and Charging
-Rules Function)*, using Diameter. This procedure lets the PCRF release the
+IP-CAN Session Termination procedure with the *PCRF*, using Diameter.
+This procedure lets the PCRF release the
 policy and charging rules for the session. The Diameter message carries a
 CC-Request-Type set to TERMINATION_REQUEST and the Used-Service-Unit, for
 usage monitoring reporting.

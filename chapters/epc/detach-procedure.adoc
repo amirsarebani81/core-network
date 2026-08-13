@@ -1,3 +1,5 @@
 === Detach Procedure
 
 include::detach-procedure-ue-initiated.adoc[]
+
+include::detach-procedure-hss-initiated.adoc[]

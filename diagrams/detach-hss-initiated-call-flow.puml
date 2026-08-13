@@ -1,0 +1,46 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "UE" as UE
+participant "eNodeB" as ENB
+participant "MME" as MME
+participant "S-GW" as SGW
+participant "P-GW" as PGW
+participant "PCRF" as PCRF
+participant "HSS" as HSS
+
+== Cancellation at the MME ==
+HSS -> MME: Diameter (S6a): Cancel-Location-Request (CLR)
+MME -> HSS: Diameter (S6a): Cancel-Location-Answer (CLA)
+
+== UE Notification ==
+opt UE is in ECM-IDLE
+    MME -> ENB: S1AP: Paging
+    ENB -> UE: RRC: Paging
+    UE -> ENB: RRC: Service Request
+    ENB -> MME: S1AP: Initial UE Message (Service Request)
+end
+
+MME -> ENB: S1AP: Downlink NAS Transport (Detach Request)
+ENB -> UE: RRC: Downlink Direct Transfer (Detach Request)
+
+== Resource Release ==
+MME -> SGW: GTPv2: Delete Session Request
+SGW -> PGW: GTPv2: Delete Session Request
+
+opt Dynamic PCC is deployed
+    PGW -> PCRF: Diameter (Gx): Credit-Control-Request (CCR) TERMINATION_REQUEST
+    PCRF -> PGW: Diameter (Gx): Credit-Control-Answer (CCA)
+end
+
+PGW -> SGW: GTPv2: Delete Session Response
+SGW -> MME: GTPv2: Delete Session Response
+
+== Detach Acknowledgement and S1 Release ==
+UE -> ENB: RRC: Direct Transfer (Detach Accept)
+ENB -> MME: S1AP: Uplink NAS Transport (Detach Accept)
+
+MME -> ENB: S1AP: UE Context Release Command
+ENB -> UE: RRC: Connection Release
+ENB -> MME: S1AP: UE Context Release Complete
+@enduml
