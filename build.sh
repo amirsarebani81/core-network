@@ -20,6 +20,7 @@ build_html() {
   echo "==> Building HTML..."
   asciidoctor \
     -r asciidoctor-kroki \
+    -a data-uri \
     main.adoc -o output/core-network.html
   echo "==> HTML written to output/core-network.html"
 }
