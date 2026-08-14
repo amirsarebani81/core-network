@@ -1,0 +1,39 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "UE" as UE
+participant "eNodeB" as ENB
+participant "MME" as MME
+participant "S-GW" as SGW
+participant "P-GW" as PGW
+participant "PCRF" as PCRF
+
+== Service Request ==
+UE -> ENB: RRC Connection Setup / Service Request (NAS)
+ENB -> MME: S1AP: Initial UE Message (Service Request)
+
+opt UE security context not valid
+    MME <-> UE: NAS: Authentication and Security Procedures
+end
+
+== Radio Bearer Setup ==
+MME -> ENB: S1AP: Initial Context Setup Request
+ENB -> UE: RRC Connection Reconfiguration
+UE -> ENB: RRC Connection Reconfiguration Complete
+ENB -> MME: S1AP: Initial Context Setup Response
+
+== Path Switch and Data Delivery ==
+ENB -> SGW: GTPv1-U: First Uplink User Data
+MME -> SGW: GTPv2: Modify Bearer Request
+
+opt Dynamic PCC is deployed
+    SGW -> PGW: GTPv2: Modify Bearer Request
+    PGW -> PCRF: Diameter (Gx): Credit-Control-Request (CCR) UPDATE_REQUEST
+    PCRF -> PGW: Diameter (Gx): Credit-Control-Answer (CCA)
+    PGW -> SGW: GTPv2: Modify Bearer Response
+end
+
+SGW -> MME: GTPv2: Modify Bearer Response
+SGW -> ENB: GTPv1-U: Downlink User Plane Data
+ENB -> UE: RRC: Downlink User Plane Data
+@enduml

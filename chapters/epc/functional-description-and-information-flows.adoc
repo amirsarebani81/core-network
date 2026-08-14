@@ -3,3 +3,5 @@
 include::attach-procedure.adoc[]
 
 include::detach-procedure.adoc[]
+
+include::service-request-procedure.adoc[]

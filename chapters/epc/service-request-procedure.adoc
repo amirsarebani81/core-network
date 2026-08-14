@@ -1,0 +1,5 @@
+=== Service Request Procedure
+
+include::service-request-procedure-ue-initiated.adoc[]
+
+include::service-request-procedure-network-triggered.adoc[]

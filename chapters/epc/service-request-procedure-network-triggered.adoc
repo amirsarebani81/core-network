@@ -1,0 +1,155 @@
+==== Network-Triggered Service Request Procedure
+
+===== Technical Overview
+
+The Network-Triggered Service Request procedure moves a UE from
+ECM-IDLE mode to ECM-CONNECTED mode when the Evolved Packet Core (EPC)
+has downlink user data or downlink signalling to deliver. The Serving
+Gateway (S-GW) starts this procedure. The S-GW starts the procedure
+when it receives a downlink packet for a UE that has no active S1
+user-plane connection.
+
+The procedure establishes the radio bearers and the S1 bearers for the
+UE. The procedure synchronizes the EPS bearer contexts between the UE
+and the MME, and delivers the buffered downlink data to the UE.
+
+===== Call Flow
+
+The call flow has four phases: Downlink Data Notification, Paging and
+Service Request, Radio Bearer Setup, and Path Switch and Data Delivery.
+
+.Network-triggered service request procedure call flow
+plantuml::diagrams/service-request-network-triggered-call-flow.puml[svg]
+
+===== Step-by-Step Description
+
+. The *P-GW* forwards a downlink PDU to the *S-GW* over the S5/S8
+interface. The UE is in ECM-IDLE mode, so the S-GW has no S1-U tunnel,
+that is no eNodeB F-TEID, for this UE. The S-GW buffers the incoming
+data.
+
+. The *S-GW* identifies the MME that serves the UE. The S-GW sends a
+GTPv2 `Downlink Data Notification` (DDN) message to the *MME*, to start
+the paging process. The message carries the Allocation and Retention
+Priority (ARP), derived from the bearer on which the data arrived, and
+the EPS Bearer Identity (EBI).
+
+. The *MME* acknowledges the DDN message. The MME returns a GTPv2
+`Downlink Data Notification Acknowledge` message to the *S-GW*, carrying
+a Cause set to "Request Accepted". This message confirms that the MME
+attempts to reach the UE.
+
+. The *MME* sends an S1AP `Paging` message to every eNodeB in the UE's
+registered Tracking Area List. The message carries the UE Identity Index
+Value, for calculating the paging frame, the UE Paging ID, that is the
+S-TMSI, the Paging Discontinuous Reception (DRX) cycle, and the List of
+TAIs.
+
+. The *eNodeB* broadcasts the paging indication over the radio
+interface, during the UE's paging occasion. The eNodeB sends an RRC
+`Paging` message to the *UE*.
+
+. The *UE* matches its S-TMSI in the Paging message. The UE starts the
+RRC connection establishment procedure and sends a `Service Request`
+message to the *eNodeB*. The UE sends this NAS message inside the RRC
+connection establishment procedure. The message carries the Protocol
+Discriminator, the NAS key set identifier (KSI), the NAS sequence
+number, and the NAS Message Authentication Code (NAS-MAC).
+
+. The *eNodeB* forwards the NAS message to the *MME* inside an S1AP
+`Initial UE Message`.
+
+. The UE's security context can be missing or no longer valid. In this
+case, the *MME* and the *UE* perform the Authentication and Security
+Procedures. These procedures carry the RAND, the AUTN, and the selected
+NAS security algorithms.
+
+. The *MME* sends an S1AP `Initial Context Setup Request` message to the
+*eNodeB*, to establish the S1-U connection and the radio bearers. The
+message carries the MME UE S1AP ID, the E-RAB To Be Setup List, with the
+S-GW F-TEIDs for the uplink, the UE Aggregate Maximum Bit Rate, and the
+Security Context.
+
+. The *eNodeB* sends an RRC `Connection Reconfiguration` message to the
+*UE*, to activate the data radio bearers for the requested EPS bearers.
+This step allocates the radio resources for the user-plane traffic.
+
+. The *eNodeB* confirms the successful setup of the radio and S1
+bearers. The eNodeB returns an S1AP `Initial Context Setup Response`
+message to the *MME*, carrying the eNB UE S1AP ID, the MME UE S1AP ID,
+and the E-RAB Setup List, with the eNodeB F-TEIDs for the downlink.
+
+. The *MME* sends a GTPv2 `Modify Bearer Request` message to the *S-GW*,
+for each PDN connection, to provide the eNodeB's downlink F-TEID and to
+show that the UE is reachable. The message carries the Bearer Contexts
+to be modified, that is the EBI and the S1-U eNodeB F-TEID for the
+downlink, the User Location Information, and the RAT type.
+
+. The network can deploy dynamic Policy and Charging Control (PCC), for
+example for location reporting or RAT change reporting. In this case,
+the *S-GW* forwards the GTPv2 `Modify Bearer Request` message to the
+*P-GW*. The P-GW starts a Diameter `Credit-Control-Request`/
+`Credit-Control-Answer` (Update) exchange with the *PCRF* over the Gx
+interface. The Diameter message carries the CC-Request-Type set to
+UPDATE_REQUEST, the 3GPP-User-Location-Info, and the RAT-Type. The P-GW
+returns a GTPv2 `Modify Bearer Response` message to the S-GW.
+
+. The *S-GW* updates its bearer contexts. The S-GW returns a GTPv2
+`Modify Bearer Response` message to the *MME*, carrying a Cause set to
+"Request Accepted" and the S-GW F-TEID for the control plane. The S-GW
+sends this message whether or not the network deployed dynamic PCC.
+
+. The *S-GW* transmits the buffered downlink packets to the *eNodeB*,
+using the downlink F-TEID from step 11. The eNodeB delivers the data to
+the *UE* over the radio interface.
+
+===== Possible Failures and Required Actions
+
+Paging failure, UE not responding:: The MME completes its paging
+repetition strategy and receives no Service Request from the UE. The
+MME sends a GTPv2 `Downlink Data Notification Reject` message to the
+S-GW, with Cause #87, "UE not responding". The S-GW deletes all
+buffered packets for the UE. Based on operator policy, the MME can start
+a Dedicated Bearer Deactivation procedure for any preserved
+Guaranteed Bit Rate (GBR) bearers.
+
+Resource allocation rejection by eNodeB:: During the Initial Context
+Setup, the eNodeB cannot allocate radio resources for some or all
+bearers, because of congestion. The eNodeB returns an S1AP `Initial
+Context Setup Failure` message, with S1AP Cause "Radio resources not
+available". The MME maps this internally to GTP Cause #73, "No
+resources available", and can map it further to NAS EMM Cause #26,
+"Insufficient resources", if the MME rejects the UE. The MME can locally
+deactivate the EPS bearer contexts that failed to establish. The UE
+stays in its current state, and the NAS layer can start back-off timer
+T3346.
+
+MME-triggered congestion control:: The MME receives a Service Request
+in response to paging, but the MME is too overloaded to establish the
+user-plane radio bearers. The MME sends a NAS `Service Reject` message,
+with EMM Cause #22, "Congestion", and a value for timer T3346. The UE
+aborts the procedure, enters the EMM-REGISTERED state, and starts timer
+T3346. The MME notifies the S-GW of the failure, and the S-GW discards
+the buffered data.
+
+===== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.401
+| Clauses 5.3.4.1 (Service Request procedure), 5.3.4.3 (Network-triggered Service Request), and 5.3.4.2 (Abnormal cases).
+
+| TS 24.301
+| Clauses 5.6.1 (Service Request procedure), 5.6.2 (Paging procedure), 8.2.24 (Service Reject message content), and 9.9.3.9 (EMM cause).
+
+| TS 29.274
+| Clauses 7.2.7 (Modify Bearer Request/Response), 7.2.11 (Downlink Data Notification), Table 8.4-1 (Cause values), and Annex C (Cause mapping).
+
+| TS 29.272
+| Annex A (Mapping between S6a and NAS causes).
+
+| TS 36.413
+| Clauses 8.2.1 (Initial Context Setup), 9.1.6 (Paging), and 9.2.1.3 (S1AP Cause values).
+|===
