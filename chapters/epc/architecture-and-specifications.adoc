@@ -7,7 +7,13 @@ The figure above shows the EPC architecture and its technical specification.
 
 === Network Elements
 
+UE (User Equipment):: The subscriber's device, for example a smartphone or an IoT module. It attaches to the network over the radio interface and is the endpoint for all mobility management, session management, and user-plane traffic.
+
+E-UTRAN (Evolved UMTS Terrestrial Radio Access Network):: The LTE radio access network, made up of eNodeBs. It provides the radio interface towards the UE over LTE-Uu and relays control-plane signaling to the MME over S1-MME and user-plane traffic to the SGW-U over S1-U.
+
 MME (Mobility Management Entity):: The control-plane node of the EPC. It handles UE authentication, mobility management, tracking area management, paging, and bearer session signaling. It carries no user-plane traffic itself and relies on the SGW-C for session establishment towards the user plane.
+
+HSS (Home Subscriber Server):: The master subscriber database of the EPC. It stores subscription profiles, authentication data, and the identity of the MME currently serving each subscriber, and it is queried by the MME over S6a for authentication vectors and location updates.
 
 SGW-C (Serving Gateway - Control Plane):: The control-plane function of the Serving Gateway. It terminates S11 signaling from the MME and translates it into PFCP rules that configure the SGW-U, without handling any user data itself.
 
@@ -15,4 +21,12 @@ SGW-U (Serving Gateway - User Plane):: The user-plane function of the Serving Ga
 
 PGW-C (PDN Gateway - Control Plane):: The control-plane function of the PDN Gateway. It handles session establishment, IP address allocation, and QoS/policy signaling, then provisions the PGW-U with the corresponding PFCP rules.
 
-PGW-U (PDN Gateway - User Plane):: The user-plane function of the PDN Gateway. It routes user traffic between the SGW-U and the external packet data network (e.g. the internet), enforcing the QoS, charging, and packet-filtering rules provisioned by the PGW-C over Sxb.
+PCRF (Policy and Charging Rules Function):: The policy control node of the EPC. It derives QoS, charging, and traffic-detection rules from subscriber and service policies and provisions the PGW-C with these rules over Gx for enforcement in the user plane.
+
+PGW-U (PDN Gateway - User Plane):: The user-plane function of the PDN Gateway. It routes user traffic between the SGW-U and the TDF-U, enforcing the QoS, charging, and packet-filtering rules provisioned by the PGW-C over Sxb.
+
+TDF-C (Traffic Detection Function - Control Plane):: The control-plane function of the Traffic Detection Function. It handles traffic-detection and application-control policy signaling, then provisions the TDF-U with the corresponding PFCP rules over Sxc.
+
+TDF-U (Traffic Detection Function - User Plane):: The user-plane function of the Traffic Detection Function. It sits inline between the PGW-U and the external PDN, performing deep packet inspection and traffic detection on user traffic according to the rules provisioned by the TDF-C over Sxc.
+
+PDN (Packet Data Network):: The external packet data network, for example the internet, that the UE obtains connectivity to. It is reached from the TDF-U over SGi.
