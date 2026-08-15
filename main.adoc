@@ -1,8 +1,8 @@
 = Core Network: Architecture and Signaling Procedures
 Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :doctype: book
-:revnumber: 0.6.1
-:revdate: 2026-08-14
+:revnumber: 0.7.0
+:revdate: 2026-08-15
 :toc: left
 :toclevels: 4
 :sectnums:

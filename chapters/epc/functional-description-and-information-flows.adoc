@@ -5,3 +5,5 @@ include::attach-procedure.adoc[]
 include::detach-procedure.adoc[]
 
 include::service-request-procedure.adoc[]
+
+include::load-and-overload-control.adoc[]
