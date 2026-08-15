@@ -61,10 +61,31 @@ Treat the documentation as living, not archival:
   `images/*.svg` after editing.
 - `diagrams/*.puml` — PlantUML sequence diagrams, rendered via the Kroki
   service referenced in `main.adoc`'s `:kroki-server-url:` attribute.
-- `theme/core-network-theme.yml` — PDF theme (asciidoctor-pdf).
+- `theme/core-network-theme.yml` — default PDF theme (asciidoctor-pdf),
+  "corporate". Five more themes each `extends: core-network` and live
+  alongside it: `theme/core-network-theme-slate.yml` and
+  `-forest.yml` are color-only recolors; `-editorial.yml`, `-manuscript.yml`,
+  and `-terminal.yml` are style themes that also change the font family,
+  page background, and table structure. Selected via
+  `bash build.sh <target> <theme-name>` — see `README.md`. A theme that
+  introduces a font outside the bundled catalog (Noto Serif, Noto Sans,
+  M+ 1mn) must declare it under `font.catalog` with a `GEM_FONTS_DIR/*.ttf`
+  path (see `core-network-theme-editorial.yml`), or asciidoctor-pdf fails
+  the build with "<font> is not a known font".
 - `theme/docinfo.html` — HTML head overrides (`:docinfo:`/`:docinfodir:` in
   `main.adoc`); keeps HTML colors in sync with `core-network-theme.yml`.
-  Only affects the HTML backend, not the PDF.
+  Only affects the HTML backend, not the PDF. `theme/slate/`, `theme/forest/`,
+  `theme/editorial/`, `theme/manuscript/`, and `theme/terminal/` each hold a
+  `docinfo.html` counterpart to one PDF theme above; keep every pair's
+  colors (and, for the style themes, fonts/backgrounds) in sync when editing
+  a theme. Two selectors in every one of these files need to stay
+  independent of the shared heading-color rule:
+  `#header > h1:first-child` (the document title) and `#header .details`
+  (the byline/version line) both live inside asciidoctor's default
+  stylesheet with higher CSS specificity than a plain `h1`/`a` selector, so
+  without an explicit override for them the title and byline silently keep
+  asciidoctor's default near-black color instead of the theme's — invisible
+  on a light page, but a real contrast bug on `terminal`'s dark page.
 - `output/` — build output (gitignored).
 
 ## Build

@@ -1,0 +1,59 @@
+extends: core-network
+
+page:
+  background-color: FBF6EC
+
+base:
+  font-color: 2B2620
+  border-color: D8CFB8
+
+title-page:
+  title:
+    top: 50%
+    font-size: 26
+    font-color: 5C1A1A
+    line-height: 1.2
+  subtitle:
+    font-color: 7A6A4F
+  authors:
+    font-color: 2B2620
+  revision:
+    font-color: 7A6A4F
+
+heading:
+  text-align: center
+  font-color: 5C1A1A
+  h1:
+    text-decoration: underline
+
+header:
+  font-color: 7A6A4F
+
+footer:
+  font-color: 7A6A4F
+  border-color: D8CFB8
+
+link:
+  font-color: 5C1A1A
+
+code:
+  font-family: M+ 1mn
+  background-color: F3EBD9
+  border-color: D8CFB8
+
+codespan:
+  font-color: 5C1A1A
+
+table:
+  background-color: FBF6EC
+  border-color: D8CFB8
+  head:
+    background-color: F3EBD9
+    font-color: 5C1A1A
+    border-bottom-color: 9C7A2E
+    border-bottom-width: 1.25
+  body:
+    stripe-background-color: F6F0E1
+
+caption:
+  font-color: 7A6A4F

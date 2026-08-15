@@ -1,0 +1,55 @@
+extends: core-network
+
+page:
+  background-color: 1E1E1E
+
+base:
+  font-color: D4D4D4
+  border-color: 3C3C3C
+
+title-page:
+  title:
+    top: 50%
+    font-size: 22
+    font-color: FFB454
+    line-height: 1.2
+  subtitle:
+    font-color: 9DA5B4
+  authors:
+    font-color: D4D4D4
+  revision:
+    font-color: 9DA5B4
+
+heading:
+  font-family: M+ 1mn
+  font-color: FFB454
+
+header:
+  font-color: 9DA5B4
+
+footer:
+  font-color: 9DA5B4
+  border-color: 3C3C3C
+
+link:
+  font-color: 7EE787
+
+code:
+  font-family: M+ 1mn
+  background-color: 252526
+  border-color: 3C3C3C
+
+codespan:
+  font-color: 7EE787
+
+table:
+  background-color: 1E1E1E
+  border-color: 3C3C3C
+  head:
+    background-color: 2D2D2D
+    font-color: FFB454
+  body:
+    stripe-background-color: 262626
+
+caption:
+  font-color: 9DA5B4

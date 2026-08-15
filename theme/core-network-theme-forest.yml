@@ -1,0 +1,32 @@
+extends: core-network
+
+title-page:
+  title:
+    font-color: 1B4332
+  subtitle:
+    font-color: 52796F
+  revision:
+    font-color: 52796F
+
+heading:
+  font-color: 1B4332
+
+header:
+  font-color: 52796F
+
+footer:
+  font-color: 52796F
+
+link:
+  font-color: 2D6A4F
+
+table:
+  border-color: C8DFD3
+  head:
+    background-color: 1B4332
+    font-color: FFFFFF
+  body:
+    stripe-background-color: F1F8F4
+
+caption:
+  font-color: 52796F

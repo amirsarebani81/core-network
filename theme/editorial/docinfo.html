@@ -1,4 +1,9 @@
 <style>
+  body {
+    font-family: "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #1A1A1A;
+  }
+
   h1, h2, h3, #toctitle, .sidebarblock > .content > .title, h4, h5, h6,
   .subheader, .admonitionblock td.content > .title, .audioblock > .title,
   .exampleblock > .title, .imageblock > .title, .listingblock > .title,
@@ -7,39 +12,51 @@
   .verseblock > .title, .videoblock > .title, .dlist > .title,
   .olist > .title, .ulist > .title, .qlist > .title, .hdlist > .title,
   #toctitle, .sidebarblock > .content > .title {
-    color: #2E4A6B;
+    font-family: "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #1A1A1A;
   }
 
   #header > h1:first-child {
-    color: #2E4A6B;
+    font-family: "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #1A1A1A;
+  }
+
+  h2, h3 {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   #content h1 > a.link, h2 > a.link, h3 > a.link, #toctitle > a.link,
   .sidebarblock > .content > .title > a.link, h4 > a.link, h5 > a.link,
   h6 > a.link {
-    color: #2E4A6B;
+    color: #1A1A1A;
   }
   #content h1 > a.link:hover, h2 > a.link:hover, h3 > a.link:hover,
   #toctitle > a.link:hover, .sidebarblock > .content > .title > a.link:hover,
   h4 > a.link:hover, h5 > a.link:hover, h6 > a.link:hover {
-    color: #1F3550;
+    color: #C2570B;
   }
 
-  a { color: #2E6B9E; }
-  a:hover, a:focus { color: #1F4E75; }
+  a { color: #C2570B; }
+  a:hover, a:focus { color: #8A3D08; }
 
-  .quoteblock blockquote::before { color: #2E4A6B; }
+  .quoteblock blockquote::before { color: #C2570B; }
 
   table thead tr th, table thead tr td,
   table tfoot tr th, table tfoot tr td {
-    background-color: #2E4A6B;
-    color: #FFFFFF;
+    background-color: #FFFFFF;
+    color: #C2570B;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom-width: 2px;
+    border-bottom-color: #C2570B;
   }
 
   table.tableblock {
     margin-left: auto;
     margin-right: auto;
     font-size: 0.85em;
+    border-color: #DDDDDD;
   }
   table.tableblock > caption.title {
     caption-side: top;

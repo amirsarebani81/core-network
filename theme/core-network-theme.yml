@@ -73,8 +73,13 @@ codespan:
 link:
   font-color: 2E6B9E
 
+image:
+  align: center
+
 table:
   border-color: C8D3DE
+  align: center
+  font-size: 8
   head:
     background-color: 2E4A6B
     font-color: FFFFFF
@@ -83,3 +88,4 @@ table:
 
 caption:
   font-color: 5A5A5A
+  align: center

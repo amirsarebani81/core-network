@@ -1,0 +1,72 @@
+extends: core-network
+
+font:
+  catalog:
+    merge: true
+    Noto Sans:
+      normal: GEM_FONTS_DIR/notosans-regular-subset.ttf
+      bold: GEM_FONTS_DIR/notosans-bold-subset.ttf
+      italic: GEM_FONTS_DIR/notosans-italic-subset.ttf
+      bold_italic: GEM_FONTS_DIR/notosans-bold_italic-subset.ttf
+
+base:
+  font-family: Noto Sans
+
+title-page:
+  align: left
+  title:
+    top: 60%
+    font-size: 22
+    font-color: C2570B
+    line-height: 1.1
+  subtitle:
+    font-color: 8A8A8A
+    font-style: normal
+  authors:
+    font-color: 1A1A1A
+  revision:
+    font-color: 8A8A8A
+
+heading:
+  font-family: Noto Sans
+  font-color: 1A1A1A
+  h1:
+    font-size: 22
+  h2:
+    font-size: 14
+    text-transform: uppercase
+  h3:
+    font-size: 11
+    text-transform: uppercase
+
+header:
+  font-color: 8A8A8A
+
+footer:
+  font-color: 8A8A8A
+  border-color: EAEAEA
+
+link:
+  font-color: C2570B
+
+code:
+  font-family: M+ 1mn
+  background-color: FAFAFA
+  border-color: EAEAEA
+
+codespan:
+  font-color: C2570B
+
+table:
+  border-color: DDDDDD
+  head:
+    background-color: FFFFFF
+    font-color: C2570B
+    text-transform: uppercase
+    border-bottom-color: C2570B
+    border-bottom-width: 1.25
+  body:
+    stripe-background-color: FFFFFF
+
+caption:
+  font-color: 8A8A8A

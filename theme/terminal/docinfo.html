@@ -1,4 +1,12 @@
 <style>
+  body {
+    background-color: #1E1E1E;
+    color: #D4D4D4;
+  }
+  #header, #content, #footnotes, #footer {
+    background-color: transparent;
+  }
+
   h1, h2, h3, #toctitle, .sidebarblock > .content > .title, h4, h5, h6,
   .subheader, .admonitionblock td.content > .title, .audioblock > .title,
   .exampleblock > .title, .imageblock > .title, .listingblock > .title,
@@ -7,43 +15,78 @@
   .verseblock > .title, .videoblock > .title, .dlist > .title,
   .olist > .title, .ulist > .title, .qlist > .title, .hdlist > .title,
   #toctitle, .sidebarblock > .content > .title {
-    color: #2E4A6B;
+    font-family: "M+ 1mn", "Droid Sans Mono", "DejaVu Sans Mono", monospace;
+    color: #FFB454;
   }
 
   #header > h1:first-child {
-    color: #2E4A6B;
+    font-family: "M+ 1mn", "Droid Sans Mono", "DejaVu Sans Mono", monospace;
+    color: #FFB454;
+  }
+  #header .details {
+    color: #9DA5B4;
+    border-color: #3C3C3C;
+  }
+  #header .details a, #header .details span.email a {
+    color: #7EE787;
+  }
+  #header .details br+span.author::before {
+    color: #9DA5B4;
   }
 
   #content h1 > a.link, h2 > a.link, h3 > a.link, #toctitle > a.link,
   .sidebarblock > .content > .title > a.link, h4 > a.link, h5 > a.link,
   h6 > a.link {
-    color: #2E4A6B;
+    color: #FFB454;
   }
   #content h1 > a.link:hover, h2 > a.link:hover, h3 > a.link:hover,
   #toctitle > a.link:hover, .sidebarblock > .content > .title > a.link:hover,
   h4 > a.link:hover, h5 > a.link:hover, h6 > a.link:hover {
-    color: #1F3550;
+    color: #FFD08A;
   }
 
-  a { color: #2E6B9E; }
-  a:hover, a:focus { color: #1F4E75; }
+  a { color: #7EE787; }
+  a:hover, a:focus { color: #A6F3AE; }
 
-  .quoteblock blockquote::before { color: #2E4A6B; }
+  .quoteblock blockquote::before { color: #FFB454; }
+
+  code, tt, kbd {
+    background-color: #252526;
+    color: #7EE787;
+    border-color: #3C3C3C;
+  }
+  pre {
+    background-color: #252526;
+    border-color: #3C3C3C;
+  }
 
   table thead tr th, table thead tr td,
   table tfoot tr th, table tfoot tr td {
-    background-color: #2E4A6B;
-    color: #FFFFFF;
+    background-color: #2D2D2D;
+    color: #FFB454;
   }
-
   table.tableblock {
     margin-left: auto;
     margin-right: auto;
     font-size: 0.85em;
+    color: #D4D4D4;
+    border-color: #3C3C3C;
+  }
+  table.tableblock td, table.tableblock th {
+    border-color: #3C3C3C;
   }
   table.tableblock > caption.title {
     caption-side: top;
     text-align: center;
+    color: #9DA5B4;
+  }
+
+  #toc.toc2 {
+    background-color: #181818;
+    border-right-color: #3C3C3C;
+  }
+  #toc ul.sectlevel0 > li > a, #toc a {
+    color: #D4D4D4;
   }
 
   .imageblock > .content {
@@ -51,5 +94,6 @@
   }
   .imageblock > .title {
     text-align: center;
+    color: #9DA5B4;
   }
 </style>
