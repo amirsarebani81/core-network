@@ -1,6 +1,6 @@
-=== Load and Overload Control
+==== Load and Overload Control
 
-==== Technical Overview
+===== Technical Overview
 
 GTP version 2 - Control plane (GTPv2-C) load control and GTPv2-C overload
 control are optional, complementary features. Both features manage
@@ -30,7 +30,7 @@ to emergency services traffic and to enhanced Multimedia Priority Service
 Load control and overload control apply over the S11, S4, S5, S8, S2a,
 and S2b interfaces.
 
-==== Load Control Procedure
+===== Load Control Procedure
 
 Load control lets a node, typically the SGW-C or the PGW-C, advertise its
 operating status to a peer, for example the MME, the SGSN, the Trusted
@@ -60,7 +60,7 @@ when a PGW-C allocates a separate resource pool to each APN. It stops the
 network from selecting a node for a new session on an APN whose resources
 are exhausted, even when the node has spare capacity overall.
 
-==== Overload Control Procedure
+===== Overload Control Procedure
 
 Overload control activates when a node operates over its nominal
 capacity and its performance degrades. The overloaded node instructs its
@@ -87,41 +87,72 @@ example because of a shortage in the IP address pool.
 A node reduces traffic toward an overloaded peer through the following
 mechanisms:
 
-Message Throttling:: The reacting node reduces the number of Request
+Message Throttling:: The reacting node reduces the number of initial
 messages that it sends to the overloaded peer, in proportion to the
-Overload Reduction Metric. The reacting node does not throttle Response
-messages, to avoid unnecessary retransmissions.
+Overload Reduction Metric. The reacting node does not throttle a
+triggered request or a response message, because that would cause the
+sender to retransmit the corresponding request message.
 
-"Loss" Throttling Algorithm:: The default throttling algorithm. The
-receiving node discards a fraction of the Request messages. A common
-implementation uses a statistical loss function to select the discarded
-messages at random.
+"Loss" Throttling Algorithm:: The mandatory default throttling
+algorithm for overload control. The node discards a fraction of the
+initial messages, in proportion to the requested traffic reduction. A
+typical implementation generates a random number for each candidate
+message and discards the message when the number falls within the
+requested reduction percentage.
 
 Self-Protection:: An overloaded node can still reject incoming requests,
 as a fallback when peer throttling does not reduce the load enough. The
 node rejects these requests with a cause value such as `GTP-C Entity
 Congestion` or `APN congestion`.
 
-==== Message Prioritization during Overload
+===== Message Prioritization during Overload
 
-An overloaded node processes messages in the following order of
-priority, from the highest to the lowest:
+Emergency services traffic and eMPS traffic keep the highest priority.
+Depending on regional and national requirements and on operator policy,
+the network exempts this traffic from throttling, for as long as the
+network can achieve the requested traffic reduction without throttling
+it.
 
-. High Priority: Emergency services traffic and eMPS traffic.
+For other traffic, an overloaded node can prioritize messages for
+throttling in the following ways.
 
-. Establishment and Mobility: Initial attach, handover, and bearer
-modification procedures. The node gives these procedures preference over
-less critical signaling.
+Prioritization Based on Procedures:: The node groups GTPv2-C procedures
+into four categories. The node gives a lower preference to throttle to
+the messages of a higher-priority category.
 
-. Resource Release: Procedures that deactivate PDN connections or
-bearers. The node can prioritize these procedures because they free the
-node's resources.
+Prioritization Based on Session Parameters:: The node can further
+prioritize messages within a category, based on session parameters such
+as the APN, the QoS Class Identifier (QCI), the Allocation and Retention
+Priority (ARP), or the Low Access Priority Indicator (LAPI).
 
-. Message Priority Header: A GTPv2-C node that supports the optional
-4-bit `Message Priority` field, in octets 1 and 12 of the GTPv2-C header,
-uses this field to signal a relative priority value, from 0 to 15.
+Prioritization Based on the Message Priority:: The node can prioritize
+messages based on the relative `Message Priority` that the sending node
+signals in the GTPv2-C header, through the `MP` flag and the `Message
+Priority` field.
 
-==== Implementation Requirements and Enforcement
+The procedure categories, from the highest priority to the lowest, are:
+
+. UE session mobility, for example a `Create Session Request` and a
+`Modify Bearer Request` with the handover indication bit set.
+Throttling these messages can cause the loss of a PDN connection or the
+interruption of a service.
+
+. Release of a PDN connection or bearer resources, for example a
+`Delete Session Request` and a `Delete Bearer Request`. These messages
+free node resources, so the node gives them a lower preference to
+throttle.
+
+. Other session management procedures, for example a `Modify Bearer
+Request` without the handover indication bit set, and a `Change
+Notification`.
+
+. Requests for a new PDN connection or new bearer resources, for
+example a `Create Session Request` for a new PDN connection, and a
+`Create Bearer Request`. The node gives the highest preference to
+throttle these messages, because it denies new services before it drops
+existing ones.
+
+===== Implementation Requirements and Enforcement
 
 Peer Discovery:: A node decides whether to use load control and overload
 control, based on local configuration and operator policy. This decision
@@ -146,7 +177,7 @@ Interaction with the PGW-C Back-Off Timer:: For a given APN, a PGW-C must
 use either APN-level overload control or the PGW back-off timer
 mechanism. The PGW-C must not use both mechanisms at the same time.
 
-==== Messages Carrying Load and Overload Control Information
+===== Messages Carrying Load and Overload Control Information
 
 A node includes the `LCI` IE and the `OCI` IE in a wide range of session
 management messages, including:
@@ -159,7 +190,7 @@ management messages, including:
 * `Downlink Data Notification`.
 * `Bearer Resource Command` and `Bearer Resource Failure Indication`.
 
-==== References
+===== References
 
 [cols="1,4",options="header"]
 |===
@@ -169,7 +200,7 @@ management messages, including:
 | Clauses 4.3.7.1a (GTP-C signalling based Load and Overload Control), 4.3.7.1a.1 (Load control), 4.3.7.1a.2 (Overload control), and 4.3.7.5 (APN congestion control and the PGW back-off timer).
 
 | TS 29.274
-| Clauses 5.4 and 5.5 (the GTPv2-C header format and the Message Priority field), 7.2.1 and 7.2.2 (Create Session Request/Response IEs), 12.1 to 12.3 (the GTP-C load and overload control mechanism), and Annex D (Load Control and Overload Control Information Elements).
+| Clauses 5.4 and 5.5 (the `MP` flag and the `Message Priority` field), 8.111 to 8.115 (the Overload Control Information, Load Control Information, Metric, Sequence Number, and APN and Relative Capacity Information Elements), 12.1 to 12.3 (the GTP-C load and overload control mechanism, including message throttling in clause 12.3.9 and enforcement in clause 12.3.10), and Annex D (the GTP-C interfaces that do not support these features, and example implementations of the "Loss" algorithm and of overload control enforcement between remote GTP-C entities).
 
 | TS 29.244
 | Clauses 6.2.3 and 6.2.4 (the parallel load and overload control mechanism over the Packet Forwarding Control Protocol, PFCP).

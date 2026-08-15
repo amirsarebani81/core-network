@@ -1,7 +1,7 @@
 = Core Network: Architecture and Signaling Procedures
 Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :doctype: book
-:revnumber: 0.7.0
+:revnumber: 0.8.0
 :revdate: 2026-08-15
 :toc: left
 :toclevels: 4
@@ -16,5 +16,7 @@ Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :kroki-server-url: http://localhost:8000
 
 include::chapters/epc/architecture-and-specifications.adoc[]
+
+include::chapters/epc/protocol-stack.adoc[]
 
 include::chapters/epc/functional-description-and-information-flows.adoc[]

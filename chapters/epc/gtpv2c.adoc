@@ -1,0 +1,533 @@
+=== GTPv2-C
+
+==== Technical Overview
+
+The GPRS Tunnelling Protocol version 2 - Control plane (GTPv2-C) is the
+control-plane signaling protocol of the EPC. Network nodes use GTPv2-C
+to create, modify, and delete GTP tunnels and EPS bearers, and to
+exchange mobility management information.
+
+GTPv2-C runs over UDP, on port 2123. A GTPv2-C entity retransmits a
+request message if it does not receive a response before a timer
+expires, because UDP does not guarantee delivery.
+
+GTPv2-C messages fall into eight categories: Path Management Messages,
+Tunnel Management Messages, Mobility Management Messages, CS Fallback
+and SRVCC related messages, Non-3GPP access related messages,
+Restoration and Recovery messages, Trace Management Messages, and MBMS
+Messages. The Message Categories section below lists the messages in
+each category.
+
+GTPv2-C applies over the S3, S4, S5, S8, S10, S11, S16, Sv, S101, S121,
+Sm, Sn, S2a, and S2b interfaces.
+
+A GTPv2-C message can carry a second, piggybacked GTPv2-C message inside
+the same IP/UDP packet, to avoid an extra signaling round trip. The
+network uses piggybacking for two message pairs: a `Create Session
+Response` that carries a piggybacked `Create Bearer Request`, and a
+`Create Bearer Response` that carries a piggybacked `Modify Bearer
+Request`. The network uses these combinations during the EUTRAN Initial
+Attach procedure, a handover from non-3GPP access to E-UTRAN, and the
+UE-requested PDN connectivity procedure.
+
+==== Packet Format
+
+Control Plane GTP uses a variable-length header. The header length is a
+multiple of 4 octets. GTPv2-C defines two header formats.
+
+===== Header Without a Tunnel Endpoint Identifier
+
+The `Echo Request`, `Echo Response`, and `Version Not Supported
+Indication` messages use the header without a Tunnel Endpoint Identifier
+(TEID). This header is 8 octets long.
+
+.GTPv2-C header without a TEID
+[width=500]
+packetdiag::diagrams/gtpv2c-header-no-teid.diag[svg]
+
+`Version`:: Bits 8 to 6 of octet 1. States the GTP-C version. GTPv2-C
+sets this field to decimal 2.
+
+`P`:: Bit 5 of octet 1. The Piggybacking flag. A value of 0 means the
+message carries no piggybacked message.
+
+`T`:: Bit 4 of octet 1. The TEID flag. A value of 0 means the header
+carries no TEID field.
+
+`Message Type`:: Octet 2. States the message type, with a unique value
+for each GTPv2-C message.
+
+`Message Length`:: Octets 3 to 4. States the length of the message in
+octets, excluding the first 4 octets of the header.
+
+`Sequence Number`:: Octets 5 to 7. Identifies the request or response.
+A node uses this field to match a response to its request and to detect
+retransmissions.
+
+===== Header With a Tunnel Endpoint Identifier
+
+Apart from the Echo and Version Not Supported Indication messages, every
+GTPv2-C message uses the header with a TEID. This header is 12 octets
+long.
+
+.GTPv2-C header with a TEID
+[width=500]
+packetdiag::diagrams/gtpv2c-header-with-teid.diag[svg]
+
+`TEID`:: Octets 5 to 8. Identifies a tunnel endpoint in the receiving
+GTP-C entity. The sending entity sets this field to the value that the
+receiving entity provided.
+
+`MP`:: Bit 3 of octet 1. The Message Priority flag. A value of 1 means
+octet 12 carries a valid `Message Priority` value. The Load and Overload
+Control section below describes how a node uses this flag.
+
+`Message Priority`:: Bits 8 to 5 of octet 12. States the relative
+priority of the message, as a value from 0 to 15, where 0 is the
+highest priority and 15 is the lowest. This field is valid only when
+the `MP` flag is set to 1.
+
+==== Message Categories
+
+===== Path Management Messages
+
+Path management messages check that a GTPv2-C peer is alive and
+reachable.
+
+[cols="2,3,2",options="header"]
+|===
+| Message | Functionality | Interfaces
+
+| `Echo Request`
+| Checks that a peer GTP-C node is alive, and carries the sender's Restart Counter.
+| All GTPv2-C interfaces.
+
+| `Echo Response`
+| Confirms that the node is alive, and reports its own Restart Counter and the features it supports.
+| All GTPv2-C interfaces.
+
+| `Version Not Supported Indication`
+| Tells the sender of an unsupported-version message which GTP version the receiving node supports.
+| All GTPv2-C interfaces.
+|===
+
+===== Tunnel Management Messages
+
+Tunnel management messages create, modify, and delete GTP tunnels and
+EPS bearers, and carry other session-level signaling between the
+MME/SGSN, the SGW-C, and the PGW-C.
+
+[cols="2,3,2",options="header"]
+|===
+| Message | Functionality | Interfaces
+
+| `Create Session Request`
+| Creates a new PDN connection and its default EPS bearer.
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Create Session Response`
+| Reports the outcome of a `Create Session Request`, and returns the allocated addresses and bearer parameters.
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Create Bearer Request`
+| Creates one or more dedicated EPS bearers for an existing PDN connection.
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Create Bearer Response`
+| Reports the outcome of a `Create Bearer Request`.
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Bearer Resource Command`
+| Forwards a UE request for a new bearer resource or a change to an existing one, for example a QoS change or an IP flow mobility update.
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Bearer Resource Failure Indication`
+| Reports that the network could not honor a `Bearer Resource Command`.
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Modify Bearer Request`
+| Updates the parameters of an existing EPS bearer, for example the eNodeB's downlink address after a handover or a service request.
+| S11, S5, S8.
+
+| `Modify Bearer Response`
+| Reports the outcome of a `Modify Bearer Request`.
+| S11, S4, S5, S8, S2b.
+
+| `Delete Session Request`
+| Deletes a PDN connection and its EPS bearers.
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Delete Bearer Request`
+| Deletes one or more dedicated EPS bearers, without deleting the whole PDN connection.
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Delete Session Response`
+| Reports the outcome of a `Delete Session Request`.
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Delete Bearer Response`
+| Reports the outcome of a `Delete Bearer Request`.
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Downlink Data Notification`
+| Tells the MME/SGSN that the SGW-C received downlink data, or downlink signaling, for a UE in idle mode, to start paging.
+| S11, S4.
+
+| `Downlink Data Notification Acknowledge`
+| Confirms that the MME/SGSN accepted a `Downlink Data Notification` and attempts to reach the UE.
+| S11, S4.
+
+| `Downlink Data Notification Failure Indication`
+| Tells the SGW-C that a paging attempt failed, for example because the UE did not respond.
+| S11, S4.
+
+| `Delete Indirect Data Forwarding Tunnel Request`
+| Tells the SGW-C to release an indirect data-forwarding tunnel that a handover procedure set up.
+| S11, S4.
+
+| `Delete Indirect Data Forwarding Tunnel Response`
+| Reports the outcome of a `Delete Indirect Data Forwarding Tunnel Request`.
+| S11, S4.
+
+| `Modify Bearer Command`
+| Asks the PGW-C to apply a subscribed QoS change that the Home Subscriber Server (HSS) pushed down for a UE's default bearer.
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Modify Bearer Failure Indication`
+| Reports that the PGW-C could not apply the QoS change requested in a `Modify Bearer Command`.
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Update Bearer Request`
+| Changes the QoS or the traffic flow template (TFT) of an existing EPS bearer, at the request of the PGW-C or the Policy and Charging Rules Function (PCRF).
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Update Bearer Response`
+| Reports the outcome of an `Update Bearer Request`.
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Delete Bearer Command`
+| Asks the SGW-C/PGW-C to deactivate one or more dedicated EPS bearers, without deleting the PDN connection.
+| S11, S4, S5, S8.
+
+| `Delete Bearer Failure Indication`
+| Reports that the PGW-C could not deactivate the bearers requested in a `Delete Bearer Command`.
+| S11, S4, S5, S8.
+
+| `Create Indirect Data Forwarding Tunnel Request`
+| Sets up an indirect data-forwarding tunnel at the SGW-C, to forward buffered downlink data during a handover.
+| S11, S4.
+
+| `Create Indirect Data Forwarding Tunnel Response`
+| Reports the outcome of a `Create Indirect Data Forwarding Tunnel Request`.
+| S11, S4.
+
+| `Release Access Bearers Request`
+| Asks the SGW-C to release the radio and S1-U (or Iu) user-plane bearers for a UE that enters idle mode, while keeping the PDN connection.
+| S11, S4.
+
+| `Release Access Bearers Response`
+| Reports the outcome of a `Release Access Bearers Request`.
+| S11, S4.
+
+| `Stop Paging Indication`
+| Tells the MME/SGSN to stop paging a UE, for example because the network already reached it another way.
+| S11, S4.
+
+| `Modify Access Bearers Request`
+| Updates only the eNodeB's user-plane addresses at the SGW-C for a UE's bearers, without involving the PGW-C.
+| S11.
+
+| `Modify Access Bearers Response`
+| Reports the outcome of a `Modify Access Bearers Request`.
+| S11.
+
+| `Remote UE Report Notification`
+| Tells the SGW-C/PGW-C that a remote UE, reached through a Proximity Services (ProSe) UE-to-Network Relay, connected or disconnected.
+| S11, S5, S8.
+
+| `Remote UE Report Acknowledge`
+| Reports the outcome of a `Remote UE Report Notification`.
+| S11, S5, S8.
+|===
+
+===== Mobility Management Messages
+
+Mobility management messages transfer a UE's mobility management and
+bearer context between the old and the new serving node during a
+handover, a relocation, or a Tracking/Routing Area Update. Some of
+these messages coordinate Idle mode Signalling Reduction (ISR), a
+feature that keeps a UE registered on an MME and an SGSN at the same
+time, so the network can page the UE without knowing which of the two
+it is camped on. These messages also apply to the EPS to 5G System
+(5GS) handover and idle-mode mobility procedures, where the peer node
+is an Access and Mobility Management Function (AMF), over the N26
+interface.
+
+[cols="2,3,2",options="header"]
+|===
+| Message | Functionality | Interfaces
+
+| `Forward Relocation Request`
+| Asks the target node to prepare resources for a handover or a relocation, and carries the UE's mobility management and bearer context.
+| S10, S3, S16, N26.
+
+| `Forward Relocation Response`
+| Reports whether the target node accepted the relocation, and which bearers it set up.
+| S10, S3, S16, N26.
+
+| `Forward Relocation Complete Notification`
+| Tells the source node that the handover finished successfully.
+| S10, S3, S16, N26.
+
+| `Forward Relocation Complete Acknowledge`
+| Reports the outcome of a `Forward Relocation Complete Notification`.
+| S10, S3, S16, N26.
+
+| `Context Request`
+| Asks the old serving node for a UE's mobility management and bearer context, during a Tracking/Routing Area Update or an idle-mode inter-system mobility procedure.
+| S3, S16, S10, N26.
+
+| `Context Response`
+| Returns the requested mobility management and bearer context, or rejects the request.
+| S3, S16, S10, N26.
+
+| `Context Acknowledge`
+| Confirms that the new node accepted the context that a `Context Response` transferred.
+| S3, S16, S10, N26.
+
+| `Identification Request`
+| Asks the old serving node to resolve a UE's temporary identity to its IMSI.
+| S3, S16, S10, N26.
+
+| `Identification Response`
+| Returns the UE's IMSI, and its mobility management context if authentication already succeeded.
+| S3, S16, S10, N26.
+
+| `Forward Access Context Notification`
+| Forwards a UE's radio access network context, for example a Radio Network Controller (RNC) or an eNodeB context, to the target node during a relocation.
+| S16, S10.
+
+| `Forward Access Context Acknowledge`
+| Reports the outcome of a `Forward Access Context Notification`.
+| S16, S10.
+
+| `Detach Notification`
+| Tells an ISR-associated MME or SGSN to also detach the UE, or to only deactivate ISR for it.
+| S3.
+
+| `Detach Acknowledge`
+| Reports the outcome of a `Detach Notification`.
+| S3.
+
+| `Change Notification Request`
+| Reports a change in a UE's location or Closed Subscriber Group (CSG) membership to the SGW-C, for location-dependent charging.
+| S11, S4, S5, S8.
+
+| `Change Notification Response`
+| Reports the outcome of a `Change Notification Request`.
+| S11, S4, S5, S8.
+
+| `Relocation Cancel Request`
+| Tells the target node to abandon the resources it prepared for a handover or a relocation that the source node cancelled.
+| S3, S10, S16, N26.
+
+| `Relocation Cancel Response`
+| Reports the outcome of a `Relocation Cancel Request`.
+| S3, S10, S16, N26.
+
+| `Configuration Transfer Tunnel`
+| Carries an opaque radio configuration container between a source and a target radio node, relayed transparently through the core network.
+| S10, N26.
+
+| `RAN Information Relay`
+| Relays radio access network information between core-network nodes, on behalf of their radio access network nodes.
+| S3, S16.
+
+| `ISR Status Indication`
+| Tells an ISR-associated MME or SGSN to deactivate ISR, to page the UE, or to stop paging it.
+| S3.
+
+| `UE Registration Query Request`
+| Asks a candidate MME whether a given UE is registered there, to coordinate CS and PS service in a shared radio access network.
+| S3.
+
+| `UE Registration Query Response`
+| Reports whether the UE is registered in the queried MME, and with which core network operator.
+| S3.
+|===
+
+===== CS Fallback and SRVCC Related Messages
+
+These messages support CS Fallback and Single Radio Voice Call
+Continuity (SRVCC): they suspend and resume a UE's non-Guaranteed Bit
+Rate (non-GBR) bearers around a move to the CS domain, and coordinate
+paging and activity reporting between an MME and an ISR-associated
+SGSN.
+
+[cols="2,3,2",options="header"]
+|===
+| Message | Functionality | Interfaces
+
+| `Suspend Notification`
+| Tells the SGW-C/PGW-C to suspend a UE's non-GBR bearers, because the UE moved to the CS domain.
+| S3, S4, S5, S8, S11, S16.
+
+| `Suspend Acknowledge`
+| Reports the outcome of a `Suspend Notification`.
+| S3, S4, S5, S8, S11, S16.
+
+| `Resume Notification`
+| Tells the SGW-C/PGW-C to resume a UE's suspended bearers, because the UE returned to the PS domain.
+| S11, S4, S5, S8.
+
+| `Resume Acknowledge`
+| Reports the outcome of a `Resume Notification`.
+| S11, S4, S5, S8.
+
+| `CS Paging Indication`
+| Relays a CS domain paging request from the MME to an ISR-associated SGSN.
+| S3.
+
+| `Alert MME Notification`
+| Asks an ISR-associated SGSN to notify the MME the next time it detects activity from the UE.
+| S3.
+
+| `Alert MME Acknowledge`
+| Reports the outcome of an `Alert MME Notification`.
+| S3.
+
+| `UE Activity Notification`
+| Tells the MME that an ISR-associated SGSN detected activity from the UE.
+| S3.
+
+| `UE Activity Acknowledge`
+| Reports the outcome of a `UE Activity Notification`.
+| S3.
+|===
+
+===== Non-3GPP Access Related Messages
+
+These messages set up an indirect data-forwarding tunnel at the SGW-C
+for a handover between E-UTRAN and CDMA2000 HRPD access.
+
+[cols="2,3,2",options="header"]
+|===
+| Message | Functionality | Interfaces
+
+| `Create Forwarding Tunnel Request`
+| Asks the SGW-C to set up an indirect data-forwarding tunnel for a handover from E-UTRAN to CDMA2000 HRPD access.
+| S11.
+
+| `Create Forwarding Tunnel Response`
+| Reports the outcome of a `Create Forwarding Tunnel Request`.
+| S11.
+|===
+
+===== Restoration and Recovery Messages
+
+These messages let GTP-C nodes recover gracefully from a peer's
+partial fault or restart, by deleting or re-associating the affected
+PDN connections. TS 23.007 defines the restoration and recovery
+procedures that use these messages.
+
+[cols="2,3,2",options="header"]
+|===
+| Message | Functionality | Interfaces
+
+| `Delete PDN Connection Set Request`
+| Tells a peer node that reports a partial fault to delete the PDN connections associated with the affected control-plane identifier.
+| S2a, S2b, S5, S8, S11.
+
+| `Delete PDN Connection Set Response`
+| Reports the outcome of a `Delete PDN Connection Set Request`.
+| S2a, S2b, S5, S8, S11.
+
+| `Update PDN Connection Set Request`
+| Tells the PGW-C which control-plane node now serves a PDN connection's SGW-C or MME, after an MME change that did not change the SGW-C.
+| S5, S8.
+
+| `Update PDN Connection Set Response`
+| Reports the outcome of an `Update PDN Connection Set Request`.
+| S5, S8.
+
+| `PGW Restart Notification`
+| Tells the MME/SGSN that the PGW-C serving a UE's PDN connections has restarted or failed.
+| S11, S4.
+
+| `PGW Restart Notification Acknowledge`
+| Confirms that the MME/SGSN deleted the PDN connections that a `PGW Restart Notification` reported.
+| S11, S4.
+
+| `PGW Downlink Triggering Notification`
+| Asks the SGW-C to restore the user-plane path for a UE, after the SGW-C lost its bearer context but the PGW-C still has downlink data or signaling to deliver.
+| S5, S8, S11, S4.
+
+| `PGW Downlink Triggering Acknowledge`
+| Reports the outcome of a `PGW Downlink Triggering Notification`.
+| S5, S8, S11, S4.
+|===
+
+===== Trace Management Messages
+
+These messages start and stop a protocol-level signaling trace for a
+subscriber, across the control-plane nodes that serve the subscriber's
+session.
+
+[cols="2,3,2",options="header"]
+|===
+| Message | Functionality | Interfaces
+
+| `Trace Session Activation`
+| Activates signaling trace recording for a subscriber's session.
+| S11, S4, S5, S8, S2a, S2b.
+
+| `Trace Session Deactivation`
+| Deactivates a previously activated signaling trace.
+| S11, S4, S5, S8, S2a, S2b.
+|===
+
+===== MBMS Messages
+
+These messages let the Multimedia Broadcast Multicast Service (MBMS)
+Gateway control a broadcast or multicast session at the MME/SGSN.
+
+[cols="2,3,2",options="header"]
+|===
+| Message | Functionality | Interfaces
+
+| `MBMS Session Start Request`
+| Asks the MME/SGSN to start an MBMS session, and carries its QoS, service area, and multicast distribution parameters.
+| Sm, Sn.
+
+| `MBMS Session Start Response`
+| Reports the outcome of an `MBMS Session Start Request`.
+| Sm, Sn.
+
+| `MBMS Session Update Request`
+| Updates the parameters of an ongoing MBMS session, for example its service area.
+| Sm, Sn.
+
+| `MBMS Session Update Response`
+| Reports the outcome of an `MBMS Session Update Request`.
+| Sm, Sn.
+
+| `MBMS Session Stop Request`
+| Ends an MBMS session.
+| Sm, Sn.
+
+| `MBMS Session Stop Response`
+| Reports the outcome of an `MBMS Session Stop Request`.
+| Sm, Sn.
+|===
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 29.274
+| Clauses 4.2 (GTPv2-C protocol stack and interfaces), 4.3 (Transmission order and bit definitions), 5.1 (General header format), 5.3 (Header for the Echo and Version Not Supported Indication messages), 5.4 (EPC specific GTP-C header), 5.5 (Usage of the GTPv2-C header, including the `MP` flag and the `Message Priority` field), 6 (GTP-C message types and message formats), and clause 7 (GTP-C messages, covering 7.1 Path Management Messages, 7.2 Tunnel Management Messages, 7.3 Mobility Management Messages, 7.4 CS Fallback and SRVCC related messages, 7.5 Non-3GPP access related messages, 7.9 Restoration and Recovery, 7.12 Trace Management Messages, and 7.13 MBMS Messages).
+|===
+
+include::load-and-overload-control.adoc[]

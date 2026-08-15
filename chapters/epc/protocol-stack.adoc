@@ -1,0 +1,3 @@
+== Protocol Stack
+
+include::gtpv2c.adoc[]
