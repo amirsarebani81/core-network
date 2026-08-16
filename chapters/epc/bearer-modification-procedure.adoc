@@ -1,0 +1,5 @@
+=== Bearer Modification Procedure
+
+include::bearer-modification-procedure-pgw-initiated.adoc[]
+
+include::bearer-modification-procedure-hss-initiated.adoc[]

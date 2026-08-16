@@ -1,0 +1,150 @@
+==== HSS-Initiated Subscribed QoS Modification Procedure
+
+===== Technical Overview
+
+The HSS-initiated Subscribed QoS Modification procedure updates the QoS
+of an active EPS bearer, after a change in the subscriber's subscription
+data at the Home Subscriber Server (HSS). The HSS starts this procedure.
+
+The procedure changes the Subscribed UE Aggregate Maximum Bit Rate
+(Subscribed-UE-AMBR), the Subscribed APN-AMBR, or the QCI and the ARP of
+the default bearer.
+
+The procedure synchronizes the UE's radio and session management
+contexts with the new subscription parameters, across the MME, the
+S-GW, and the P-GW. The procedure keeps the bearer compliant with the
+PCC rules.
+
+===== Call Flow
+
+The call flow has three phases: Subscription Update, Bearer Modification
+Command, and, if the QCI, the ARP, or the APN-AMBR changed, Bearer
+Modification Request and Bearer Modification Acknowledgement.
+
+.HSS-initiated subscribed QoS modification procedure call flow
+plantuml::diagrams/bearer-modification-hss-initiated-call-flow.puml[svg]
+
+===== Step-by-Step Description
+
+. The *HSS* starts the procedure after an administrative change to the
+subscription. The HSS sends a Diameter `Insert-Subscriber-Data-Request`
+(IDR) message to the *MME*, carrying the IMSI and the Subscription-Data,
+that is the new Subscribed-UE-AMBR, APN-AMBR, QCI, or ARP.
+
+. The *MME* updates its local UE context with the new subscription data.
+The MME returns a Diameter `Insert-Subscriber-Data-Answer` (IDA) message
+to the *HSS*, carrying a Result-Code set to DIAMETER_SUCCESS.
+
+. The new subscription data can affect an active PDN connection, for
+example a changed QCI or APN-AMBR. In this case, the *MME* sends a
+GTPv2 `Modify Bearer Command` message to the *S-GW*, carrying the EBI of
+the default bearer, the Bearer Level QoS, and the APN-AMBR.
+
+. The *S-GW* forwards the GTPv2 `Modify Bearer Command` message to the
+*P-GW*, carrying the EBI, the Bearer Level QoS, and the APN-AMBR.
+
+. The network can deploy dynamic PCC. In this case, the *P-GW* reports
+the updated subscribed QoS to the *PCRF*. The P-GW sends a Diameter
+`Credit-Control-Request` (CCR) message over the Gx interface, with the
+CC-Request-Type set to UPDATE_REQUEST, carrying the Subscription-Id,
+the QoS-Information, and the APN-Aggregate-Max-Bitrate.
+
+. The *PCRF* authorizes the modification. The PCRF can adjust the
+parameters, based on local policy. The PCRF returns a Diameter
+`Credit-Control-Answer` (CCA) message to the *P-GW*, carrying a
+Result-Code, the QoS-Information, and the APN-Aggregate-Max-Bitrate.
+
+. The *P-GW* sends a GTPv2 `Update Bearer Request` message to the
+*S-GW*, to update the bearer context, carrying the EBI, the Bearer Level
+QoS, the TFT, and the APN-AMBR.
+
+. The *S-GW* forwards the GTPv2 `Update Bearer Request` message to the
+*MME*, without changes.
+
+. The *MME* builds a NAS `Modify EPS Bearer Context Request` message.
+The MME sends this message to the *eNodeB* inside an S1AP `E-RAB Modify
+Request` message, carrying the E-RAB ID, the E-RAB Level QoS Parameters,
+the NAS-PDU, and the UE-AMBR.
+
+. The *eNodeB* reconfigures the radio bearer. The eNodeB sends an RRC
+`Connection Reconfiguration` message to the *UE*, carrying the Radio
+Bearer QoS and the Session Management Request.
+
+. The *UE* confirms the successful reconfiguration of its radio
+resources. The UE returns an RRC `Connection Reconfiguration Complete`
+message to the *eNodeB*.
+
+. The *eNodeB* informs the MME of the outcome of the resource
+modification. The eNodeB returns an S1AP `E-RAB Modify Response`
+message to the *MME*, carrying the E-RAB ID and a Cause set to "Request
+Accepted".
+
+. The *UE* accepts the new EPS bearer context. The UE sends a NAS
+`Modify EPS Bearer Context Accept` message, carrying the EBI, inside an
+RRC `Direct Transfer` message, to the *eNodeB*. The eNodeB forwards the
+message to the *MME* inside an S1AP `Uplink NAS Transport` message.
+
+. The *MME* receives both the eNodeB and the UE acknowledgements. The
+MME sends a GTPv2 `Update Bearer Response` message to the *S-GW*,
+carrying the EBI, a Cause set to "Request Accepted", and the ULI.
+
+. The *S-GW* forwards the GTPv2 `Update Bearer Response` message to the
+*P-GW*, carrying the EBI, the Cause, and the ULI.
+
+. The network can deploy dynamic PCC. In this case, the *P-GW* confirms
+the enforcement of the authorized QoS to the *PCRF*. The P-GW sends a
+Diameter `Credit-Control-Request` (CCR) message, with the Event-Trigger
+set to SUCCESSFUL_RESOURCE_ALLOCATION, and the PCRF returns a Diameter
+`Credit-Control-Answer` (CCA) message, to acknowledge the final status.
+
+===== Possible Failures and Required Actions
+
+HSS registration rejection:: The MME sends an Update Location for a
+subscriber unknown to the HSS. The HSS returns a Diameter Result-Code
+DIAMETER_ERROR_USER_UNKNOWN (5001). If the HSS returns this error during
+an Update Location, the MME rejects the UE's Attach or Tracking Area
+Update request, with EMM Cause #2, "IMSI unknown in HSS". If the HSS
+returns this error during an Insert Subscriber Data procedure for an
+active UE, the MME locally detaches the UE and removes its context.
+
+Radio resource allocation rejection by eNodeB:: The eNodeB cannot
+provide the requested GBR or QCI, because of congestion. The eNodeB
+returns an S1AP Cause #20, "Radio resources not available", or a cause
+of "Not supported QCI Value". The MME maps this to GTPv2 Cause #89,
+"Service denied", or GTPv2 Cause #90, "No resources available", in the
+`Update Bearer Response` message to the P-GW. The P-GW informs the PCRF
+that the modification failed. If the modification is mandatory, the
+P-GW can delete the affected bearer.
+
+NAS syntactical error in the TFT:: The UE's NAS layer finds a syntax
+error in the packet filters of the modification request. The UE returns
+a NAS `Modify EPS Bearer Context Reject` message, with ESM Cause #45,
+"syntactical error in the TFT operation". This maps to GTPv2 Cause #77,
+"Syntactic errors in packet filter(s)". The MME stops timer T3486,
+aborts the procedure, and can start a procedure to re-align the bearer
+context between the EPC and the UE.
+
+===== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.401
+| Clauses 5.3.9.2 (Subscribed QoS modification), 5.4.2.1 (PGW-initiated bearer modification without bearer QoS update), and 5.4.2.2 (Bearer modification with bearer QoS update procedures using GTP); Figure 5.4.2.2-1.
+
+| TS 24.301
+| Clauses 6.4.3.2, 6.4.3.3, and 6.4.3.4 (Network-requested EPS bearer context modification); Table 9.9.4.4 (ESM cause values).
+
+| TS 29.272
+| Clauses 5.2.2.1 (Insert Subscriber Data procedure) and 7.2.9 (IDR/IDA commands); Tables 5.2.2.1.1/1 and A.1.
+
+| TS 29.274
+| Clauses 7.2.14 (Modify Bearer Command), 7.2.15, and 7.2.16 (Update Bearer Request/Response); Tables 7.2.14.1-1 and 8.4-1.
+
+| TS 36.413
+| Clauses 8.2.2 (E-RAB Modify procedure), 9.1.3.3 (E-RAB Modify Response), and 9.2.1.3 (S1AP Cause values).
+
+| TS 29.213
+| Clauses 4.3.2 (IP-CAN Session Modification) and 7.4.1.2.2.2 (QoS negotiation at Subscribed QoS modification).
+|===

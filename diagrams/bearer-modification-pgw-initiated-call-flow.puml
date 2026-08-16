@@ -1,0 +1,45 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "UE" as UE
+participant "eNodeB" as ENB
+participant "MME" as MME
+participant "S-GW" as SGW
+participant "P-GW" as PGW
+participant "PCRF" as PCRF
+
+== Policy Decision ==
+opt Dynamic PCC is deployed
+    PCRF -> PGW: Diameter (Gx): Re-Auth-Request (RAR)
+    PGW -> PCRF: Diameter (Gx): Re-Auth-Answer (RAA)
+end
+
+== Bearer Modification Request ==
+PGW -> SGW: GTPv2: Update Bearer Request
+SGW -> MME: GTPv2: Update Bearer Request
+
+opt UE is in ECM-IDLE
+    MME -> ENB: S1AP: Paging
+    ENB -> UE: RRC: Paging
+    UE -> ENB: RRC: Service Request
+    ENB -> MME: S1AP: Initial UE Message (Service Request)
+end
+
+== Radio Bearer Modification ==
+MME -> ENB: S1AP: E-RAB Modify Request (NAS: Modify EPS Bearer Context Request)
+ENB -> UE: RRC: Connection Reconfiguration
+UE -> ENB: RRC: Connection Reconfiguration Complete
+ENB -> MME: S1AP: E-RAB Modify Response
+
+UE -> ENB: RRC: Direct Transfer (Modify EPS Bearer Context Accept)
+ENB -> MME: S1AP: Uplink NAS Transport (Modify EPS Bearer Context Accept)
+
+== Bearer Modification Acknowledgement ==
+MME -> SGW: GTPv2: Update Bearer Response
+SGW -> PGW: GTPv2: Update Bearer Response
+
+opt Dynamic PCC is deployed
+    PGW -> PCRF: Diameter (Gx): Credit-Control-Request (CCR)
+    PCRF -> PGW: Diameter (Gx): Credit-Control-Answer (CCA)
+end
+@enduml
