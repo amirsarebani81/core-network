@@ -1,0 +1,733 @@
+=== S1AP (S1 Application Protocol)
+
+==== Technical Overview
+
+The S1 Application Protocol (S1AP) is the radio network layer signaling
+protocol of the S1-MME interface between the E-UTRAN and the MME. TS
+36.413 clause 1 defines this scope. S1AP carries UE mobility and session
+control, and it relays NAS messages between the UE and the MME without
+inspecting their content.
+
+S1AP consists of Elementary Procedures (EPs). An EP is a unit of
+interaction between an eNodeB and the MME, and it comprises an
+initiating message and, for a Class 1 EP, a response message. TS 36.413
+clause 3.1 defines two EP classes:
+
+Class 1:: An EP with a response. The response reports a successful
+outcome, an unsuccessful outcome, or both outcomes for different
+requests within the same message.
+
+Class 2:: An EP without a response. The network always considers a
+Class 2 EP successful.
+
+An eNodeB and the MME can run several EPs independently of each other,
+in parallel, unless a specific EP description restricts this
+independence.
+
+S1AP provides two groups of services. TS 36.413 clause 5 defines this
+grouping:
+
+Non-UE-associated services:: Services related to the whole S1 interface
+instance between an eNodeB and the MME, for example S1 Setup or Reset.
+
+UE-associated services:: Services related to one UE, over a
+UE-associated logical S1-connection. This connection uses the MME UE
+S1AP ID and the eNB UE S1AP ID to identify the UE at the MME and at the
+eNodeB. TS 36.413 clause 3.1 defines the UE-associated logical
+S1-connection. This connection can exist before the eNodeB establishes
+the S1 UE context.
+
+S1AP runs over the Stream Control Transmission Protocol (SCTP), which
+provides in-sequence delivery of S1AP messages and notifies S1AP if the
+signaling connection breaks. TS 36.413 clause 6 defines this transport
+requirement; TS 36.410 defines the S1 transport network layer in detail.
+
+Unlike NAS, GTPv2-C, and PFCP, S1AP does not encode its messages with a
+fixed-position byte header. S1AP messages use the Packed Encoding Rules
+(PER) of ASN.1, as defined in ITU-T Recommendation X.691, so a message's
+on-the-wire layout depends on the abstract syntax of its information
+elements rather than on fixed octet positions. The Message Format
+section below describes the message structure at the ASN.1 level
+instead of a byte-position diagram.
+
+==== Message Format
+
+===== Elementary Procedure Structure
+
+TS 36.413 clause 9.3.2 defines the `S1AP-ELEMENTARY-PROCEDURE` ASN.1
+class, which every S1AP EP conforms to:
+
+[source,asn1]
+----
+S1AP-ELEMENTARY-PROCEDURE ::= CLASS {
+    &InitiatingMessage             ,
+    &SuccessfulOutcome              OPTIONAL,
+    &UnsuccessfulOutcome            OPTIONAL,
+    &procedureCode      ProcedureCode  UNIQUE,
+    &criticality        Criticality    DEFAULT ignore
+}
+----
+
+`InitiatingMessage`:: The message that starts the EP. Every EP defines
+this message.
+
+`SuccessfulOutcome`:: The response message for a successful outcome.
+Only a Class 1 EP defines this message.
+
+`UnsuccessfulOutcome`:: The response message for an unsuccessful
+outcome. Only a Class 1 EP defines this message, and only if the EP
+supports an explicit failure response.
+
+`procedureCode`:: A value that uniquely identifies the EP, for example
+the value assigned to the Handover Preparation procedure or the E-RAB
+Setup procedure.
+
+`criticality`:: The default criticality of the EP itself, used when an
+S1AP node does not comprehend the procedure code.
+
+===== S1AP-PDU
+
+TS 36.413 clause 9.3.3 defines the top-level S1AP-PDU as a CHOICE
+between three message classes:
+
+[source,asn1]
+----
+S1AP-PDU ::= CHOICE {
+    initiatingMessage   InitiatingMessage,
+    successfulOutcome   SuccessfulOutcome,
+    unsuccessfulOutcome UnsuccessfulOutcome,
+    ...
+}
+
+InitiatingMessage ::= SEQUENCE {
+    procedureCode   S1AP-ELEMENTARY-PROCEDURE.&procedureCode,
+    criticality     S1AP-ELEMENTARY-PROCEDURE.&criticality,
+    value           S1AP-ELEMENTARY-PROCEDURE.&InitiatingMessage
+}
+----
+
+`SuccessfulOutcome` and `UnsuccessfulOutcome` follow the same
+`procedureCode`/`criticality`/`value` structure as `InitiatingMessage`.
+
+`procedureCode`:: Identifies which EP the message belongs to, for
+example E-RAB Setup or Path Switch Request.
+
+`criticality`:: States how a receiving node handles the message if it
+does not comprehend the EP. The Criticality Values table below lists
+the possible values.
+
+`value`:: Carries the message-specific information elements (IEs) for
+this EP and outcome, for example the IEs of an E-RAB SETUP REQUEST
+message.
+
+===== Criticality Values
+
+Each IE or IE group within a message can carry its own criticality
+information, independent of the criticality of the EP itself. TS 36.413
+clause 10.3.2 defines these values.
+
+[cols="1,4",options="header"]
+|===
+| Value | Meaning
+
+| `reject`
+| The receiving node rejects the entire procedure if it does not
+comprehend the IE or IE group.
+
+| `notify`
+| The receiving node ignores the IE or IE group if it does not
+comprehend it, and notifies the sender.
+
+| `ignore`
+| The receiving node ignores the IE or IE group if it does not
+comprehend it, without notifying the sender.
+|===
+
+==== Message Categories
+
+===== E-RAB Management Messages
+
+These messages assign, modify, and release the E-UTRAN Radio Access
+Bearers (E-RABs) and their Data Radio Bearers for a UE.
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `E-RAB Setup Request`
+| Asks the eNodeB to assign Uu and S1 resources and set up Data Radio Bearers for one or more E-RABs.
+| MME → eNodeB
+
+| `E-RAB Setup Response`
+| Reports the E-RABs successfully set up and the E-RABs that failed to be set up.
+| eNodeB → MME
+
+| `E-RAB Modify Request`
+| Asks the eNodeB to modify one or more already established E-RABs for a UE.
+| MME → eNodeB
+
+| `E-RAB Modify Response`
+| Reports the E-RABs successfully modified and the E-RABs that failed to be modified.
+| eNodeB → MME
+
+| `E-RAB Release Command`
+| Asks the eNodeB to release one or more established E-RABs for a UE.
+| MME → eNodeB
+
+| `E-RAB Release Response`
+| Reports the E-RABs successfully released and the E-RABs that failed to be released.
+| eNodeB → MME
+
+| `E-RAB Release Indication`
+| Tells the MME that the eNodeB released one or more E-RABs on its own initiative.
+| eNodeB → MME
+
+| `E-RAB Modification Indication`
+| Asks the MME to accept a modification of one or more established E-RABs that the eNodeB initiated, for example a new downlink transport address.
+| eNodeB → MME
+
+| `E-RAB Modification Confirm`
+| Reports the E-RABs successfully modified, the E-RABs that failed to be modified, and the E-RABs to be released, for an `E-RAB Modification Indication` message.
+| MME → eNodeB
+|===
+
+===== Context Management Messages
+
+These messages establish, modify, suspend, resume, and release a UE's
+context at the eNodeB and the MME, and transfer UE information between
+them.
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Initial Context Setup Request`
+| Establishes the initial UE context in the eNodeB, sets up the default IP connectivity, and optionally sets up one or more E-RABs.
+| MME → eNodeB
+
+| `Initial Context Setup Response`
+| Reports that the eNodeB established the initial UE context.
+| eNodeB → MME
+
+| `Initial Context Setup Failure`
+| Reports that the eNodeB could not establish the initial UE context.
+| eNodeB → MME
+
+| `UE Context Release Request`
+| Asks the MME to release the UE-associated logical S1-connection for an E-UTRAN generated reason, for example user inactivity.
+| eNodeB → MME
+
+| `UE Context Release Command`
+| Orders the release of the UE-associated logical S1-connection, for example after a completed handover.
+| MME → eNodeB
+
+| `UE Context Release Complete`
+| Confirms that the eNodeB released all signaling and user-plane transport resources for the UE.
+| eNodeB → MME
+
+| `UE Context Modification Request`
+| Asks the eNodeB to partly modify the established UE context, for example the Security Key or the UE Aggregate Maximum Bit Rate.
+| MME → eNodeB
+
+| `UE Context Modification Response`
+| Confirms that the eNodeB applied the requested UE context modification.
+| eNodeB → MME
+
+| `UE Context Modification Failure`
+| Reports that the eNodeB could not apply the requested UE context modification.
+| eNodeB → MME
+
+| `UE Radio Capability Match Request`
+| Asks the eNodeB to derive whether the UE radio capabilities are compatible with the network configuration for voice continuity.
+| MME → eNodeB
+
+| `UE Radio Capability Match Response`
+| Returns the Voice Support Match Indicator that a `UE Radio Capability Match Request` message asked for.
+| eNodeB → MME
+
+| `UE Context Modification Indication`
+| Asks the MME to verify Closed Subscriber Group (CSG) membership for the established UE context.
+| eNodeB → MME
+
+| `UE Context Modification Confirm`
+| Returns the CSG membership verification result for a `UE Context Modification Indication` message.
+| MME → eNodeB
+
+| `UE Context Suspend Request`
+| Asks the MME to suspend the UE context, the UE-associated logical S1-connection, and the related bearer contexts.
+| eNodeB → MME
+
+| `UE Context Suspend Response`
+| Confirms that the MME suspended the UE context.
+| MME → eNodeB
+
+| `UE Context Resume Request`
+| Tells the MME that the UE resumed its suspended RRC connection, and asks the MME to resume the UE context.
+| eNodeB → MME
+
+| `UE Context Resume Response`
+| Confirms that the MME resumed the UE context.
+| MME → eNodeB
+
+| `UE Context Resume Failure`
+| Reports that the MME could not resume at least one suspended E-RAB, and releases the UE-associated logical S1-connection.
+| MME → eNodeB
+
+| `Connection Establishment Indication`
+| Completes the establishment of the UE-associated logical S1-connection, and can trigger the eNodeB to obtain and report the UE radio capability.
+| MME → eNodeB
+
+| `Retrieve UE Information`
+| Asks the MME for the UE information of an NB-IoT UE that uses Control Plane CIoT EPS Optimisation.
+| eNodeB → MME
+
+| `UE Information Transfer`
+| Sends the requested UE information, for example QoS parameters and UE radio capability, to the eNodeB.
+| MME → eNodeB
+
+| `eNB CP Relocation Indication`
+| Asks the MME to authenticate a UE's re-establishment request for an NB-IoT UE that uses Control Plane CIoT EPS Optimisation.
+| eNodeB → MME
+
+| `MME CP Relocation Indication`
+| Tells the eNodeB that the UE's connection is to be relocated to another eNodeB.
+| MME → eNodeB
+|===
+
+===== Handover Signalling Messages
+
+These messages prepare, execute, confirm, and cancel a handover of a UE
+between eNodeBs or between radio access technologies, and transfer
+PDCP status between the source and the target eNodeB.
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Handover Required`
+| Starts the Handover Preparation procedure. The source eNodeB requests preparation of resources at the target side via the EPC.
+| eNodeB → MME
+
+| `Handover Command`
+| Reports that the MME accepted the handover, and carries the target-side transparent container for the UE.
+| MME → eNodeB
+
+| `Handover Preparation Failure`
+| Reports that the handover preparation failed.
+| MME → eNodeB
+
+| `Handover Request`
+| Asks the target eNodeB to reserve resources for the handover of a UE.
+| MME → eNodeB
+
+| `Handover Request Acknowledge`
+| Reports that the target eNodeB reserved the requested resources.
+| eNodeB → MME
+
+| `Handover Failure`
+| Reports that the target eNodeB could not reserve the requested resources.
+| eNodeB → MME
+
+| `Handover Notify`
+| Tells the MME that the UE arrived at the target cell and the S1 handover completed successfully.
+| eNodeB → MME
+
+| `Path Switch Request`
+| Establishes a UE-associated signaling connection to the EPC, and requests the switch of a downlink GTP tunnel to a new endpoint.
+| eNodeB → MME
+
+| `Path Switch Request Acknowledge`
+| Reports that the EPC switched the downlink path for at least one requested E-RAB.
+| MME → eNodeB
+
+| `Path Switch Request Failure`
+| Reports that the EPC failed to switch the downlink path for every requested E-RAB.
+| MME → eNodeB
+
+| `Handover Cancel`
+| Asks the EPC to cancel an ongoing handover preparation or an already prepared handover.
+| eNodeB → MME
+
+| `Handover Cancel Acknowledge`
+| Confirms that the EPC released the resources of the cancelled handover.
+| MME → eNodeB
+
+| `eNB Status Transfer`
+| Transfers the uplink and downlink PDCP-SN and Hyper Frame Number (HFN) status from the source eNodeB to the target eNodeB via the MME.
+| eNodeB → MME
+
+| `MME Status Transfer`
+| Forwards the PDCP-SN and HFN status that an `eNB Status Transfer` message carried to the target eNodeB.
+| MME → eNodeB
+
+| `Handover Success`
+| Tells the source eNodeB, during a Dual Active Protocol Stacks (DAPS) handover, that the UE successfully accessed the target eNodeB.
+| MME → eNodeB
+
+| `eNB Early Status Transfer`
+| Transfers, during a DAPS handover, the COUNT of the first downlink SDU that the source eNodeB forwards to the target eNodeB.
+| eNodeB → MME
+
+| `MME Early Status Transfer`
+| Forwards the COUNT that an `eNB Early Status Transfer` message carried to the target eNodeB.
+| MME → eNodeB
+|===
+
+===== Paging Messages
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Paging`
+| Asks the eNodeB to page a UE in the cells of the tracking areas listed in the message.
+| MME → eNodeB
+|===
+
+===== NAS Transport Messages
+
+These messages carry NAS signaling, opaque to the eNodeB, between the
+UE and the MME over the S1 interface. TS 36.413 clause 8.6.1 defines
+this scope.
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Initial UE Message`
+| Forwards the UE's first uplink NAS message to the MME, and can establish the UE-associated logical S1-connection.
+| eNodeB → MME
+
+| `Downlink NAS Transport`
+| Forwards a NAS message from the MME to the UE.
+| MME → eNodeB
+
+| `Uplink NAS Transport`
+| Forwards a NAS message from the UE to the MME, over an existing UE-associated logical S1-connection.
+| eNodeB → MME
+
+| `NAS Non Delivery Indication`
+| Reports that the eNodeB could not deliver, or decided not to start delivering, a NAS message to the UE.
+| eNodeB → MME
+
+| `NAS Delivery Indication`
+| Reports that the eNodeB successfully delivered a downlink NAS message to the UE, when the MME requested this indication.
+| eNodeB → MME
+
+| `Reroute NAS Request`
+| Asks the eNodeB to reroute an `Initial UE Message` message to the MME of the indicated Dedicated Core Network (DCN).
+| MME → eNodeB
+|===
+
+===== Management Messages
+
+These messages initialize the S1 interface, exchange interoperability
+data, report unrecoverable errors, and manage MME overload.
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Reset`
+| Initializes or re-initializes the E-UTRAN, or part of the E-UTRAN S1AP UE-related contexts, after a failure at the sending node.
+| Both
+
+| `Reset Acknowledge`
+| Confirms that the receiving node released the S1 resources and UE associations indicated in a `Reset` message.
+| Both
+
+| `Error Indication`
+| Reports a detected error in an incoming message, when no dedicated failure message exists to report it.
+| Both
+
+| `S1 Setup Request`
+| Starts the S1 Setup procedure, the first S1AP procedure after the transport network layer association becomes operational.
+| eNodeB → MME
+
+| `S1 Setup Response`
+| Reports that the MME accepted the S1 Setup Request, and exchanges application-level configuration data.
+| MME → eNodeB
+
+| `S1 Setup Failure`
+| Reports that the MME rejected the S1 Setup Request.
+| MME → eNodeB
+
+| `eNB Configuration Update`
+| Updates application-level configuration data that the eNodeB and the MME need to interoperate on the S1 interface.
+| eNodeB → MME
+
+| `eNB Configuration Update Acknowledge`
+| Confirms that the MME updated the configuration data.
+| MME → eNodeB
+
+| `eNB Configuration Update Failure`
+| Reports that the MME rejected the configuration update.
+| MME → eNodeB
+
+| `MME Configuration Update`
+| Updates application-level configuration data that the eNodeB needs to interoperate with the MME.
+| MME → eNodeB
+
+| `MME Configuration Update Acknowledge`
+| Confirms that the eNodeB updated the configuration data.
+| eNodeB → MME
+
+| `MME Configuration Update Failure`
+| Reports that the eNodeB rejected the configuration update.
+| eNodeB → MME
+
+| `Overload Start`
+| Tells the eNodeB to reduce the signaling load it sends towards the concerned MME.
+| MME → eNodeB
+
+| `Overload Stop`
+| Tells the eNodeB that the overload situation at the MME ended, and normal operation can resume.
+| MME → eNodeB
+|===
+
+===== S1 CDMA2000 Tunnelling Messages
+
+These messages tunnel CDMA2000 signaling, opaque to the eNodeB, between
+the UE and the CDMA2000 radio access technology over the S1 interface.
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Downlink S1 CDMA2000 Tunnelling`
+| Forwards a CDMA2000 message from the MME to the UE, through the eNodeB.
+| MME → eNodeB
+
+| `Uplink S1 CDMA2000 Tunnelling`
+| Forwards a CDMA2000 message from the UE to the MME, through the eNodeB.
+| eNodeB → MME
+|===
+
+===== UE Capability Info Indication Messages
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `UE Capability Info Indication`
+| Provides UE capability-related information, received from the UE, to the MME.
+| eNodeB → MME
+|===
+
+===== Trace Messages
+
+These messages control a trace session or a Minimization of Drive Tests
+(MDT) session for a UE, as specified in TS 32.422.
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Trace Start`
+| Asks the eNodeB to start a trace function, and optionally an MDT session, for a UE.
+| MME → eNodeB
+
+| `Trace Failure Indication`
+| Reports that a `Trace Start` or `Deactivate Trace` procedure failed because of an interaction with a handover.
+| eNodeB → MME
+
+| `Deactivate Trace`
+| Asks the eNodeB to stop the trace session identified by the given trace reference.
+| MME → eNodeB
+
+| `Cell Traffic Trace`
+| Sends the allocated Trace Recording Session Reference and Trace Reference to the MME.
+| eNodeB → MME
+|===
+
+===== Location Reporting Messages
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Location Reporting Control`
+| Asks the eNodeB to report the UE's current location, for example on every serving-cell change.
+| MME → eNodeB
+
+| `Location Report Failure Indication`
+| Reports that a `Location Reporting Control` procedure failed because of an interaction with a handover.
+| eNodeB → MME
+
+| `Location Report`
+| Provides the UE's current location to the MME.
+| eNodeB → MME
+|===
+
+===== Warning Message Transmission Messages
+
+These messages start, replace, and cancel the broadcast of Public
+Warning System (PWS) messages, and report the eNodeB's PWS status to
+the MME.
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Write-Replace Warning Request`
+| Starts, or replaces, the broadcast of a warning message in the indicated warning area.
+| MME → eNodeB
+
+| `Write-Replace Warning Response`
+| Reports the area(s) where the eNodeB is broadcasting the warning message.
+| eNodeB → MME
+
+| `Kill Request`
+| Asks the eNodeB to cancel an already ongoing broadcast of a warning message.
+| MME → eNodeB
+
+| `Kill Response`
+| Reports the area(s) where the eNodeB stopped the warning message broadcast.
+| eNodeB → MME
+
+| `PWS Restart Indication`
+| Tells the MME that PWS information for some or all cells of the eNodeB is available for reloading from the Cell Broadcast Centre (CBC).
+| eNodeB → MME
+
+| `PWS Failure Indication`
+| Tells the MME that an ongoing PWS operation for one or more cells of the eNodeB has failed.
+| eNodeB → MME
+|===
+
+===== Direct Information Transfer Messages
+
+These messages transfer RAN Information Management (RIM) information,
+in unacknowledged mode, between an eNodeB and a peer RAN node via the
+core network. The MME does not interpret the transferred information.
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `eNB Direct Information Transfer`
+| Transfers RAN information from the eNodeB to the MME.
+| eNodeB → MME
+
+| `MME Direct Information Transfer`
+| Transfers RAN information from the MME to the eNodeB.
+| MME → eNodeB
+|===
+
+===== Configuration Transfer Messages
+
+These messages transfer Self-Organizing Network (SON) configuration
+information, in unacknowledged mode, between an eNodeB and a peer RAN
+node via the core network.
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `eNB Configuration Transfer`
+| Transfers RAN configuration information from the eNodeB to the MME.
+| eNodeB → MME
+
+| `MME Configuration Transfer`
+| Transfers RAN configuration information from the MME to the eNodeB.
+| MME → eNodeB
+|===
+
+===== LPPa Transport Messages
+
+These messages carry LTE Positioning Protocol Annex (LPPa) signaling
+between an eNodeB and the Evolved Serving Mobile Location Centre
+(E-SMLC), relayed transparently by the MME, as specified in TS 36.455.
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Downlink UE Associated LPPa Transport`
+| Forwards a UE-associated LPPa message from the MME to the eNodeB, for example to support E-CID or UTDOA positioning of that UE.
+| MME → eNodeB
+
+| `Uplink UE Associated LPPa Transport`
+| Forwards a UE-associated LPPa message from the eNodeB to the MME.
+| eNodeB → MME
+
+| `Downlink Non UE Associated LPPa Transport`
+| Forwards a non-UE-associated LPPa message from the MME to the eNodeB, for example to obtain OTDOA assistance data.
+| MME → eNodeB
+
+| `Uplink Non UE Associated LPPa Transport`
+| Forwards a non-UE-associated LPPa message from the eNodeB to the MME.
+| eNodeB → MME
+|===
+
+===== Secondary RAT Data Usage Report Messages
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Secondary RAT Data Usage Report`
+| Reports the resources used on a secondary RAT, for example NR resources during EN-DC operation.
+| eNodeB → MME
+|===
+
+===== UE Radio Capability ID Mapping Messages
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `UE Radio Capability ID Mapping Request`
+| Asks the MME for the UE radio capability information that maps to a given UE Radio Capability ID.
+| eNodeB → MME
+
+| `UE Radio Capability ID Mapping Response`
+| Returns the UE radio capability information that a `UE Radio Capability ID Mapping Request` message asked for.
+| MME → eNodeB
+|===
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 36.413
+a|
+* Clause 1 — Scope
+* Clause 3.1 — Definitions, covering Elementary Procedures and EP classes, and the UE-associated logical S1-connection
+* Clause 5 — S1AP services
+* Clause 6 — Services expected from the signaling transport
+* Clause 8.1 — List of S1AP Elementary procedures (Table 1: Class 1 procedures, Table 2: Class 2 procedures)
+* Clause 8.2 — E-RAB Management procedures
+* Clause 8.3 — Context Management procedures
+* Clause 8.4 — Handover Signalling
+* Clause 8.5 — Paging
+* Clause 8.6 — NAS transport
+* Clause 8.7 — Management procedures
+* Clause 8.8 — S1 CDMA2000 Tunnelling Procedures
+* Clause 8.9 — UE Capability Info Indication
+* Clause 8.10 — Trace Procedures
+* Clause 8.11 — Location Reporting Procedures
+* Clause 8.12 — Warning Message Transmission Procedures
+* Clause 8.13 — eNB Direct Information Transfer
+* Clause 8.14 — MME Direct Information Transfer
+* Clause 8.15 — eNB Configuration Transfer
+* Clause 8.16 — MME Configuration Transfer
+* Clause 8.17 — LPPa transport
+* Clause 8.18 — Secondary RAT Data Usage Report
+* Clause 8.19 — UE Radio Capability ID Mapping
+* Clause 9.3.2 — Elementary Procedure definitions, covering the `S1AP-ELEMENTARY-PROCEDURE` class
+* Clause 9.3.3 — PDU Definitions, covering the `S1AP-PDU` choice and the `InitiatingMessage`, `SuccessfulOutcome`, and `UnsuccessfulOutcome` types
+* Clause 10.3.2 — Criticality information
+| ITU-T X.691
+| ASN.1 encoding rules: Specification of Packed Encoding Rules (PER), used to encode S1AP messages
+
+| TS 36.410
+| E-UTRAN; S1 general aspects and principles: defines the S1 transport network layer
+
+| TS 32.422
+| Subscriber and equipment trace; Trace control and configuration management: defines the trace and MDT sessions that the Trace Messages control
+
+| TS 36.455
+| E-UTRA; LTE Positioning Protocol A (LPPa): the protocol relayed transparently between the eNodeB and the E-SMLC by the LPPa Transport messages
+|===

@@ -1,3 +1,5 @@
 == Protocol Stack
 
+include::s1ap.adoc[]
+
 include::gtpv2c.adoc[]
