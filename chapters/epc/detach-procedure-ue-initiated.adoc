@@ -139,17 +139,30 @@ performs a local detach and enters the EMM-DEREGISTERED state.
 | Specification | Clauses and coverage
 
 | TS 23.401
-| Clauses 5.3.8.1 (Detach procedure), 5.3.8.2.1 (UE-initiated detach), and 5.3.5 (ISR).
+a|
+* Clause 5.3.8.1 — Detach procedure
+* Clause 5.3.8.2.1 — UE-initiated detach
+* Clause 5.3.5 — ISR
 
 | TS 24.301
-| Clauses 5.5.2.1 (Detach procedure), 5.5.2.2.1 (UE-initiated detach, general), 5.5.2.2.2 (UE-initiated detach procedure), and 8.2.11 (Detach Request message content).
+a|
+* Clause 5.5.2.1 — Detach procedure
+* Clause 5.5.2.2.1 — UE-initiated detach, general
+* Clause 5.5.2.2.2 — UE-initiated detach procedure
+* Clause 8.2.11 — Detach Request message content
 
 | TS 29.274
-| Clauses 7.2.9.1 (Delete Session Request), 7.2.10.1 (Delete Session Response), and 7.3.12 (Detach Notification/Acknowledge).
+a|
+* Clause 7.2.9.1 — Delete Session Request
+* Clause 7.2.10.1 — Delete Session Response
+* Clause 7.3.12 — Detach Notification/Acknowledge
 
 | TS 29.213
 | Clause 4.2.2.1 (IP-CAN Session Termination).
 
 | TS 36.413
-| Clauses 8.3.3 (UE Context Release), 9.1.4.6 (UE Context Release Command), and 9.1.4.7 (UE Context Release Complete).
+a|
+* Clause 8.3.3 — UE Context Release
+* Clause 9.1.4.6 — UE Context Release Command
+* Clause 9.1.4.7 — UE Context Release Complete
 |===

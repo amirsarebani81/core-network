@@ -131,20 +131,37 @@ context between the EPC and the UE.
 | Specification | Clauses and coverage
 
 | TS 23.401
-| Clauses 5.3.9.2 (Subscribed QoS modification), 5.4.2.1 (PGW-initiated bearer modification without bearer QoS update), and 5.4.2.2 (Bearer modification with bearer QoS update procedures using GTP); Figure 5.4.2.2-1.
+a|
+* Clause 5.3.9.2 — Subscribed QoS modification
+* Clause 5.4.2.1 — PGW-initiated bearer modification without bearer QoS update
+* Clause 5.4.2.2 — Bearer modification with bearer QoS update procedures using GTP
+* Figure 5.4.2.2-1
 
 | TS 24.301
-| Clauses 6.4.3.2, 6.4.3.3, and 6.4.3.4 (Network-requested EPS bearer context modification); Table 9.9.4.4 (ESM cause values).
+a|
+* Clauses 6.4.3.2, 6.4.3.3, and 6.4.3.4 — Network-requested EPS bearer context modification
+* Table 9.9.4.4 — ESM cause values
 
 | TS 29.272
-| Clauses 5.2.2.1 (Insert Subscriber Data procedure) and 7.2.9 (IDR/IDA commands); Tables 5.2.2.1.1/1 and A.1.
+a|
+* Clause 5.2.2.1 — Insert Subscriber Data procedure
+* Clause 7.2.9 — IDR/IDA commands
+* Tables 5.2.2.1.1/1 and A.1
 
 | TS 29.274
-| Clauses 7.2.14 (Modify Bearer Command), 7.2.15, and 7.2.16 (Update Bearer Request/Response); Tables 7.2.14.1-1 and 8.4-1.
+a|
+* Clause 7.2.14 — Modify Bearer Command
+* Clauses 7.2.15 and 7.2.16 — Update Bearer Request/Response
+* Tables 7.2.14.1-1 and 8.4-1
 
 | TS 36.413
-| Clauses 8.2.2 (E-RAB Modify procedure), 9.1.3.3 (E-RAB Modify Response), and 9.2.1.3 (S1AP Cause values).
+a|
+* Clause 8.2.2 — E-RAB Modify procedure
+* Clause 9.1.3.3 — E-RAB Modify Response
+* Clause 9.2.1.3 — S1AP Cause values
 
 | TS 29.213
-| Clauses 4.3.2 (IP-CAN Session Modification) and 7.4.1.2.2.2 (QoS negotiation at Subscribed QoS modification).
+a|
+* Clause 4.3.2 — IP-CAN Session Modification
+* Clause 7.4.1.2.2.2 — QoS negotiation at Subscribed QoS modification
 |===

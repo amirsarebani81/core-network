@@ -138,20 +138,35 @@ complete at the same time.
 | Specification | Clauses and coverage
 
 | TS 23.401
-| Clauses 5.3.8.4 (HSS-initiated detach), 5.3.5 (S1 release), and 5.10.3 (satellite E-UTRAN access restrictions).
+a|
+* Clause 5.3.8.4 — HSS-initiated detach
+* Clause 5.3.5 — S1 release
+* Clause 5.10.3 — satellite E-UTRAN access restrictions
 
 | TS 24.301
-| Clauses 5.5.2.3 (Network-initiated detach procedure), 8.2.11 (Detach Request message content), and 9.9.3.7 (Detach type).
+a|
+* Clause 5.5.2.3 — Network-initiated detach procedure
+* Clause 8.2.11 — Detach Request message content
+* Clause 9.9.3.7 — Detach type
 
 | TS 29.272
-| Clauses 5.2.1.2 (Cancel Location procedure), 7.2.7 (CLR command), and 7.3.24 (Cancellation-Type values).
+a|
+* Clause 5.2.1.2 — Cancel Location procedure
+* Clause 7.2.7 — CLR command
+* Clause 7.3.24 — Cancellation-Type values
 
 | TS 29.274
-| Clauses 7.2.9.1 (Delete Session Request), 7.2.10.1 (Delete Session Response), and 8.4 (Cause values).
+a|
+* Clause 7.2.9.1 — Delete Session Request
+* Clause 7.2.10.1 — Delete Session Response
+* Clause 8.4 — Cause values
 
 | TS 29.213
 | Clause 4.2.2.1 (IP-CAN Session Termination).
 
 | TS 36.413
-| Clauses 8.3.3 (UE Context Release), 9.1.4.6 (UE Context Release Command), and 9.1.4.7 (UE Context Release Complete).
+a|
+* Clause 8.3.3 — UE Context Release
+* Clause 9.1.4.6 — UE Context Release Command
+* Clause 9.1.4.7 — UE Context Release Complete
 |===

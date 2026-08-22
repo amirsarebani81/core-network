@@ -527,7 +527,23 @@ Gateway control a broadcast or multicast session at the MME/SGSN.
 | Specification | Clauses and coverage
 
 | TS 29.274
-| Clauses 4.2 (GTPv2-C protocol stack and interfaces), 4.3 (Transmission order and bit definitions), 5.1 (General header format), 5.3 (Header for the Echo and Version Not Supported Indication messages), 5.4 (EPC specific GTP-C header), 5.5 (Usage of the GTPv2-C header, including the `MP` flag and the `Message Priority` field), 6 (GTP-C message types and message formats), and clause 7 (GTP-C messages, covering 7.1 Path Management Messages, 7.2 Tunnel Management Messages, 7.3 Mobility Management Messages, 7.4 CS Fallback and SRVCC related messages, 7.5 Non-3GPP access related messages, 7.9 Restoration and Recovery, 7.12 Trace Management Messages, and 7.13 MBMS Messages).
+a|
+* Clause 4.2 — GTPv2-C protocol stack and interfaces
+* Clause 4.3 — Transmission order and bit definitions
+* Clause 5.1 — General header format
+* Clause 5.3 — Header for the Echo and Version Not Supported Indication messages
+* Clause 5.4 — EPC specific GTP-C header
+* Clause 5.5 — Usage of the GTPv2-C header, including the `MP` flag and the `Message Priority` field
+* Clause 6 — GTP-C message types and message formats
+* Clause 7 — GTP-C messages, covering:
+** 7.1 Path Management Messages
+** 7.2 Tunnel Management Messages
+** 7.3 Mobility Management Messages
+** 7.4 CS Fallback and SRVCC related messages
+** 7.5 Non-3GPP access related messages
+** 7.9 Restoration and Recovery
+** 7.12 Trace Management Messages
+** 7.13 MBMS Messages
 |===
 
 include::load-and-overload-control.adoc[]

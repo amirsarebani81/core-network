@@ -197,10 +197,18 @@ management messages, including:
 | Specification | Clauses and coverage
 
 | TS 23.401
-| Clauses 4.3.7.1a (GTP-C signalling based Load and Overload Control), 4.3.7.1a.1 (Load control), 4.3.7.1a.2 (Overload control), and 4.3.7.5 (APN congestion control and the PGW back-off timer).
+a|
+* Clause 4.3.7.1a — GTP-C signalling based Load and Overload Control
+* Clause 4.3.7.1a.1 — Load control
+* Clause 4.3.7.1a.2 — Overload control
+* Clause 4.3.7.5 — APN congestion control and the PGW back-off timer
 
 | TS 29.274
-| Clauses 5.4 and 5.5 (the `MP` flag and the `Message Priority` field), 8.111 to 8.115 (the Overload Control Information, Load Control Information, Metric, Sequence Number, and APN and Relative Capacity Information Elements), 12.1 to 12.3 (the GTP-C load and overload control mechanism, including message throttling in clause 12.3.9 and enforcement in clause 12.3.10), and Annex D (the GTP-C interfaces that do not support these features, and example implementations of the "Loss" algorithm and of overload control enforcement between remote GTP-C entities).
+a|
+* Clauses 5.4 and 5.5 — the `MP` flag and the `Message Priority` field
+* Clauses 8.111 to 8.115 — the Overload Control Information, Load Control Information, Metric, Sequence Number, and APN and Relative Capacity Information Elements
+* Clauses 12.1 to 12.3 — the GTP-C load and overload control mechanism, including message throttling in clause 12.3.9 and enforcement in clause 12.3.10
+* Annex D — the GTP-C interfaces that do not support these features, and example implementations of the "Loss" algorithm and of overload control enforcement between remote GTP-C entities
 
 | TS 29.244
 | Clauses 6.2.3 and 6.2.4 (the parallel load and overload control mechanism over the Packet Forwarding Control Protocol, PFCP).
