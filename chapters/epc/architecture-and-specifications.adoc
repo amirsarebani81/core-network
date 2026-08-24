@@ -7,37 +7,37 @@ The figure above shows the EPC architecture and its technical specification.
 
 === Network Elements
 
-UE (User Equipment):: The subscriber's device, for example a smartphone or an IoT module. It attaches to the network over the radio interface and is the endpoint for all mobility management, session management, and user-plane traffic.
+UE (User Equipment):: The UE is the subscriber's device, for example a smartphone or an IoT module, that attaches to the network over the radio interface. It is the endpoint for all mobility management, session management, and user-plane traffic.
 
-E-UTRAN (Evolved UMTS Terrestrial Radio Access Network):: The LTE radio access network, made up of eNodeBs. It provides the radio interface towards the UE over LTE-Uu and relays control-plane signaling to the MME over S1-MME and user-plane traffic to the SGW-U over S1-U.
+E-UTRAN (Evolved UMTS Terrestrial Radio Access Network):: The E-UTRAN is the LTE radio access network, made up of eNodeBs. It provides the radio interface towards the UE over LTE-Uu, relays control-plane signaling to the MME over S1-MME, and relays user-plane traffic to the SGW-U over S1-U.
 
-MME (Mobility Management Entity):: The control-plane node of the EPC. It handles UE authentication, mobility management, tracking area management, paging, and bearer session signaling. It carries no user-plane traffic itself and relies on the SGW-C for session establishment towards the user plane.
+MME (Mobility Management Entity):: The MME is the control-plane node of the EPC, handling UE authentication, mobility management, tracking area management, paging, and bearer session signaling. The MME carries no user-plane traffic itself and relies on the SGW-C for session establishment towards the user plane.
 
-HSS (Home Subscriber Server):: The master subscriber database of the EPC. It stores subscription profiles, authentication data, and the identity of the MME currently serving each subscriber, and it is queried by the MME over S6a for authentication vectors and location updates.
+HSS (Home Subscriber Server):: The HSS is the master subscriber database of the EPC. It stores subscription profiles, authentication data, and the identity of the MME currently serving each subscriber, and the MME queries the HSS over S6a for authentication vectors and location updates.
 
-SGW-C (Serving Gateway - Control Plane):: The control-plane function of the Serving Gateway. It terminates S11 signaling from the MME and translates it into PFCP rules that configure the SGW-U, without handling any user data itself.
+SGW-C (Serving Gateway - Control Plane):: The SGW-C is the control-plane function of the Serving Gateway. It terminates S11 signaling from the MME and translates this signaling into PFCP rules that configure the SGW-U, without handling any user data itself.
 
-SGW-U (Serving Gateway - User Plane):: The user-plane function of the Serving Gateway. It forwards user IP packets between the eNodeB and the PGW-U according to the forwarding rules provisioned by the SGW-C over Sxa, acting as the local mobility anchor for inter-eNodeB handovers.
+SGW-U (Serving Gateway - User Plane):: The SGW-U is the user-plane function of the Serving Gateway. It forwards user IP packets between the eNodeB and the PGW-U according to the forwarding rules that the SGW-C provisions over Sxa, and it acts as the local mobility anchor for inter-eNodeB handovers.
 
-PGW-C (PDN Gateway - Control Plane):: The control-plane function of the PDN Gateway. It handles session establishment, IP address allocation, and QoS/policy signaling, then provisions the PGW-U with the corresponding PFCP rules.
+PGW-C (PDN Gateway - Control Plane):: The PGW-C is the control-plane function of the PDN Gateway, handling session establishment, IP address allocation, and QoS/policy signaling. It then provisions the PGW-U with the corresponding PFCP rules.
 
-PCRF (Policy and Charging Rules Function):: The policy control node of the EPC. It derives QoS, charging, and traffic-detection rules from subscriber and service policies and provisions the PGW-C with these rules over Gx for enforcement in the user plane.
+PCRF (Policy and Charging Rules Function):: The PCRF is the policy control node of the EPC. It derives QoS, charging, and traffic-detection rules from subscriber and service policies, and it provisions the PGW-C with these rules over Gx for enforcement in the user plane.
 
-OCS (Online Charging System):: The real-time charging system for prepaid and quota-based services. It receives credit-control requests from the PGW-C over Gy and authorizes or denies continued user-plane usage based on the subscriber's available balance.
+OCS (Online Charging System):: The OCS is the real-time charging system for prepaid and quota-based services. It receives credit-control requests from the PGW-C over Gy and authorizes or denies continued user-plane usage based on the subscriber's available balance.
 
-OFCS (Offline Charging System):: The offline, postpaid charging system of the EPC. It collects charging data records from the PGW-C over Gz for billing purposes, without affecting the subscriber's session in real time.
+OFCS (Offline Charging System):: The OFCS is the offline, postpaid charging system of the EPC. It collects charging data records from the PGW-C over Gz for billing purposes, without affecting the subscriber's session in real time.
 
-PGW-U (PDN Gateway - User Plane):: The user-plane function of the PDN Gateway. It routes user traffic between the SGW-U and the TDF-U, enforcing the QoS, charging, and packet-filtering rules provisioned by the PGW-C over Sxb.
+PGW-U (PDN Gateway - User Plane):: The PGW-U is the user-plane function of the PDN Gateway. It routes user traffic between the SGW-U and the TDF-U, enforcing the QoS, charging, and packet-filtering rules that the PGW-C provisions over Sxb.
 
-3GPP AAA Server:: The authentication, authorization, and accounting server for non-3GPP access. It authenticates the UE and supplies the PGW-C with the authorization data needed over S6b when the UE connects through an untrusted non-3GPP access network.
+3GPP AAA Server:: The 3GPP AAA Server is the authentication, authorization, and accounting server for non-3GPP access. When the UE connects through an untrusted non-3GPP access network, the 3GPP AAA Server authenticates the UE and supplies the PGW-C with the authorization data needed over S6b.
 
-ePDG (evolved Packet Data Gateway):: The security gateway for untrusted non-3GPP access, such as public Wi-Fi. It terminates the IPsec tunnel from the UE and relays control-plane signaling to the PGW-C over S2b-C and user-plane traffic to the PGW-U over S2b-U.
+ePDG (evolved Packet Data Gateway):: The ePDG is the security gateway for untrusted non-3GPP access, such as public Wi-Fi. It terminates the IPsec tunnel from the UE and relays control-plane signaling to the PGW-C over S2b-C and user-plane traffic to the PGW-U over S2b-U.
 
-TDF-C (Traffic Detection Function - Control Plane):: The control-plane function of the Traffic Detection Function. It handles traffic-detection and application-control policy signaling, then provisions the TDF-U with the corresponding PFCP rules over Sxc.
+TDF-C (Traffic Detection Function - Control Plane):: The TDF-C is the control-plane function of the Traffic Detection Function, handling traffic-detection and application-control policy signaling. It then provisions the TDF-U with the corresponding PFCP rules over Sxc.
 
-TDF-U (Traffic Detection Function - User Plane):: The user-plane function of the Traffic Detection Function. It sits inline between the PGW-U and the external PDN, performing deep packet inspection and traffic detection on user traffic according to the rules provisioned by the TDF-C over Sxc.
+TDF-U (Traffic Detection Function - User Plane):: The TDF-U is the user-plane function of the Traffic Detection Function. Sitting inline between the PGW-U and the external PDN, it performs deep packet inspection and traffic detection on user traffic according to the rules that the TDF-C provisions over Sxc.
 
-PDN (Packet Data Network):: The external packet data network, for example the internet, that the UE obtains connectivity to. It is reached from the TDF-U over SGi.
+PDN (Packet Data Network):: The PDN is the external packet data network, for example the internet, that the UE obtains connectivity to, reached from the TDF-U over SGi.
 
 === Technical Specifications
 

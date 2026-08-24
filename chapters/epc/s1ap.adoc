@@ -3,39 +3,39 @@
 ==== Technical Overview
 
 The S1 Application Protocol (S1AP) is the radio network layer signaling
-protocol of the S1-MME interface between the E-UTRAN and the MME. TS
-36.413 clause 1 defines this scope. S1AP carries UE mobility and session
-control, and it relays NAS messages between the UE and the MME without
-inspecting their content.
+protocol of the S1-MME interface between the E-UTRAN and the MME, a
+scope that TS 36.413 clause 1 defines. S1AP carries UE mobility and
+session control, and it relays NAS messages between the UE and the MME
+without inspecting their content.
 
-S1AP consists of Elementary Procedures (EPs). An EP is a unit of
-interaction between an eNodeB and the MME, and it comprises an
-initiating message and, for a Class 1 EP, a response message. TS 36.413
-clause 3.1 defines two EP classes:
+S1AP consists of Elementary Procedures (EPs), where an EP is a unit of
+interaction between an eNodeB and the MME that comprises an initiating
+message and, for a Class 1 EP, a response message. TS 36.413 clause 3.1
+defines two EP classes:
 
-Class 1:: An EP with a response. The response reports a successful
-outcome, an unsuccessful outcome, or both outcomes for different
-requests within the same message.
+Class 1:: An EP with a response, which reports a successful outcome, an
+unsuccessful outcome, or both outcomes for different requests within
+the same message.
 
-Class 2:: An EP without a response. The network always considers a
+Class 2:: An EP without a response; the network always considers a
 Class 2 EP successful.
 
 An eNodeB and the MME can run several EPs independently of each other,
 in parallel, unless a specific EP description restricts this
 independence.
 
-S1AP provides two groups of services. TS 36.413 clause 5 defines this
-grouping:
+S1AP provides two groups of services, a grouping that TS 36.413 clause
+5 defines:
 
-Non-UE-associated services:: Services related to the whole S1 interface
-instance between an eNodeB and the MME, for example S1 Setup or Reset.
+Non-UE-associated services:: These are services related to the whole S1
+interface instance between an eNodeB and the MME, for example S1 Setup
+or Reset.
 
-UE-associated services:: Services related to one UE, over a
-UE-associated logical S1-connection. This connection uses the MME UE
-S1AP ID and the eNB UE S1AP ID to identify the UE at the MME and at the
-eNodeB. TS 36.413 clause 3.1 defines the UE-associated logical
-S1-connection. This connection can exist before the eNodeB establishes
-the S1 UE context.
+UE-associated services:: These are services related to one UE, over a
+UE-associated logical S1-connection that TS 36.413 clause 3.1 defines
+and that can exist before the eNodeB establishes the S1 UE context.
+This connection uses the MME UE S1AP ID and the eNB UE S1AP ID to
+identify the UE at the MME and at the eNodeB.
 
 S1AP runs over the Stream Control Transmission Protocol (SCTP), which
 provides in-sequence delivery of S1AP messages and notifies S1AP if the
@@ -68,22 +68,22 @@ S1AP-ELEMENTARY-PROCEDURE ::= CLASS {
 }
 ----
 
-`InitiatingMessage`:: The message that starts the EP. Every EP defines
-this message.
+`InitiatingMessage`:: This is the message that starts the EP, and every
+EP defines it.
 
-`SuccessfulOutcome`:: The response message for a successful outcome.
-Only a Class 1 EP defines this message.
+`SuccessfulOutcome`:: This is the response message for a successful
+outcome, and only a Class 1 EP defines it.
 
-`UnsuccessfulOutcome`:: The response message for an unsuccessful
-outcome. Only a Class 1 EP defines this message, and only if the EP
-supports an explicit failure response.
+`UnsuccessfulOutcome`:: This is the response message for an
+unsuccessful outcome, and only a Class 1 EP that supports an explicit
+failure response defines it.
 
-`procedureCode`:: A value that uniquely identifies the EP, for example
-the value assigned to the Handover Preparation procedure or the E-RAB
-Setup procedure.
+`procedureCode`:: This is a value that uniquely identifies the EP, for
+example the value assigned to the Handover Preparation procedure or the
+E-RAB Setup procedure.
 
-`criticality`:: The default criticality of the EP itself, used when an
-S1AP node does not comprehend the procedure code.
+`criticality`:: This is the default criticality of the EP itself, used
+when an S1AP node does not comprehend the procedure code.
 
 ===== S1AP-PDU
 
@@ -109,16 +109,16 @@ InitiatingMessage ::= SEQUENCE {
 `SuccessfulOutcome` and `UnsuccessfulOutcome` follow the same
 `procedureCode`/`criticality`/`value` structure as `InitiatingMessage`.
 
-`procedureCode`:: Identifies which EP the message belongs to, for
-example E-RAB Setup or Path Switch Request.
+`procedureCode`:: This field identifies which EP the message belongs
+to, for example E-RAB Setup or Path Switch Request.
 
-`criticality`:: States how a receiving node handles the message if it
-does not comprehend the EP. The Criticality Values table below lists
-the possible values.
+`criticality`:: This field states how a receiving node handles the
+message if it does not comprehend the EP, and the Criticality Values
+table below lists the possible values.
 
-`value`:: Carries the message-specific information elements (IEs) for
-this EP and outcome, for example the IEs of an E-RAB SETUP REQUEST
-message.
+`value`:: This field carries the message-specific information elements
+(IEs) for this EP and outcome, for example the IEs of an E-RAB SETUP
+REQUEST message.
 
 ===== Criticality Values
 

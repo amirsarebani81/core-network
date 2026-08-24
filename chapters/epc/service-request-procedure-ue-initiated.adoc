@@ -4,15 +4,15 @@
 
 The UE-initiated Service Request procedure lets a UE in ECM-IDLE mode
 establish a Non-Access Stratum (NAS) signalling connection with the
-network. The UE starts this procedure when it has pending uplink user
+network, and the UE starts the procedure when it has pending uplink user
 data or pending uplink signalling.
 
 The procedure establishes the radio bearers and the S1 user-plane bearers
-for the UE's active EPS bearers. The procedure moves the UE from
-ECM-IDLE mode to ECM-CONNECTED mode.
+for the UE's active EPS bearers, moving the UE from ECM-IDLE mode to
+ECM-CONNECTED mode.
 
-The procedure synchronizes the EPS bearer contexts between the UE and
-the MME.
+The procedure also synchronizes the EPS bearer contexts between the UE
+and the MME.
 
 ===== Call Flow
 
@@ -24,94 +24,90 @@ plantuml::diagrams/service-request-ue-initiated-call-flow.puml[svg]
 
 ===== Step-by-Step Description
 
-. The *UE* sends a `Service Request` message to the *eNodeB*. The UE
-sends this NAS message inside the RRC connection establishment
-procedure. The message carries the NAS key set identifier (KSI), the NAS
-sequence number, and the NAS Message Authentication Code (NAS-MAC).
+. The *UE* sends a `Service Request` message to the *eNodeB*, carrying
+this NAS message inside the RRC connection establishment procedure. The
+message carries the NAS key set identifier (KSI), the NAS sequence
+number, and the NAS Message Authentication Code (NAS-MAC).
 
 . The *eNodeB* forwards the NAS message to the *MME* inside an S1AP
-`Initial UE Message`. This message establishes the UE-associated logical
-S1 connection. The message carries the NAS-PDU, the S-TMSI, the TAI and
-the E-UTRAN Cell Global Identifier (ECGI) of the serving cell, and the
-RRC establishment cause, for example "mo-Data" or "mo-Signalling".
+`Initial UE Message`, which establishes the UE-associated logical S1
+connection. The message carries the NAS-PDU, the S-TMSI, the TAI and the
+E-UTRAN Cell Global Identifier (ECGI) of the serving cell, and the RRC
+establishment cause, for example "mo-Data" or "mo-Signalling".
 
-. The UE's security context can be missing or no longer valid. In this
-case, the *MME* and the *UE* perform the Authentication and Security
-Procedures. These procedures carry the RAND, the AUTN, and the selected
-NAS security algorithms. They activate NAS integrity protection and
-ciphering.
+. If the UE's security context is missing or no longer valid, the *MME*
+and the *UE* perform the Authentication and Security Procedures,
+carrying the RAND, the AUTN, and the selected NAS security algorithms,
+and activating NAS integrity protection and ciphering.
 
 . The *MME* sends an S1AP `Initial Context Setup Request` message to the
-*eNodeB*. This message provides the eNodeB with the security context and
-the Serving GW address for the uplink. The message carries the MME UE
-S1AP ID, the eNB UE S1AP ID, the E-RAB To Be Setup List, with the S1-U
-S-GW Fully Qualified Tunnel Endpoint Identifier (F-TEID) and the QoS
-parameters, the UE Aggregate Maximum Bit Rate, and the Security Context.
+*eNodeB*, providing it with the security context and the Serving GW
+address for the uplink. The message carries the MME UE S1AP ID, the eNB
+UE S1AP ID, the E-RAB To Be Setup List, with the S1-U S-GW Fully
+Qualified Tunnel Endpoint Identifier (F-TEID) and the QoS parameters,
+the UE Aggregate Maximum Bit Rate, and the Security Context.
 
-. The *eNodeB* sets up the radio bearer. The eNodeB sends an RRC
-`Connection Reconfiguration` message to the *UE*, to establish the data
-radio bearers for the requested E-RABs.
+. The *eNodeB* sets up the radio bearer by sending an RRC `Connection
+Reconfiguration` message to the *UE*, establishing the data radio
+bearers for the requested E-RABs.
 
-. The *UE* completes the radio reconfiguration. The UE returns an RRC
-`Connection Reconfiguration Complete` message to the *eNodeB*. The UE is
-now ready to send user data.
+. The *UE* completes the radio reconfiguration and returns an RRC
+`Connection Reconfiguration Complete` message to the *eNodeB*, after
+which the UE is ready to send user data.
 
 . The *eNodeB* sends an S1AP `Initial Context Setup Response` message to
-the *MME*. This message provides the MME with the eNodeB's downlink
-tunnel information. The message carries the eNB UE S1AP ID, the MME UE
-S1AP ID, and the E-RAB Setup List, with the S1-U eNodeB F-TEID for the
-downlink.
+the *MME*, providing it with the eNodeB's downlink tunnel information.
+The message carries the eNB UE S1AP ID, the MME UE S1AP ID, and the
+E-RAB Setup List, with the S1-U eNodeB F-TEID for the downlink.
 
-. The *eNodeB* can forward uplink user-plane packets to the *S-GW*,
-using the S-GW F-TEID from step 4, once the radio bearer setup
-completes.
+. Once the radio bearer setup completes, the *eNodeB* can forward uplink
+user-plane packets to the *S-GW*, using the S-GW F-TEID from step 4.
 
-. The *MME* sends a GTPv2 `Modify Bearer Request` message to the *S-GW*,
-for each PDN connection, to update the user-plane path with the
-eNodeB's downlink F-TEID. The message carries the Bearer Contexts to be
-modified, that is the EPS Bearer Identity (EBI) and the S1-U eNodeB
-F-TEID, the User Location Information, and the RAT type.
+. To update the user-plane path with the eNodeB's downlink F-TEID, the
+*MME* sends a GTPv2 `Modify Bearer Request` message to the *S-GW* for
+each PDN connection, carrying the Bearer Contexts to be modified, that
+is the EPS Bearer Identity (EBI) and the S1-U eNodeB F-TEID, the User
+Location Information, and the RAT type.
 
-. The network can deploy dynamic Policy and Charging Control (PCC). In
-this case, the *S-GW* forwards the GTPv2 `Modify Bearer Request` message
-to the *P-GW*. The P-GW starts a Diameter `Credit-Control-Request`/
+. If the network deploys dynamic Policy and Charging Control (PCC), the
+*S-GW* forwards the GTPv2 `Modify Bearer Request` message to the *P-GW*.
+The P-GW then starts a Diameter `Credit-Control-Request`/
 `Credit-Control-Answer` (Update) exchange with the *PCRF* over the Gx
-interface. The Diameter message carries the CC-Request-Type set to
-UPDATE_REQUEST, the 3GPP-User-Location-Info, and the RAT-Type. The P-GW
-returns a GTPv2 `Modify Bearer Response` message to the S-GW.
+interface, carrying the CC-Request-Type set to UPDATE_REQUEST, the
+3GPP-User-Location-Info, and the RAT-Type, before returning a GTPv2
+`Modify Bearer Response` message to the S-GW.
 
-. The *S-GW* returns a GTPv2 `Modify Bearer Response` message to the
-*MME*, carrying a Cause set to "Request Accepted" and the S-GW F-TEID
-for the control plane. The S-GW sends this message whether or not the
-network deployed dynamic PCC.
+. Whether or not the network deployed dynamic PCC, the *S-GW* returns a
+GTPv2 `Modify Bearer Response` message to the *MME*, carrying a Cause
+set to "Request Accepted" and the S-GW F-TEID for the control plane.
 
-. The *S-GW* delivers buffered or newly arrived downlink user data to
-the *eNodeB*, using the downlink F-TEID from step 7. The eNodeB delivers
-the data to the *UE* over the radio interface.
+. Using the downlink F-TEID from step 7, the *S-GW* delivers buffered or
+newly arrived downlink user data to the *eNodeB*, which delivers the
+data to the *UE* over the radio interface.
 
 ===== Possible Failures and Required Actions
 
-Authentication failure:: The UE fails the authentication check that the
-MME starts during the Service Request procedure. The MME sends a NAS
-`Authentication Reject` message, with EMM Cause #3, "Illegal UE", or EMM
-Cause #6, "Illegal ME". The UE stops the procedure, considers its USIM
-or SIM invalid for EPS services, and enters the EMM-DEREGISTERED state.
+Authentication failure:: If the UE fails the authentication check that
+the MME starts during the Service Request procedure, the MME sends a
+NAS `Authentication Reject` message, with EMM Cause #3, "Illegal UE", or
+EMM Cause #6, "Illegal ME". The UE then stops the procedure, considers
+its USIM or SIM invalid for EPS services, and enters the
+EMM-DEREGISTERED state.
 
-MME congestion:: The MME is overloaded and cannot process the Service
-Request. The MME sends a NAS `Service Reject` message, with EMM Cause
-#22, "Congestion", and a value for timer T3346. The UE starts timer
-T3346 and does not start a new Service Request of the same category
-until the timer expires.
+MME congestion:: If the MME is overloaded and cannot process the
+Service Request, it sends a NAS `Service Reject` message, with EMM
+Cause #22, "Congestion", and a value for timer T3346. The UE starts
+timer T3346 and does not start a new Service Request of the same
+category until the timer expires.
 
-E-UTRAN resource allocation failure:: The eNodeB cannot admit one or
-more E-RABs, because radio resources are not available. The eNodeB
-returns an S1AP `Initial Context Setup Failure` message, with S1AP
-Cause "Radio resources not available". The MME maps this internally to
-GTP Cause #73, "No resources available", and can map it further to NAS
-EMM Cause #26, "Insufficient resources", if the MME rejects the UE. The
-MME locally deactivates the EPS bearer contexts that failed to
-establish. The UE stays in its current state and can start timer
-T3346.
+E-UTRAN resource allocation failure:: If the eNodeB cannot admit one or
+more E-RABs because radio resources are not available, it returns an
+S1AP `Initial Context Setup Failure` message, with S1AP Cause "Radio
+resources not available". The MME maps this internally to GTP Cause
+#73, "No resources available", and, if it rejects the UE, can map it
+further to NAS EMM Cause #26, "Insufficient resources". The MME locally
+deactivates the EPS bearer contexts that failed to establish, while the
+UE stays in its current state and can start timer T3346.
 
 ===== References
 

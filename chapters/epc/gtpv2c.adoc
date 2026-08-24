@@ -3,13 +3,13 @@
 ==== Technical Overview
 
 The GPRS Tunnelling Protocol version 2 - Control plane (GTPv2-C) is the
-control-plane signaling protocol of the EPC. Network nodes use GTPv2-C
+control-plane signaling protocol of the EPC, and network nodes use it
 to create, modify, and delete GTP tunnels and EPS bearers, and to
 exchange mobility management information.
 
-GTPv2-C runs over UDP, on port 2123. A GTPv2-C entity retransmits a
-request message if it does not receive a response before a timer
-expires, because UDP does not guarantee delivery.
+GTPv2-C runs over UDP, on port 2123, and because UDP does not guarantee
+delivery, a GTPv2-C entity retransmits a request message if it does not
+receive a response before a timer expires.
 
 GTPv2-C messages fall into eight categories: Path Management Messages,
 Tunnel Management Messages, Mobility Management Messages, CS Fallback
@@ -22,9 +22,9 @@ GTPv2-C applies over the S3, S4, S5, S8, S10, S11, S16, Sv, S101, S121,
 Sm, Sn, S2a, and S2b interfaces.
 
 A GTPv2-C message can carry a second, piggybacked GTPv2-C message inside
-the same IP/UDP packet, to avoid an extra signaling round trip. The
-network uses piggybacking for two message pairs: a `Create Session
-Response` that carries a piggybacked `Create Bearer Request`, and a
+the same IP/UDP packet, to avoid an extra signaling round trip; the
+network uses piggybacking for two message pairs, a `Create Session
+Response` that carries a piggybacked `Create Bearer Request` and a
 `Create Bearer Response` that carries a piggybacked `Modify Bearer
 Request`. The network uses these combinations during the EUTRAN Initial
 Attach procedure, a handover from non-3GPP access to E-UTRAN, and the
@@ -32,59 +32,58 @@ UE-requested PDN connectivity procedure.
 
 ==== Packet Format
 
-Control Plane GTP uses a variable-length header. The header length is a
-multiple of 4 octets. GTPv2-C defines two header formats.
+Control Plane GTP uses a variable-length header, with a length that is
+always a multiple of 4 octets, and GTPv2-C defines two header formats.
 
 ===== Header Without a Tunnel Endpoint Identifier
 
 The `Echo Request`, `Echo Response`, and `Version Not Supported
 Indication` messages use the header without a Tunnel Endpoint Identifier
-(TEID). This header is 8 octets long.
+(TEID), which is 8 octets long.
 
 .GTPv2-C header without a TEID
 [width=500]
 packetdiag::diagrams/gtpv2c-header-no-teid.diag[svg]
 
-`Version`:: Bits 8 to 6 of octet 1. States the GTP-C version. GTPv2-C
-sets this field to decimal 2.
+`Version`:: Bits 8 to 6 of octet 1. This field states the GTP-C
+version, and GTPv2-C sets it to decimal 2.
 
-`P`:: Bit 5 of octet 1. The Piggybacking flag. A value of 0 means the
-message carries no piggybacked message.
+`P`:: Bit 5 of octet 1. This is the Piggybacking flag; a value of 0
+means the message carries no piggybacked message.
 
-`T`:: Bit 4 of octet 1. The TEID flag. A value of 0 means the header
-carries no TEID field.
+`T`:: Bit 4 of octet 1. This is the TEID flag; a value of 0 means the
+header carries no TEID field.
 
-`Message Type`:: Octet 2. States the message type, with a unique value
-for each GTPv2-C message.
+`Message Type`:: Octet 2. This field states the message type, with a
+unique value for each GTPv2-C message.
 
-`Message Length`:: Octets 3 to 4. States the length of the message in
-octets, excluding the first 4 octets of the header.
+`Message Length`:: Octets 3 to 4. This field states the length of the
+message in octets, excluding the first 4 octets of the header.
 
-`Sequence Number`:: Octets 5 to 7. Identifies the request or response.
-A node uses this field to match a response to its request and to detect
-retransmissions.
+`Sequence Number`:: Octets 5 to 7. This field identifies the request or
+response, and a node uses it to match a response to its request and to
+detect retransmissions.
 
 ===== Header With a Tunnel Endpoint Identifier
 
 Apart from the Echo and Version Not Supported Indication messages, every
-GTPv2-C message uses the header with a TEID. This header is 12 octets
-long.
+GTPv2-C message uses the header with a TEID, which is 12 octets long.
 
 .GTPv2-C header with a TEID
 [width=500]
 packetdiag::diagrams/gtpv2c-header-with-teid.diag[svg]
 
-`TEID`:: Octets 5 to 8. Identifies a tunnel endpoint in the receiving
-GTP-C entity. The sending entity sets this field to the value that the
-receiving entity provided.
+`TEID`:: Octets 5 to 8. This field identifies a tunnel endpoint in the
+receiving GTP-C entity, and the sending entity sets it to the value
+that the receiving entity provided.
 
-`MP`:: Bit 3 of octet 1. The Message Priority flag. A value of 1 means
-octet 12 carries a valid `Message Priority` value. The Load and Overload
-Control section below describes how a node uses this flag.
+`MP`:: Bit 3 of octet 1. This is the Message Priority flag; a value of
+1 means octet 12 carries a valid `Message Priority` value. The Load and
+Overload Control section below describes how a node uses this flag.
 
-`Message Priority`:: Bits 8 to 5 of octet 12. States the relative
-priority of the message, as a value from 0 to 15, where 0 is the
-highest priority and 15 is the lowest. This field is valid only when
+`Message Priority`:: Bits 8 to 5 of octet 12. This field states the
+relative priority of the message, as a value from 0 to 15, where 0 is
+the highest priority and 15 is the lowest, and it is valid only when
 the `MP` flag is set to 1.
 
 ==== Message Categories

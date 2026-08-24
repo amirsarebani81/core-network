@@ -8,26 +8,37 @@ A docs-as-code reference document covering the architecture and signaling
 procedures of the mobile core network (EPC). Source is AsciiDoc, built into
 PDF and HTML. See `README.md` for the full toolchain and install steps.
 
-## Writing style: ASD-STE100
+## Writing style
 
-All prose in this documentation must follow **ASD-STE100 (Simplified
-Technical English)**. This is non-negotiable for any `.adoc` content you
-write or edit:
+All prose in this documentation follows the register of the **IBM Style
+Guide** (*Developing Quality Technical Information*), together with the
+drafting conventions of **3GPP TR 21.801** wherever the text restates a
+specification. The reader is a network engineer who also reads 3GPP specs,
+so match that register: precise and formal, but not clipped.
 
-- One instruction or fact per sentence. Keep sentences short (as a guide,
-  under ~20 words).
-- Use active voice and the approved verb forms (e.g. "The MME sends the
-  request", not "The request is sent by the MME").
-- Avoid nested clauses, ambiguous pronouns, and figurative language.
+These rules apply to any `.adoc` content you write or edit:
+
+- Vary sentence length to fit the logic of the sentence. Aim for an average
+  of roughly 20 to 25 words, and let a sentence carry a subordinate clause
+  when the relationship between two facts is itself part of the point.
+  Don't split one idea across a run of short declarative sentences, and
+  don't write a sentence so long that the reader loses the subject.
+- Use active voice by default (e.g. "The MME sends the request", not "The
+  request is sent by the MME"). Passive voice is fine where the actor is
+  genuinely unknown or irrelevant.
 - Prefer a small set of consistent, unambiguous terms over synonyms — do
   not vary vocabulary for style. If a term is defined once (e.g. "SGW-C"),
   reuse it exactly; don't switch between "SGW-C", "the control-plane SGW",
   and "the S-GW control function" for the same thing.
 - Spell out an acronym on first use per chapter, then use the acronym
   consistently.
-- Only use words/senses in their normal technical or dictionary meaning —
-  no idioms, no "may" for possibility (use "can"), reserve "must" for
-  requirements.
+- Keep pronouns unambiguous. Where "it" or "this" could point at more than
+  one node, message, or information element, repeat the noun instead.
+- No idioms, no figurative language, no humour.
+- Reserve the normative keywords "shall", "must", "should", and "may" for
+  restating a requirement or a recommendation that a specification actually
+  makes, and cite the clause when you do. This book is descriptive, so use
+  "can" for a capability and "usually" or "typically" for common practice.
 
 When editing existing prose, bring the surrounding text into compliance
 rather than only patching the new sentence.

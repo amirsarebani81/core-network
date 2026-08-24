@@ -3,28 +3,28 @@
 ===== Technical Overview
 
 GTP version 2 - Control plane (GTPv2-C) load control and GTPv2-C overload
-control are optional, complementary features. Both features manage
-signaling traffic between EPC control-plane nodes and help keep the
-network stable.
+control are optional, complementary features that manage signaling
+traffic between EPC control-plane nodes and help keep the network
+stable.
 
-Load control is a preventive mechanism. A node uses load control to
-balance the distribution of new sessions across its peers, before an
-overload condition occurs.
+Load control is a preventive mechanism: a node uses it to balance the
+distribution of new sessions across its peers before an overload
+condition occurs.
 
-Overload control is a reactive mechanism. A node uses overload control to
-reduce incoming signaling traffic, after the node already operates over
-its capacity.
+Overload control is a reactive mechanism: a node uses it to reduce
+incoming signaling traffic after the node already operates over its
+capacity.
 
 An operator can support load control and overload control independently
 of each other, based on operator policy. Each node piggybacks its
 `Load Control Information` (LCI) or `Overload Control Information` (OCI)
-onto existing GTP-C request and response messages. This method avoids
-extra signaling traffic. The computation and transfer of this control
-information must not add significant load to the sending node or to its
-peers.
+onto existing GTP-C request and response messages, a method that avoids
+extra signaling traffic and keeps the computation and transfer of this
+control information from adding significant load to the sending node or
+to its peers.
 
-Overload control must still let the network give preferential treatment
-to emergency services traffic and to enhanced Multimedia Priority Service
+Overload control still lets the network give preferential treatment to
+emergency services traffic and to enhanced Multimedia Priority Service
 (eMPS) traffic.
 
 Load control and overload control apply over the S11, S4, S5, S8, S2a,
@@ -40,85 +40,87 @@ The peer uses this status to balance the distribution of new sessions.
 The node includes an `LCI` Information Element (IE) in its GTP-C
 messages. The `LCI` IE carries the following parameters:
 
-`Load Control Sequence Number`:: Sequences the LCI updates. This number
-lets the receiving node identify the most recent load information.
+`Load Control Sequence Number`:: This number sequences the LCI updates,
+letting the receiving node identify the most recent load information.
 
-`Load Metric`:: States the current load level, as a percentage from 0 to
-100, where 100 means the node operates at maximum load.
+`Load Metric`:: This parameter states the current load level, as a
+percentage from 0 to 100, where 100 means the node operates at maximum
+load.
 
-`List of APN and Relative Capacity` (PGW-C only):: States the load
-status for a specific Access Point Name (APN). The PGW-C includes this
-list when it does not distribute its resources evenly across its APNs.
+`List of APN and Relative Capacity` (PGW-C only):: This list states the
+load status for a specific Access Point Name (APN), and the PGW-C
+includes it when it does not distribute its resources evenly across its
+APNs.
 
 Load control operates at two levels:
 
-Node Level:: Advertises the load of the entire node. This level helps
+Node Level:: This level advertises the load of the entire node, helping
 distribute sessions evenly across a cluster of gateways.
 
-APN Level:: Advertises the load for a specific APN. This level applies
-when a PGW-C allocates a separate resource pool to each APN. It stops the
-network from selecting a node for a new session on an APN whose resources
-are exhausted, even when the node has spare capacity overall.
+APN Level:: This level advertises the load for a specific APN and
+applies when a PGW-C allocates a separate resource pool to each APN,
+stopping the network from selecting a node for a new session on an APN
+whose resources are exhausted, even when the node has spare capacity
+overall.
 
 ===== Overload Control Procedure
 
 Overload control activates when a node operates over its nominal
-capacity and its performance degrades. The overloaded node instructs its
-peers to reduce the rate of Request messages that they send to it.
+capacity and its performance degrades, and the overloaded node instructs
+its peers to reduce the rate of Request messages that they send to it.
 
 The node includes an `OCI` IE in its GTP-C messages. The `OCI` IE carries
 the following parameters:
 
-`Overload Control Sequence Number`:: Differentiates between OCI
-instances. This number lets the receiving node collate reports that
-arrive out of order.
+`Overload Control Sequence Number`:: This number differentiates between
+OCI instances, letting the receiving node collate reports that arrive
+out of order.
 
-`Overload Reduction Metric`:: States the traffic reduction that the
-sender requests from the receiver, as a percentage from 0 to 100. A
-value of 0 means the overload condition ended.
+`Overload Reduction Metric`:: This parameter states the traffic
+reduction that the sender requests from the receiver, as a percentage
+from 0 to 100, where a value of 0 means the overload condition ended.
 
-`Period of Validity`:: States how long the overload condition stays
-valid. When this timer expires, and the node received no new OCI, the
-receiving node considers the overload condition ended.
+`Period of Validity`:: This parameter states how long the overload
+condition stays valid, and when this timer expires without a new OCI,
+the receiving node considers the overload condition ended.
 
-`List of APNs` (PGW-C only):: States the APNs that are in overload, for
-example because of a shortage in the IP address pool.
+`List of APNs` (PGW-C only):: This list states the APNs that are in
+overload, for example because of a shortage in the IP address pool.
 
 A node reduces traffic toward an overloaded peer through the following
 mechanisms:
 
 Message Throttling:: The reacting node reduces the number of initial
 messages that it sends to the overloaded peer, in proportion to the
-Overload Reduction Metric. The reacting node does not throttle a
-triggered request or a response message, because that would cause the
-sender to retransmit the corresponding request message.
+Overload Reduction Metric, but does not throttle a triggered request or
+a response message, because doing so would cause the sender to
+retransmit the corresponding request message.
 
-"Loss" Throttling Algorithm:: The mandatory default throttling
-algorithm for overload control. The node discards a fraction of the
-initial messages, in proportion to the requested traffic reduction. A
-typical implementation generates a random number for each candidate
-message and discards the message when the number falls within the
-requested reduction percentage.
+"Loss" Throttling Algorithm:: This is the mandatory default throttling
+algorithm for overload control, under which the node discards a
+fraction of the initial messages, in proportion to the requested
+traffic reduction. A typical implementation generates a random number
+for each candidate message and discards the message when the number
+falls within the requested reduction percentage.
 
-Self-Protection:: An overloaded node can still reject incoming requests,
-as a fallback when peer throttling does not reduce the load enough. The
-node rejects these requests with a cause value such as `GTP-C Entity
-Congestion` or `APN congestion`.
+Self-Protection:: As a fallback when peer throttling does not reduce
+the load enough, an overloaded node can still reject incoming requests,
+with a cause value such as `GTP-C Entity Congestion` or `APN
+congestion`.
 
 ===== Message Prioritization during Overload
 
-Emergency services traffic and eMPS traffic keep the highest priority.
-Depending on regional and national requirements and on operator policy,
-the network exempts this traffic from throttling, for as long as the
-network can achieve the requested traffic reduction without throttling
-it.
+Emergency services traffic and eMPS traffic keep the highest priority,
+and, depending on regional and national requirements and on operator
+policy, the network exempts this traffic from throttling for as long as
+it can achieve the requested traffic reduction without throttling it.
 
 For other traffic, an overloaded node can prioritize messages for
 throttling in the following ways.
 
 Prioritization Based on Procedures:: The node groups GTPv2-C procedures
-into four categories. The node gives a lower preference to throttle to
-the messages of a higher-priority category.
+into four categories and gives a lower preference to throttle to the
+messages of a higher-priority category.
 
 Prioritization Based on Session Parameters:: The node can further
 prioritize messages within a category, based on session parameters such
@@ -155,13 +157,14 @@ existing ones.
 ===== Implementation Requirements and Enforcement
 
 Peer Discovery:: A node decides whether to use load control and overload
-control, based on local configuration and operator policy. This decision
-applies separately to internal interfaces and to roaming interfaces.
+control, based on local configuration and operator policy, and this
+decision applies separately to internal interfaces and to roaming
+interfaces.
 
-Homogeneity:: Operators must support these features consistently, across
-all nodes in the network. Partial support can cause unfair load
-distribution: supporting nodes throttle their traffic, while
-non-supporting nodes keep overwhelming the target node.
+Homogeneity:: Operators need to support these features consistently
+across all nodes in the network, because partial support can cause
+unfair load distribution: supporting nodes throttle their traffic,
+while non-supporting nodes keep overwhelming the target node.
 
 Direct Enforcement:: A node enforces load control and overload control
 for peers that it directly contacts, based on the metrics that those
@@ -173,9 +176,9 @@ through an SGW-C. In this case, the source node enforces control based on
 the maximum reduction metric that any node in the signaling path reports,
 whether that node is the target or an intermediate node.
 
-Interaction with the PGW-C Back-Off Timer:: For a given APN, a PGW-C must
-use either APN-level overload control or the PGW back-off timer
-mechanism. The PGW-C must not use both mechanisms at the same time.
+Interaction with the PGW-C Back-Off Timer:: For a given APN, a PGW-C
+uses either APN-level overload control or the PGW back-off timer
+mechanism, never both mechanisms at the same time.
 
 ===== Messages Carrying Load and Overload Control Information
 

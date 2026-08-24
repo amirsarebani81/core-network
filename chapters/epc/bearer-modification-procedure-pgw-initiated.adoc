@@ -3,21 +3,21 @@
 ===== Technical Overview
 
 The P-GW-initiated Bearer Modification procedure updates the parameters
-of an active default or dedicated EPS bearer. The PDN Gateway (P-GW)
-starts this procedure.
+of an active default or dedicated EPS bearer, and the PDN Gateway (P-GW)
+starts the procedure.
 
-The procedure changes the Quality of Service (QoS) of the bearer. The
-QoS parameters include the QoS Class Identifier (QCI), the Guaranteed
-Bit Rate (GBR), the Maximum Bit Rate (MBR), and the Allocation and
-Retention Priority (ARP). The procedure can also update the Traffic Flow
-Template (TFT), the APN Aggregate Maximum Bit Rate (APN-AMBR), and the
-Protocol Configuration Options (PCO).
+The procedure changes the Quality of Service (QoS) of the bearer, that
+is the QoS Class Identifier (QCI), the Guaranteed Bit Rate (GBR), the
+Maximum Bit Rate (MBR), and the Allocation and Retention Priority (ARP),
+and it can also update the Traffic Flow Template (TFT), the APN
+Aggregate Maximum Bit Rate (APN-AMBR), and the Protocol Configuration
+Options (PCO).
 
 The procedure keeps the radio and core network resources aligned with
 the Policy and Charging Control (PCC) rules that the Policy and Charging
-Rules Function (PCRF) authorizes. The procedure reconfigures the Data
-Radio Bearer (DRB) at the UE. The procedure also updates the EPS bearer
-contexts at the P-GW, the Serving Gateway (S-GW), and the MME.
+Rules Function (PCRF) authorizes, reconfiguring the Data Radio Bearer
+(DRB) at the UE and updating the EPS bearer contexts at the P-GW, the
+Serving Gateway (S-GW), and the MME.
 
 ===== Call Flow
 
@@ -30,94 +30,94 @@ plantuml::diagrams/bearer-modification-pgw-initiated-call-flow.puml[svg]
 
 ===== Step-by-Step Description
 
-. The network can deploy dynamic PCC. In this case, the *PCRF* starts the
-procedure. The PCRF sends a Diameter `Re-Auth-Request` (RAR) message to
-the *P-GW* over the Gx interface, to provision new PCC rules. The
-*P-GW* returns a Diameter `Re-Auth-Answer` (RAA) message, to acknowledge
-the new policy decision.
+. If the network deploys dynamic PCC, the *PCRF* starts the procedure by
+sending a Diameter `Re-Auth-Request` (RAR) message to the *P-GW* over
+the Gx interface, to provision new PCC rules, and the *P-GW* returns a
+Diameter `Re-Auth-Answer` (RAA) message to acknowledge the new policy
+decision.
 
-. The *P-GW* derives the new EPS Bearer QoS from the PCC rules. The P-GW
-sends a GTPv2 `Update Bearer Request` message to the *S-GW*, carrying the
-Procedure Transaction Id (PTI), the EPS Bearer Identity (EBI), the EPS
-Bearer QoS, the APN-AMBR, and the TFT.
+. The *P-GW* derives the new EPS Bearer QoS from the PCC rules and
+sends a GTPv2 `Update Bearer Request` message to the *S-GW*, carrying
+the Procedure Transaction Id (PTI), the EPS Bearer Identity (EBI), the
+EPS Bearer QoS, the APN-AMBR, and the TFT.
 
 . The *S-GW* forwards the GTPv2 `Update Bearer Request` message to the
 *MME*, without changes.
 
-. The UE can be in ECM-IDLE mode. In this case, the *MME* pages the UE,
-unless the procedure only changes the ARP. The MME sends an S1AP
-`Paging` message to the *eNodeB*. The eNodeB pages the *UE* over the
-radio interface with an RRC `Paging` message. The UE responds with an
-RRC `Service Request` message to the eNodeB, and the eNodeB forwards the
-request to the MME inside an S1AP `Initial UE Message`.
+. If the UE is in ECM-IDLE mode, the *MME* pages the UE, unless the
+procedure only changes the ARP, by sending an S1AP `Paging` message to
+the *eNodeB*, which pages the *UE* over the radio interface with an RRC
+`Paging` message. The UE responds with an RRC `Service Request` message
+to the eNodeB, and the eNodeB forwards the request to the MME inside an
+S1AP `Initial UE Message`.
 
-. The *MME* builds a NAS `Modify EPS Bearer Context Request` message.
-The MME sends this message to the *eNodeB* inside an S1AP `E-RAB Modify
-Request` message, carrying the E-RAB ID, the E-RAB Level QoS Parameters,
-the NAS-PDU, and the UE Aggregate Maximum Bit Rate (UE-AMBR), if the
-APN-AMBR changed.
+. The *MME* builds a NAS `Modify EPS Bearer Context Request` message
+and sends it to the *eNodeB* inside an S1AP `E-RAB Modify Request`
+message, carrying the E-RAB ID, the E-RAB Level QoS Parameters, the
+NAS-PDU, and, if the APN-AMBR changed, the UE Aggregate Maximum Bit Rate
+(UE-AMBR).
 
-. The *eNodeB* maps the new EPS Bearer QoS to the Radio Bearer QoS. The
-eNodeB sends an RRC `Connection Reconfiguration` message to the *UE*,
-carrying the Radio Bearer QoS and the Session Management Request, that
-is the NAS `Modify EPS Bearer Context Request` message.
+. The *eNodeB* maps the new EPS Bearer QoS to the Radio Bearer QoS and
+sends an RRC `Connection Reconfiguration` message to the *UE*, carrying
+the Radio Bearer QoS and the Session Management Request, that is the
+NAS `Modify EPS Bearer Context Request` message.
 
-. The *UE* reconfigures its radio resources. The UE returns an RRC
+. The *UE* reconfigures its radio resources and returns an RRC
 `Connection Reconfiguration Complete` message to the *eNodeB*.
 
-. The *eNodeB* confirms the successful radio bearer modification. The
-eNodeB returns an S1AP `E-RAB Modify Response` message to the *MME*,
+. The *eNodeB* confirms the successful radio bearer modification by
+returning an S1AP `E-RAB Modify Response` message to the *MME*,
 carrying the E-RAB ID and, if the network uses Dual Connectivity, the
 PSCell ID.
 
-. The *UE* accepts the new EPS bearer context. The UE sends a NAS
-`Modify EPS Bearer Context Accept` message, inside an RRC `Direct
-Transfer` message, to the *eNodeB*. The eNodeB forwards the message to
-the *MME* inside an S1AP `Uplink NAS Transport` message.
+. The *UE* accepts the new EPS bearer context by sending a NAS `Modify
+EPS Bearer Context Accept` message, inside an RRC `Direct Transfer`
+message, to the *eNodeB*, which forwards it to the *MME* inside an
+S1AP `Uplink NAS Transport` message.
 
-. The *MME* receives both the S1AP and the NAS acknowledgements. The MME
-sends a GTPv2 `Update Bearer Response` message to the *S-GW*, carrying
-the EBI, a Cause set to "Request Accepted", the User Location
+. When the *MME* receives both the S1AP and the NAS acknowledgements,
+it sends a GTPv2 `Update Bearer Response` message to the *S-GW*,
+carrying the EBI, a Cause set to "Request Accepted", the User Location
 Information (ULI), that is the ECGI, and the PSCell ID.
 
 . The *S-GW* forwards the GTPv2 `Update Bearer Response` message to the
 *P-GW* over the S5/S8 interface, carrying the EBI and the ULI.
 
-. The network can deploy dynamic PCC. In this case, the *P-GW* confirms
-the enforcement of the PCC rules to the *PCRF*. The P-GW sends a
-Diameter `Credit-Control-Request` (CCR) message, to provide the
-provisioning acknowledgement, and the PCRF returns a Diameter
-`Credit-Control-Answer` (CCA) message. This exchange concludes the
-IP-CAN Session Modification procedure.
+. If the network deploys dynamic PCC, the *P-GW* confirms the
+enforcement of the PCC rules to the *PCRF* by sending a Diameter
+`Credit-Control-Request` (CCR) message to provide the provisioning
+acknowledgement, and the PCRF returns a Diameter `Credit-Control-Answer`
+(CCA) message, concluding the IP-CAN Session Modification procedure.
 
 ===== Possible Failures and Required Actions
 
-Radio resource allocation rejection by eNodeB:: The eNodeB cannot meet
-the requested QoS, for example because of congestion or a lack of GBR
-capacity. The eNodeB returns an S1AP `E-RAB Modify Response` message,
-with the bearer in the E-RAB Failed to Modify List and S1AP Cause #20,
+Radio resource allocation rejection by eNodeB:: If the eNodeB cannot
+meet the requested QoS, for example because of congestion or a lack of
+GBR capacity, it returns an S1AP `E-RAB Modify Response` message, with
+the bearer in the E-RAB Failed to Modify List and S1AP Cause #20,
 "Radio resources not available". The MME reports the failure to the
 S-GW and the P-GW with a GTPv2 `Update Bearer Response` message, with
-GTP Cause #89, "Service denied". The P-GW informs the PCRF that the
+GTP Cause #89, "Service denied", and the P-GW informs the PCRF that the
 network cannot enforce the PCC decision.
 
-NAS syntactical error in the TFT:: The UE's NAS layer finds a syntax
-error in the packet filters of the modification request. The UE returns
+NAS syntactical error in the TFT:: If the UE's NAS layer finds a syntax
+error in the packet filters of the modification request, the UE returns
 a NAS `Modify EPS Bearer Context Reject` message to the MME, with ESM
-Cause #45, "syntactical error in the TFT operation". The MME stops timer
-T3486. The MME sends a GTPv2 `Update Bearer Response` message to the
-S-GW, with GTP Cause #77, "Syntactic errors in packet filter(s)". The
-MME can start a procedure to re-align the bearer context, if the MME
-detects a mismatch.
+Cause #45, "syntactical error in the TFT operation". The MME stops
+timer T3486 and sends a GTPv2 `Update Bearer Response` message to the
+S-GW, with GTP Cause #77, "Syntactic errors in packet filter(s)", and,
+if it detects a mismatch, can start a procedure to re-align the bearer
+context.
 
-UE temporarily not reachable:: The MME tries to modify a bearer for a UE
-in ECM-IDLE mode with extended idle mode DRX (eDRX) active. The UE does
-not respond to paging before the paging timer expires. The MME sends a
-GTPv2 `Update Bearer Response` message to the S-GW, with GTP Cause #123,
-"UE is temporarily not reachable due to power saving". The MME sets the
-"Pending Network Initiated PDN Connection Signalling" flag for the UE.
-The P-GW retries the procedure after it receives an indication that the
-UE is reachable, for example in a later `Modify Bearer Request` message.
+UE temporarily not reachable:: When the MME tries to modify a bearer
+for a UE in ECM-IDLE mode with extended idle mode DRX (eDRX) active,
+the UE can fail to respond to paging before the paging timer expires.
+In this case, the MME sends a GTPv2 `Update Bearer Response` message to
+the S-GW, with GTP Cause #123, "UE is temporarily not reachable due to
+power saving", and sets the "Pending Network Initiated PDN Connection
+Signalling" flag for the UE. The P-GW retries the procedure after it
+receives an indication that the UE is reachable, for example in a
+later `Modify Bearer Request` message.
 
 ===== References
 
