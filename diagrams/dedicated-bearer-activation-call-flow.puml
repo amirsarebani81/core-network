@@ -1,0 +1,51 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "UE" as UE
+participant "eNodeB" as ENB
+participant "MME" as MME
+participant "S-GW" as SGW
+participant "P-GW" as PGW
+participant "PCRF" as PCRF
+
+== Gx Policy Provisioning ==
+opt Dynamic PCC is deployed
+    PCRF -> PGW: Diameter (Gx): Re-Auth-Request (RAR)
+    PGW -> PCRF: Diameter (Gx): Re-Auth-Answer (RAA)
+end
+
+== GTPv2 Bearer Resource Allocation ==
+PGW -> SGW: GTPv2: Create Bearer Request
+SGW -> MME: GTPv2: Create Bearer Request
+
+== Paging and Service Request ==
+opt UE is in ECM-IDLE
+    MME -> ENB: S1AP: Paging
+    ENB -> UE: RRC: Paging
+    UE -> ENB: RRC: Service Request
+    ENB -> MME: S1AP: Initial UE Message (Service Request)
+
+    opt UE security context not valid
+        MME <-> UE: NAS: Authentication and Security Procedures
+    end
+end
+
+== E-UTRAN Resource Establishment and NAS Signalling ==
+MME -> ENB: S1AP: E-RAB Setup Request (NAS: Activate Dedicated EPS Bearer Context Request)
+ENB -> UE: RRC: Connection Reconfiguration (NAS: Activate Dedicated EPS Bearer Context Request)
+UE -> ENB: RRC: Connection Reconfiguration Complete
+ENB -> MME: S1AP: E-RAB Setup Response
+
+UE -> ENB: RRC: Direct Transfer (NAS: Activate Dedicated EPS Bearer Context Accept)
+ENB -> MME: S1AP: Uplink NAS Transport (NAS: Activate Dedicated EPS Bearer Context Accept)
+
+== GTPv2 Tunnel Confirmation ==
+MME -> SGW: GTPv2: Create Bearer Response
+SGW -> PGW: GTPv2: Create Bearer Response
+
+== Gx Enforcement Reporting ==
+opt Dynamic PCC is deployed
+    PGW -> PCRF: Diameter (Gx): Credit-Control-Request (CCR-U)
+    PCRF -> PGW: Diameter (Gx): Credit-Control-Answer (CCA-U)
+end
+@enduml

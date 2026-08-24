@@ -1,0 +1,39 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "UE" as UE
+participant "eNodeB" as ENB
+participant "MME" as MME
+participant "S-GW" as SGW
+participant "P-GW" as PGW
+participant "PCRF" as PCRF
+
+== Gx Policy Provisioning ==
+opt Dynamic PCC is deployed
+    PCRF -> PGW: Diameter (Gx): Re-Auth-Request (RAR)
+    PGW -> PCRF: Diameter (Gx): Re-Auth-Answer (RAA)
+end
+
+== GTPv2 Bearer Resource Release ==
+PGW -> SGW: GTPv2: Delete Bearer Request
+SGW -> MME: GTPv2: Delete Bearer Request
+
+== E-UTRAN Resource Release and NAS Signalling ==
+MME -> ENB: S1AP: E-RAB Release Command (NAS: Deactivate EPS Bearer Context Request)
+ENB -> UE: RRC: Connection Reconfiguration (NAS: Deactivate EPS Bearer Context Request)
+UE -> ENB: RRC: Connection Reconfiguration Complete
+ENB -> MME: S1AP: E-RAB Release Response
+
+UE -> ENB: RRC: Direct Transfer (NAS: Deactivate EPS Bearer Context Accept)
+ENB -> MME: S1AP: Uplink NAS Transport (NAS: Deactivate EPS Bearer Context Accept)
+
+== GTPv2 Tunnel Confirmation ==
+MME -> SGW: GTPv2: Delete Bearer Response
+SGW -> PGW: GTPv2: Delete Bearer Response
+
+== Gx Enforcement Reporting ==
+opt Dynamic PCC is deployed
+    PGW -> PCRF: Diameter (Gx): Credit-Control-Request (CCR-U)
+    PCRF -> PGW: Diameter (Gx): Credit-Control-Answer (CCA-U)
+end
+@enduml

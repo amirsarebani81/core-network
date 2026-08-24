@@ -6,4 +6,8 @@ include::detach-procedure.adoc[]
 
 include::service-request-procedure.adoc[]
 
+include::dedicated-bearer-activation-procedure.adoc[]
+
 include::bearer-modification-procedure.adoc[]
+
+include::bearer-deactivation-procedure-pgw-initiated.adoc[]
