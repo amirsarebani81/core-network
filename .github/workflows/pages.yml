@@ -39,7 +39,7 @@ jobs:
           ruby-version: "3.3"
 
       - name: Install AsciiDoc toolchain
-        run: gem install --no-document asciidoctor asciidoctor-pdf asciidoctor-kroki rouge
+        run: gem install --no-document asciidoctor asciidoctor-pdf asciidoctor-kroki asciidoctor-multipage rouge
 
       - name: Wait for Kroki
         run: |
@@ -56,10 +56,11 @@ jobs:
       - name: Assemble site
         run: |
           mkdir -p site
-          cp output/core-network.html site/index.html
+          cp -r output/html/. site/
+          cp site/main.html site/index.html
           cp output/core-network.pdf site/core-network.pdf
-          if grep -q 'localhost:8000' site/index.html; then
-            echo "index.html references localhost:8000" >&2
+          if grep -rl --include='*.html' 'localhost:8000' site; then
+            echo "the HTML pages above reference localhost:8000" >&2
             exit 1
           fi
 

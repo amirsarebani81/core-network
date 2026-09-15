@@ -96,4 +96,18 @@
     text-align: center;
     color: #9DA5B4;
   }
+
+  /* Multi-page HTML: pin the footer to the bottom of the viewport on
+     short pages instead of letting it float under a block of empty space. */
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  #header, #footer {
+    flex: none;
+  }
+  #content {
+    flex: 1 0 auto;
+  }
 </style>

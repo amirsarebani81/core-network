@@ -28,6 +28,9 @@
   #header .details a, #header .details span.email a {
     color: #5C1A1A;
   }
+  #footer-text {
+    color: #7A6A4F;
+  }
 
   h1, h2, h3 {
     text-align: center;
@@ -81,5 +84,19 @@
   }
   .imageblock > .title {
     text-align: center;
+  }
+
+  /* Multi-page HTML: pin the footer to the bottom of the viewport on
+     short pages instead of letting it float under a block of empty space. */
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  #header, #footer {
+    flex: none;
+  }
+  #content {
+    flex: 1 0 auto;
   }
 </style>

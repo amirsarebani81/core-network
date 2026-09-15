@@ -9,7 +9,7 @@ procedures of the mobile core network.
 |--------------------|------------------------------------------------|
 | Source format      | AsciiDoc (`.adoc`)                             |
 | PDF output         | `asciidoctor-pdf` (pure Ruby, no LaTeX needed) |
-| HTML output        | `asciidoctor` (HTML5 backend)                  |
+| HTML output        | `asciidoctor` + `asciidoctor-multipage` (multi-page HTML5) |
 | Diagrams           | Kroki (Mermaid / Graphviz / D2 / packetdiag …) |
 | Diagram server     | Docker Compose (local, private)                |
 
@@ -21,7 +21,7 @@ procedures of the mobile core network.
 # Ruby + AsciiDoc toolchain
 sudo apt-get update
 sudo apt-get install -y ruby-full build-essential
-sudo gem install asciidoctor asciidoctor-pdf asciidoctor-diagram asciidoctor-kroki rouge
+sudo gem install asciidoctor asciidoctor-pdf asciidoctor-diagram asciidoctor-kroki asciidoctor-multipage rouge
 
 # Docker, for the local Kroki diagram server (skip if you already have Docker)
 sudo apt-get install -y docker.io docker-compose-plugin
@@ -32,7 +32,7 @@ sudo usermod -aG docker "$USER"   # log out/in (or `newgrp docker`) for this to 
 
 ```bash
 sudo dnf install -y ruby ruby-devel gcc make
-sudo gem install asciidoctor asciidoctor-pdf asciidoctor-diagram asciidoctor-kroki rouge
+sudo gem install asciidoctor asciidoctor-pdf asciidoctor-diagram asciidoctor-kroki asciidoctor-multipage rouge
 sudo dnf install -y docker docker-compose
 ```
 
@@ -40,7 +40,7 @@ sudo dnf install -y docker docker-compose
 
 ```bash
 brew install ruby
-gem install asciidoctor asciidoctor-pdf asciidoctor-diagram asciidoctor-kroki rouge
+gem install asciidoctor asciidoctor-pdf asciidoctor-diagram asciidoctor-kroki asciidoctor-multipage rouge
 brew install --cask docker
 ```
 
@@ -76,7 +76,7 @@ Or run the underlying commands directly:
 
 ```bash
 asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme.yml -a pdf-themesdir=theme -a allow-uri-read -a cache-uri main.adoc -o output/core-network.pdf
-asciidoctor    -r asciidoctor-kroki -a data-uri -a allow-uri-read main.adoc -o output/core-network.html
+asciidoctor -r asciidoctor-kroki -r asciidoctor-multipage -b multipage_html5 -a multipage-level=2 -a data-uri -a allow-uri-read -a docinfodir=theme main.adoc -D output/html
 ```
 
 `allow-uri-read` is required because diagrams are fetched as remote images
@@ -87,9 +87,27 @@ re-fetching unchanged diagrams on every rebuild (needs the optional
 cache).
 
 For the HTML, `data-uri` together with `allow-uri-read` embeds every diagram
-in the page as a data URI. Without `allow-uri-read`, the HTML keeps `<img>`
+in its page as a data URI. Without `allow-uri-read`, the HTML keeps `<img>`
 links to `http://localhost:8000/...`, which only resolve on a machine that
 runs Kroki — so a published copy would show broken diagrams.
+
+### HTML output is multi-page
+
+The HTML build splits at level-2 sections (`===`, one protocol or
+procedure per page — e.g. S1AP, the Attach Procedure, RADIUS on the
+Gi/SGi Interface) instead of producing one long page. `bash build.sh html`
+writes the whole site into `output/html/`; open `output/html/main.html`
+as the entry point, which carries the full table of contents and links
+out to every page. Each page also gets prev/next/up navigation links.
+`main.html` is the required name for the entry page — it comes from
+`main.adoc`'s basename and `asciidoctor-multipage` hard-codes it, so
+renaming the output (e.g. via `-o`) breaks that link.
+
+Adjust the split granularity with `-a multipage-level=N` (`1` = one
+page per top-level chapter, larger N = deeper, more numerous pages);
+`build.sh` sets `N=2`. If you change it, keep `:toclevels:` in
+`main.adoc` at or above `N`, or `asciidoctor-multipage` prints a
+warning.
 
 ## 4. Choosing a theme
 
@@ -132,7 +150,7 @@ attributes:
 asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme-slate.yml -a pdf-themesdir=theme -a allow-uri-read -a cache-uri main.adoc -o output/core-network.pdf
 
 # HTML, "forest" theme
-asciidoctor -r asciidoctor-kroki -a data-uri -a allow-uri-read -a docinfodir=theme/forest main.adoc -o output/core-network.html
+asciidoctor -r asciidoctor-kroki -r asciidoctor-multipage -b multipage_html5 -a multipage-level=2 -a data-uri -a allow-uri-read -a docinfodir=theme/forest main.adoc -D output/html
 
 # PDF, "terminal" theme (style themes also need the table/rouge attributes build.sh sets)
 asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme-terminal.yml -a pdf-themesdir=theme -a allow-uri-read -a cache-uri -a table-frame=topbot -a table-grid=rows -a table-stripes=even -a rouge-style=monokai main.adoc -o output/core-network.pdf
@@ -170,7 +188,8 @@ asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme-terminal.ym
    `:kroki-server-url:` in `main.adoc` works unchanged;
 2. runs `bash build.sh all "$THEME"` (`THEME` is set at the top of the
    workflow — change it there to publish a different theme);
-3. publishes `output/core-network.html` as `index.html`, alongside
-   `core-network.pdf` (at `.../core-network/core-network.pdf`).
+3. publishes the multi-page site from `output/html/`, with a copy of
+   `main.html` as `index.html`, alongside `core-network.pdf` (at
+   `.../core-network/core-network.pdf`).
 
 One-time setup: **Settings → Pages → Source: GitHub Actions**.

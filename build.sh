@@ -111,14 +111,19 @@ build_pdf() {
 
 build_html() {
   echo "==> Building HTML (theme: $THEME)..."
+  rm -rf output/html
+  mkdir -p output/html
   asciidoctor \
     -r asciidoctor-kroki \
+    -r asciidoctor-multipage \
+    -b multipage_html5 \
     -a data-uri \
     -a allow-uri-read \
     -a docinfodir="$DOCINFODIR" \
+    -a multipage-level=2 \
     "${EXTRA_ATTRS[@]}" \
-    main.adoc -o output/core-network.html
-  echo "==> HTML written to output/core-network.html"
+    main.adoc -D output/html
+  echo "==> HTML written to output/html/ (open output/html/main.html)"
 }
 
 case "$TARGET" in
