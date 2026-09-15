@@ -1,8 +1,8 @@
 = Core Network: Architecture and Signaling Procedures
 Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :doctype: book
-:revnumber: 0.14.1
-:revdate: 2026-10-04
+:revnumber: 1.0.0
+:revdate: 2026-10-05
 :toc: left
 :toclevels: 4
 :sectnums:
@@ -16,15 +16,17 @@ Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :kroki-server-url: http://localhost:8000
 :sectanchors:
 :sectlinks:
-:description: A reference to the architecture of the Evolved Packet Core (EPC) and the signaling procedures between its network elements, with call flows and 3GPP TS clause citations.
+:description: A reference to the architecture of the GPRS core network and the Evolved Packet Core (EPC), and to the signaling procedures between their network elements, with call flows and 3GPP TS clause citations.
 :favicon: favicon.svg
 ifdef::backend-multipage_html5[]
 :email!:
 endif::[]
 
 ifdef::backend-multipage_html5[]
-This book describes the architecture of the Evolved Packet Core (EPC) and
-the signaling procedures that run between its network elements. Each
+This book describes the architecture of two generations of the mobile
+packet core network, and the signaling procedures that run between their
+network elements. Part I covers the General Packet Radio Service (GPRS)
+core network, and Part II covers the Evolved Packet Core (EPC). Each
 procedure has a call flow diagram and a step-by-step description of its
 messages, and each technical claim cites the 3GPP Technical Specification
 (TS) and clause that defines it, so that a network engineer can move
@@ -33,6 +35,24 @@ directly between this book and the specifications.
 [.cn-button]
 link:core-network.pdf[Download the PDF edition]
 endif::[]
+
+= Part I: GPRS Core
+
+[partintro]
+This part describes the architecture of the General Packet Radio Service
+(GPRS) core network: its network elements and the interfaces between
+them.
+
+include::chapters/gprs/architecture-and-specifications.adoc[]
+
+= Part II: Evolved Packet Core (EPC)
+
+[partintro]
+This part describes the Evolved Packet Core (EPC) with Control and User
+Plane Separation (CUPS): its network elements and interfaces, the
+protocols that carry signaling between them, the procedures for attach,
+detach, service request, and bearer management, and the use of RADIUS on
+the SGi interface.
 
 include::chapters/epc/architecture-and-specifications.adoc[]
 

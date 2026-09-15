@@ -1,7 +1,8 @@
 # Core Network Documentation
 
 A docs-as-code reference document covering the architecture and signaling
-procedures of the mobile core network.
+procedures of the mobile core network, in two parts: the GPRS core network
+(Part I) and the Evolved Packet Core, EPC (Part II).
 
 ## Stack
 

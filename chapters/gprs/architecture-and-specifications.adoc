@@ -1,0 +1,67 @@
+[#_gprs_architecture_and_specifications]
+== Architecture and Specifications
+
+The General Packet Radio Service (GPRS) core network, which this book
+calls the GPRS Core, provides packet-switched connectivity to a mobile
+subscriber and is the direct predecessor of the EPC architecture that
+Part II describes. This chapter describes the GPRS Core in Iu mode with
+Gn/Gp interfaces, the configuration that 3GPP TS 23.060 clause 5.4.0
+shows in Figure 2 ("Overview of the GPRS Logical Architecture when based
+on Gn/Gp interfaces").
+
+.GPRS Core architecture
+image::images/gprs-architecture.svg[GPRS Core Architecture]
+
+The figure above shows the path of packet-switched traffic from the User
+Equipment (UE), through the Universal Mobile Telecommunications System
+(UMTS) Terrestrial Radio Access Network (UTRAN) and the two GPRS Support
+Nodes, to an external packet data network.
+
+[#_gprs_network_elements]
+=== Network Elements
+
+UE (User Equipment):: The UE is the subscriber's device, for example a
+mobile phone or a data modem, that connects to the UTRAN over the Uu
+radio interface to use packet-switched services (TS 23.060 clause 5.1).
+
+UTRAN (UMTS Terrestrial Radio Access Network):: The UTRAN is the UMTS
+radio access network, made up of one or more Radio Network Subsystems
+(RNSs), each of which contains a Radio Network Controller (RNC) and the
+Node Bs that the RNC controls (TS 25.401 clause 6). The UTRAN provides
+the Uu radio interface towards the UE, and it relays packet-switched
+signaling and user data to the SGSN over the IuPs interface, the
+packet-switched part of the Iu interface (TS 25.410).
+
+SGSN (Serving GPRS Support Node):: The SGSN serves the UE within its
+current routeing area, and it handles mobility management, session
+management, and the forwarding of user data between the UTRAN and the
+GGSN (TS 23.060 clause 5.4.1.3). Unlike the EPC, where the MME handles
+the control plane and the SGW-U forwards user data, the SGSN usually
+carries both control-plane signaling and user-plane traffic. The
+exception is Direct Tunnel, an optional function in which the SGSN
+establishes a user-plane tunnel directly between the RNC and the GGSN
+and keeps only the control plane (TS 23.060 clause 15.6). The SGSN
+connects to a GGSN over Gn when both nodes belong to the same Public
+Land Mobile Network (PLMN), and over Gp when the GGSN belongs to another
+PLMN (TS 23.060 clause 5.4.1.3).
+
+GGSN (Gateway GPRS Support Node):: The GGSN is the gateway between the
+GPRS Core and the external packet data network, and it supports the Gi
+reference point towards that network (TS 23.060 clause 5.4.1.2). The
+GGSN anchors the Packet Data Protocol (PDP) address that the UE uses for
+the lifetime of a PDP context, and it routes packets between the SGSN
+over Gn/Gp and the PDN over Gi.
+
+PDN (Packet Data Network):: The PDN is the external packet data network,
+for example the internet or a corporate intranet, that the UE obtains
+connectivity to. The GGSN reaches the PDN over the Gi reference point,
+which TS 29.061 defines (TS 23.060 clause 5.1).
+
+[#_gprs_technical_specifications]
+=== Technical Specifications
+
+* *3GPP TS 23.060* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); General Packet Radio Service (GPRS); Service description; Stage 2_
+* *3GPP TS 25.401* _Universal Mobile Telecommunications System (UMTS); UTRAN overall description_
+* *3GPP TS 25.410* _Universal Mobile Telecommunications System (UMTS); UTRAN Iu interface: General aspects and principles_
+* *3GPP TS 29.060* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); General Packet Radio Service (GPRS); GPRS Tunnelling Protocol (GTP) across the Gn and Gp interface_
+* *3GPP TS 29.061* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); LTE; 5G; Interworking between the Public Land Mobile Network (PLMN) supporting packet based services and Packet Data Networks (PDN)_

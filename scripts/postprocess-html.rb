@@ -29,7 +29,7 @@ def numbered_page_list(html)
 end
 
 def landing_toc(html)
-  outline = html[%r{<div id="toc" class="toc2">.*?(<ul class="sectlevel1">.*</ul>)\s*</div>\s*</div>\s*<div id="content"}m, 1]
+  outline = html[%r{<div id="toc" class="toc2">.*?(<ul class="sectlevel[01]">.*</ul>)\s*</div>\s*</div>\s*<div id="content"}m, 1]
   abort 'main.html: no table of contents found' unless outline
   html = html.sub(%r{<div id="toc" class="toc2">.*?(?=</div>\s*<div id="content")}m, '')
   html = html.sub(/<body id="main" class="([^"]*)"/) do
@@ -51,7 +51,7 @@ Dir.glob(File.join(dir, '*.html')).sort.each do |path|
   if is_main
     page_title = book_title
   else
-    heading_re = %r{(<div id="content">.*?<h([23]) id="[^"]*")([^>]*>)(.*?)(</h\2>)}m
+    heading_re = %r{(<div id="content">.*?<h([1-3]) id="[^"]*")([^>]*>)(.*?)(</h\2>)}m
     match = html.match(heading_re)
     abort "#{path}: no page heading found" unless match
     heading = strip_tags(match[4]).sub(/\A[\d.]+\s+/, '')
