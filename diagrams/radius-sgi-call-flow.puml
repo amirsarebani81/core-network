@@ -1,0 +1,33 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "UE" as UE
+participant "S-GW" as SGW
+participant "P-GW" as PGW
+participant "RADIUS AAA Server" as AAA
+
+== IP-CAN Session Establishment ==
+SGW -> PGW: GTPv2: Create Session Request
+PGW -> AAA: RADIUS: Access-Request
+AAA -> PGW: RADIUS: Access-Accept
+PGW -> AAA: RADIUS: Accounting-Request (Start)
+PGW -> SGW: GTPv2: Create Session Response
+AAA -> PGW: RADIUS: Accounting-Response (Start)
+
+== Session Active ==
+autonumber stop
+UE <-> PGW: Uplink / Downlink User Plane Data
+autonumber resume
+
+== SGi Session Update ==
+SGW -> PGW: GTPv2: Modify Bearer Request
+PGW -> AAA: RADIUS: Accounting-Request (Interim-Update)
+PGW -> SGW: GTPv2: Modify Bearer Response
+AAA -> PGW: RADIUS: Accounting-Response (Interim-Update)
+
+== Session Termination ==
+SGW -> PGW: GTPv2: Delete Session Request
+PGW -> AAA: RADIUS: Accounting-Request (Stop)
+PGW -> SGW: GTPv2: Delete Session Response
+AAA -> PGW: RADIUS: Accounting-Response (Stop)
+@enduml

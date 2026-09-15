@@ -1,0 +1,315 @@
+=== RADIUS Usage on the Gi/SGi Interface
+
+==== Technical Overview
+
+The Remote Authentication Dial-In User Service (RADIUS) protocol can run
+on the Gi/SGi reference points to provide Authentication, Authorization,
+and Accounting (AAA) for a User Equipment (UE) that establishes a Packet
+Data Network (PDN) connection through non-transparent access (TS 29.061
+clauses 11.2.1.2.2 and 11.2.1.3). In the Evolved Packet Core (EPC), the
+PDN Gateway (P-GW) acts as the RADIUS client, and an AAA server in the
+external packet data network, which this section calls the RADIUS AAA
+Server, acts as the RADIUS server. The operator configures the use of
+RADIUS separately for each Access Point Name (APN), and can configure a
+separate RADIUS AAA Server for authentication and for accounting
+(TS 29.061 clause 16.3a.1). When the network separates the control plane and the user
+plane of the P-GW, the PDN Gateway Control Plane function (PGW-C)
+exchanges the RADIUS messages with the RADIUS AAA Server. The PGW-C
+communicates with the RADIUS AAA Server directly, or through the PDN
+Gateway User Plane function (PGW-U) when the RADIUS AAA Server is
+reachable only through the PGW-U, in which case the PGW-U forwards the
+RADIUS messages (TS 29.061 clause 11.2.1.6). To report the packet counts
+that the accounting messages carry, the PGW-U supports the Measurement of
+Number of Packets (MNOP) feature (TS 29.061 clause 16.4.4, Table 4,
+NOTE 10).
+
+SGi RADIUS serves two purposes, which the P-GW can enable independently
+of each other.
+
+Authentication and authorization:: The P-GW sends the credentials that
+the UE supplies with the Password Authentication Protocol (PAP) or the
+Challenge Handshake Authentication Protocol (CHAP) to the RADIUS AAA
+Server, which accepts or rejects the UE for the requested APN. The UE
+carries these credentials in the Protocol Configuration Options (PCO)
+information element (IE). When the RADIUS AAA Server also manages the
+address pool of the external network, the RADIUS AAA Server returns the
+allocated IPv4 address or IPv6 prefix in its response (TS 29.061 clause
+16.1).
+
+Accounting:: The P-GW reports the start, the updates, and the end of
+each session to the RADIUS AAA Server, together with usage counters such
+as octets, packets, and session duration. The RADIUS AAA Server can
+store this information, and application servers in the packet data
+network can use the information to correlate the identity of the UE
+with its IP address (TS 29.061 clause 16.2).
+
+The P-GW completes the PDN connection establishment only after it
+receives a RADIUS `Access-Accept` message. If the P-GW receives an
+`Access-Reject` message, or no response, it rejects the initial access
+request with a suitable cause (TS 29.061 clause 16.1). The information
+that the P-GW exchanges with the RADIUS AAA Server lets the external
+network correlate the UE's identity, that is the Mobile Station
+International Subscriber Directory Number (MSISDN) or the International
+Mobile Subscriber Identity (IMSI), with the IPv4 address or IPv6 prefix
+that the network allocates to the UE.
+
+==== Call Flow
+
+The call flow has four phases: IP-CAN Session Establishment, Session
+Active, SGi Session Update, and Session Termination. The flow follows
+the GTP-based S5/S8 examples in TS 29.061 Figures 25a.1 and 25a.2.
+
+.RADIUS usage on the Gi/SGi interface call flow
+plantuml::diagrams/radius-sgi-call-flow.puml[svg]
+
+==== Step-by-Step Description
+
+. During an E-UTRAN Initial Attach or a UE-requested PDN connectivity
+procedure, the *S-GW* sends a GPRS Tunnelling Protocol version 2 (GTPv2)
+`Create Session Request` message to the *P-GW*, to request the default
+bearer of the PDN connection. The message carries the IMSI, the MSISDN,
+the Sender F-TEID for Control Plane, the RAT Type, the APN, the Selection
+Mode, the PDN Type, and the APN-AMBR. The message also carries the PDN
+Address Allocation (PAA), with the IPv4 address set to 0.0.0.0 or the
+IPv6 prefix set to zero when the network allocates the address
+dynamically, and the PCO with the PAP or CHAP credentials of the UE. The
+Bearer Contexts to be created IE carries the EPS Bearer ID (EBI), the
+S5/S8-U SGW F-TEID, and the Bearer Level QoS (TS 29.274 clause 7.2.1).
+
+. The *P-GW* reads the credentials from the PCO and sends a RADIUS
+`Access-Request` message to the *RADIUS AAA Server*, to authenticate and
+authorize the UE for the APN (TS 29.061 clause 16.3a.1). The message
+carries the `User-Name` (attribute 1), that is the PAP or CHAP username,
+and the `User-Password` (attribute 2) for PAP or the `CHAP-Password`
+(attribute 3) and `CHAP-Challenge` (attribute 60) for CHAP. The message
+also carries the `NAS-IP-Address` (attribute 4), that is the P-GW IPv4
+address for communication with the RADIUS AAA Server, or the
+`NAS-Identifier` (attribute 32), and the `Service-Type` (attribute 6), set
+to `Framed`. The message also carries the `Framed-Protocol` (attribute 7),
+set to `GPRS PDP Context`, the `Called-Station-Id` (attribute 30), that is
+the APN, and the `Calling-Station-Id` (attribute 31), that is the MSISDN
+in international format. The 3GPP Vendor-Specific Attribute (attribute
+26, vendor 10415) can carry sub-attributes such as `3GPP-IMSI` (1),
+`3GPP-Charging-Id` (2), `3GPP-PDP-Type` (3), `3GPP-Charging-Characteristics`
+(13), `3GPP-RAT-Type` (21), and `3GPP-User-Location-Info` (22)
+(TS 29.061 clause 16.4.1, Table 1, and clause 16.4.7, Table 7). The
+`3GPP-Allocate-IP-Type` (27) sub-attribute tells the RADIUS AAA Server
+which type of address, if any, to allocate. The P-GW includes this
+sub-attribute when the PDN connection needs more than one
+`Access-Request` message, for example for PDN type IPv4v6 with deferred
+IPv4 address allocation, and can include it when the P-GW needs only
+one address type although the RADIUS AAA Server can allocate both. When
+the `Access-Request` message does not carry this sub-attribute, the
+RADIUS AAA Server allocates addresses according to its own configured
+policy (TS 29.061 clause 16.4.7.2).
+
+. The *RADIUS AAA Server* validates the credentials. If validation
+succeeds, the RADIUS AAA Server returns a RADIUS `Access-Accept` message
+to the *P-GW*, which authorizes the session. When the RADIUS AAA Server
+allocates the address, the message carries the `Framed-IP-Address`
+(attribute 8) for an IPv4 allocation, the `Framed-IPv6-Prefix`
+(attribute 97) for an IPv6 allocation, or both. The message can also
+carry the `Framed-Interface-Id` (attribute 96), the `Session-Timeout`
+(attribute 27), the `Idle-Timeout` (attribute 28), the primary and
+secondary DNS server addresses, and the `Class` (attribute 25), which the
+P-GW then copies into each later accounting message (TS 29.061 clause
+16.4.2, Table 2).
+
+. The *P-GW* sends a RADIUS `Accounting-Request` message, with the
+`Acct-Status-Type` (attribute 40) set to `Start`, to the *RADIUS AAA
+Server*, to indicate that the user session has started. The message
+carries the `Acct-Session-Id` (attribute 44), which concatenates the
+P-GW IP address and the Charging ID of the bearer as UTF-8 encoded
+hexadecimal characters, and which uniquely identifies the session. The
+message also carries the `User-Name`, the `NAS-IP-Address`, the
+`Framed-IP-Address` or the `Framed-IPv6-Prefix`, the `Called-Station-Id`,
+and the `Class`, if the `Access-Accept` carried it. The message can also
+carry the sub-attributes `3GPP-IMSI`, `3GPP-Charging-Id`,
+`3GPP-PDP-Type`, `3GPP-NSAPI` (10), which identifies the EPS Bearer ID
+on GTP-based S5/S8, `3GPP-RAT-Type`, and `3GPP-User-Location-Info`
+(TS 29.061 clause 16.4.3, Table 3).
+
+. The *P-GW* returns a GTPv2 `Create Session Response` message to the
+*S-GW*, to confirm the PDN connection. The message carries the Cause,
+set to "Request accepted", the PGW S5/S8 F-TEID for Control Plane, the
+PAA with the allocated IPv4 address or IPv6 prefix, the APN Restriction,
+and the PCO with the configuration parameters for the UE, for example
+the DNS server addresses. The Bearer Contexts created IE carries the
+EBI, the Cause, the S5/S8-U PGW F-TEID, and the Charging ID (TS 29.274
+clause 7.2.2). The P-GW usually sends the `Create Session Response`
+without waiting for the `Accounting-Response` message, but the operator
+can configure the APN so that the P-GW waits for the
+`Accounting-Response` before it sends the `Create Session Response`
+(TS 29.061 clause 16.3a.1, Figure 25a.1, NOTE 1).
+
+. The *RADIUS AAA Server* records the session start and returns a RADIUS
+`Accounting-Response` message to the *P-GW*. If external applications
+need the start information before they can process user packets, the
+operator can configure the APN so that the P-GW drops user data until
+it receives this `Accounting-Response`, and the P-GW can reject the
+bearer if the response does not arrive (TS 29.061 clause 16.3a.1).
+Without this configuration, the P-GW does not wait for this
+`Accounting-Response` before it forwards uplink and downlink user data
+between the UE and the external PDN.
+
+. During the session, the *S-GW* sends a GTPv2 `Modify Bearer Request`
+message to the *P-GW* when a procedure changes the access
+characteristics of the session, for example an inter-RAT mobility
+procedure or a handover or Tracking Area Update with S-GW relocation.
+The message can carry the User Location Information (ULI), the Serving
+Network, the RAT Type, the UE Time Zone, and the User CSG Information
+(UCI). For a TAU, RAU, or handover with S-GW relocation, the new S-GW
+also includes the Sender F-TEID for Control Plane and the Bearer
+Contexts to be modified IE, which carries the S5/S8-U SGW F-TEID for
+each bearer. For a procedure without S-GW relocation, the S-GW does not
+include the Bearer Contexts to be modified IE on S5/S8 (TS 29.274
+clause 7.2.7, Table 7.2.7-1).
+
+. The *P-GW* checks whether the `Modify Bearer Request` indicates a
+chargeable event, that is a RAT change, an S-GW address change, or a QoS
+change. If so, the P-GW can send a RADIUS `Accounting-Request` message, with
+the `Acct-Status-Type` set to `Interim-Update`, to the *RADIUS AAA
+Server*, to update the session record (TS 29.061 clause 16.3a.2). The
+message carries the `Acct-Session-Id` and can carry the current usage
+counters, for example the `Acct-Input-Octets` (attribute 42) and the
+`Acct-Output-Octets` (attribute 43). The message can also carry the
+updated sub-attributes `3GPP-RAT-Type`, `3GPP-User-Location-Info`, and
+`3GPP-MS-TimeZone` (23) (TS 29.061 clause 16.4.8, Table 8). The P-GW can
+also send an interim update when an operator-configured time limit
+expires.
+
+. The *P-GW* returns a GTPv2 `Modify Bearer Response` message to the
+*S-GW* without waiting for the RADIUS `Accounting-Response` message
+(TS 29.061 clause 16.3a.2, Figure 25a.2). The message carries the Cause,
+set to "Request accepted". For a TAU, RAU, or handover with S-GW
+relocation, the message also carries the MSISDN, if the P-GW stores it
+in the UE context, and the Bearer Contexts modified IE carries the
+Charging ID of each bearer (TS 29.274 clause 7.2.8, Tables 7.2.8-1 and
+7.2.8-2). During the same procedures, the Indication Flags IE can carry
+the PDN Pause Enable Indication, which lets the new S-GW use the PDN GW
+Pause of Charging procedure for the PDN connection (TS 29.274 clause
+7.2.8 and TS 23.401 clause 5.3.6A).
+
+. The *RADIUS AAA Server* updates its session record and returns a
+RADIUS `Accounting-Response` message to the *P-GW*. If the P-GW does
+not receive this response, the P-GW can delete the bearer (TS 29.061
+clause 16.3a.2).
+
+. When the UE detaches, the MME starts a detach, or the UE requests a PDN
+disconnection, the *S-GW* sends a GTPv2 `Delete Session Request` message
+to the *P-GW*, to release the PDN connection. The message carries the
+Linked EPS Bearer ID (LBI), that is the EBI of the default bearer, and
+it can carry the ULI with the last known location of the UE, the ULI
+Timestamp, the UE Time Zone, and the Secondary RAT Usage Data Report
+when the network collects secondary RAT usage data (TS 29.274 clause
+7.2.9.1).
+
+. Because the P-GW previously sent an `Accounting-Request` (Start)
+message for the session, the *P-GW* sends a RADIUS `Accounting-Request`
+message, with the `Acct-Status-Type` set to `Stop`, to the *RADIUS AAA
+Server* (TS 29.061 clause 16.3a.1). The message carries the
+`Acct-Session-Id` and the final usage of the session, for example the
+`Acct-Input-Octets` (attribute 42), the `Acct-Output-Octets` (attribute
+43), the `Acct-Session-Time` (attribute 46), the `Acct-Input-Packets`
+(attribute 47), the `Acct-Output-Packets` (attribute 48), and the
+`Acct-Terminate-Cause` (attribute 49) (TS 29.061 clause 16.4.4, Table 4).
+For the last bearer of the IP-CAN session, the P-GW includes the
+`3GPP-Session-Stop-Indicator` (11) sub-attribute, and the RADIUS AAA
+Server does not consider the IP-CAN session terminated until it receives
+an `Accounting-Request` (Stop) message with this sub-attribute
+(TS 29.061 clause 16.2). The message can also carry the
+`3GPP-User-Location-Info-Time` (30) sub-attribute, which indicates when
+the UE was last known to be at the reported location.
+
+. The *P-GW* returns a GTPv2 `Delete Session Response` message to the
+*S-GW* immediately, without waiting for the RADIUS `Accounting-Response`
+message (TS 29.061 clause 16.3a.1, Figure 25a.1). The message carries
+the Cause, set to "Request accepted", and can carry the PCO for the UE
+(TS 29.274 clause 7.2.10.1).
+
+. The *RADIUS AAA Server* records the end of the session and returns a
+RADIUS `Accounting-Response` message to the *P-GW*. If the RADIUS AAA
+Server allocated the IPv4 address or IPv6 prefix of the UE and no other
+session exists for the subscriber, the RADIUS AAA Server deallocates the
+address so that it can assign the address again (TS 29.061 clauses 16.2
+and 16.3a.1).
+
+==== Possible Failures and Required Actions
+
+RADIUS authentication or authorization failure:: The RADIUS AAA Server
+rejects the credentials of the UE and returns a RADIUS `Access-Reject`
+message to the P-GW. The P-GW treats an `Access-Challenge` message, or
+the absence of a response, in the same way (TS 29.061 clauses 16.1 and
+16.3a.1). The P-GW rejects the `Create Session Request` with GTPv2 Cause
+#92, "User authentication failed" (TS 29.274 clause 8.4, Table 8.4-1),
+and the S-GW forwards the rejection to the MME. The MME maps GTPv2 Cause
+#92 to ESM cause #29, "User authentication or authorization failed"
+(TS 29.274 Annex C, Table C.1). For a standalone PDN connectivity
+request, the MME sends a `PDN Connectivity Reject` message with ESM
+cause #29 to the UE, and the UE stops timer T3482 (TS 24.301 clause
+6.5.1.4.1). During an attach, the MME sends an `Attach Reject` message
+with EMM cause #19, "ESM failure", that contains the `PDN Connectivity
+Reject` message. Depending on operator policy, the MME can instead send
+the `Attach Reject` message with EMM cause #15, "No suitable cells in
+tracking area", which lets a roaming UE obtain service in another PLMN
+(TS 24.301 clause 5.5.1.2.5 and TS 29.274 Annex C, Table C.1, NOTE 4).
+
+APN congestion or resource limitation at the P-GW:: The P-GW detects
+congestion for an APN, for example because the APN reaches its maximum
+number of active bearers or its maximum rate of bearer activations, or
+the P-GW has no addresses or other resources left. The P-GW rejects the
+`Create Session Request` with GTPv2 Cause #113, "APN Congestion", or
+Cause #73, "No resources available" (TS 29.274 clause 8.4, Table 8.4-1).
+The MME can map either cause to ESM cause #26, "Insufficient resources"
+(TS 29.274 Annex C, Table C.1). For APN congestion only, the P-GW can
+include the PGW Back-Off Time IE in the `Create Session Response`
+message (TS 29.274 clause 7.2.2). While the back-off time runs, the MME
+rejects further PDN connection requests for that APN at that P-GW, or
+selects another P-GW for the APN instead. The MME cannot select another
+P-GW when the UE already has a PDN connection to the same APN, and in
+that case the MME rejects the request (TS 23.401 clause 4.3.7.5). The
+MME can include a
+Back-off timer value IE in the `PDN Connectivity Reject` message, except
+when the UE sent the request with high-priority access or as an
+emergency request (TS 24.301 clause 6.5.1.4.1). When the UE receives ESM
+cause #26 with a Back-off timer value IE, the UE starts timer T3396
+for the APN, and does not send another PDN connectivity, bearer resource
+allocation, or bearer resource modification request for that APN until
+T3396 expires or stops (TS 24.301 clause 6.5.1.4.2).
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.401
+a|
+* Clause 4.3.7.5 — PDN GW control of overload and the PDN GW back-off time
+* Clause 5.3.2.1 — E-UTRAN Initial Attach
+* Clause 5.3.6A — PDN GW Pause of Charging procedure
+* Clause 5.10.3 — UE or MME requested PDN disconnection
+
+| TS 24.301
+a|
+* Clause 5.5.1.2.5 — Attach not accepted by the network
+* Clause 6.5.1.4 — UE requested PDN connectivity procedure not accepted by the network
+* Clause 9.9.4.4 — ESM cause
+
+| TS 29.274
+a|
+* Clauses 7.2.1 and 7.2.2 — Create Session Request and Create Session Response
+* Clauses 7.2.7 and 7.2.8 — Modify Bearer Request and Modify Bearer Response
+* Clauses 7.2.9.1 and 7.2.10.1 — Delete Session Request and Delete Session Response
+* Clause 8.4 — Cause values, Table 8.4-1
+* Annex C — Mapping from S11/S4 to NAS cause values, Table C.1
+
+| TS 29.061
+a|
+* Clause 11.2.1.2.2 — EPC based IPv4 non-transparent access
+* Clause 11.2.1.3 — IPv6 non-transparent access
+* Clause 11.2.1.6 — Support for CUPS across SGi
+* Clauses 16.1 and 16.2 — RADIUS authentication, authorization, and accounting
+* Clauses 16.3a.1 and 16.3a.2 — RADIUS message flows on the SGi interface, Figures 25a.1 and 25a.2
+* Clauses 16.4.1 to 16.4.8 — RADIUS attributes and 3GPP Vendor-Specific sub-attributes
+|===

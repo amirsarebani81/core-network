@@ -11,3 +11,5 @@ include::dedicated-bearer-activation-procedure.adoc[]
 include::bearer-modification-procedure.adoc[]
 
 include::bearer-deactivation-procedure-pgw-initiated.adoc[]
+
+include::radius-sgi-procedure.adoc[]
