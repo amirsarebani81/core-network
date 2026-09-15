@@ -1,0 +1,7 @@
+packetdiag {
+  colwidth = 8
+
+  0-3: "Security Header Type"
+  4-7: "Protocol Discriminator"
+  8-15: "Message Type"
+}

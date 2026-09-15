@@ -1,0 +1,323 @@
+=== PFCP (Packet Forwarding Control Protocol)
+
+==== Technical Overview
+
+The Packet Forwarding Control Protocol (PFCP) is the protocol on the
+interface between a control plane function (CP function) and a user
+plane function (UP function). In the EPC, the CP functions are the
+SGW-C, the PGW-C, and the Traffic Detection Function control plane
+(TDF-C), and the UP functions are the SGW-U, the PGW-U, and the Traffic
+Detection Function user plane (TDF-U).
+
+PFCP applies over the Sxa, Sxb, and Sxc reference points and the
+combined Sxa/Sxb reference point of the EPC, and over the N4 and N4mb
+reference points of the 5G System. TS 29.244 clause 1 defines this
+scope, together with the CP functions and the UP functions.
+
+A CP function controls the packet processing in a UP function by
+establishing PFCP sessions and by provisioning rules in each PFCP
+session. Each Packet Detection Rule (PDR) contains Packet Detection
+Information (PDI), the match fields against which the UP function
+matches incoming packets, and a PDR can be associated with one or more
+Forwarding Action Rules (FARs) and with zero or more QoS Enforcement
+Rules (QERs) and Usage Reporting Rules (URRs). A FAR that buffers
+packets references a Buffering Action Rule (BAR), which the CP function
+creates at the level of the PFCP session. TS 29.244 clause 5.2.1
+defines this packet forwarding model.
+
+PFCP runs over the User Datagram Protocol (UDP), and a request message
+uses the registered UDP destination port 8805. Because UDP does not guarantee delivery, a PFCP
+entity retransmits a request message when it does not receive a
+response before timer T1 expires, until the number of retransmissions
+reaches N1. TS 29.244 clause 4.2 defines the UDP port numbers, and
+clause 6.4 defines the retransmission rules.
+
+PFCP messages fall into two groups, node related messages and session
+related messages, and TS 29.244 Table 7.3-1 assigns every message to
+one of these groups. A node related message applies to a PFCP entity or
+to the PFCP association as a whole, and carries no Session Endpoint
+Identifier (SEID); the Session Set messages belong to this group,
+although they act on a set of PFCP sessions. A session related message
+applies to an individual PFCP session, and carries an SEID that
+identifies that PFCP session at the receiving entity.
+
+==== Packet Format
+
+PFCP uses a variable-length header with a length that is always a
+multiple of 4 octets, and PFCP defines one header format for node
+related messages and one for session related messages. TS 29.244 clause
+7.2.2 defines both header formats.
+
+===== Header for Node Related Messages
+
+Every node related message, for example `PFCP Heartbeat Request` or
+`PFCP Association Setup Request`, uses the header without an SEID, which
+is 8 octets long. TS 29.244 clause 7.2.2.2 defines this header.
+
+.PFCP header for a node related message
+[width=500]
+packetdiag::diagrams/pfcp-header-node.diag[svg]
+
+`Version`:: Bits 8 to 6 of octet 1. This field states the PFCP version,
+and the current version of PFCP sets it to decimal 1, as TS 29.244
+clause 7.2.2.4.1 defines.
+
+`FO`:: Bit 3 of octet 1. This is the Follow On flag, and a node related
+message always sets it to 0, because PFCP does not allow node related
+messages to be bundled in one UDP/IP packet (TS 29.244 clause 6.5).
+
+`MP`:: Bit 2 of octet 1. This is the Message Priority flag, and a node
+related message always sets it to 0, because the header without an SEID
+has no `Message Priority` field.
+
+`S`:: Bit 1 of octet 1. This is the SEID flag; a value of 0 means that
+the header carries no SEID field, and every node related message sets
+this flag to 0.
+
+`Message Type`:: Octet 2. This field states the message type, with a
+unique value for each PFCP message, and TS 29.244 Table 7.3-1 lists
+these values.
+
+`Message Length`:: Octets 3 to 4. This field states the length of the
+message in octets, excluding the first 4 octets of the header, so the
+count includes the SEID, if present, and the `Sequence Number`.
+
+`Sequence Number`:: Octets 5 to 7. This field identifies the request or
+response, and a PFCP entity uses it to match a response to its request
+and to detect retransmissions. A receiver ignores this field in a `PFCP
+Version Not Supported Response` message.
+
+===== Header for Session Related Messages
+
+Every session related message, for example `PFCP Session Establishment
+Request`, uses the header with an SEID, which is 16 octets long and sets
+the `S` flag to 1. TS 29.244 clause 7.2.2.3 defines this header, and
+clause 7.2.2.4 defines how a PFCP entity uses the fields of both
+headers.
+
+.PFCP header for a session related message
+[width=500]
+packetdiag::diagrams/pfcp-header-session.diag[svg]
+
+`FO`:: Bit 3 of octet 1. This is the Follow On flag; a value of 1 means
+that another PFCP message follows in the same UDP/IP packet. A CP
+function and a UP function can bundle session related messages in this
+way only when both functions indicated support for PFCP message
+bundling during the PFCP association setup or update procedure (TS
+29.244 clause 6.5).
+
+`MP`:: Bit 2 of octet 1. This is the Message Priority flag; a value of 1
+means that octet 16 carries a valid `Message Priority` value.
+
+`SEID`:: Octets 5 to 12. This field identifies the PFCP session at the
+receiving entity. The sending entity sets this field to the SEID value
+that the receiving entity provided, or to 0 when the SEID of the peer is
+not yet available, for example in a `PFCP Session Establishment Request`
+message.
+
+`Sequence Number`:: Octets 13 to 15. This field identifies the request
+or response, in the same way as in the header for node related
+messages.
+
+`Message Priority`:: Bits 8 to 5 of octet 16. This field states the
+relative priority of the message, as a value from 0 to 15, where 0 is
+the highest priority and 15 is the lowest, and it is valid only when
+the `MP` flag is set to 1.
+
+==== Message Categories
+
+TS 29.244 Table 7.3-1 lists every PFCP message and the reference points
+that each message applies to. The tables below group these messages by
+function.
+
+===== Heartbeat and Version Messages
+
+Heartbeat messages check that a peer PFCP entity is alive. The `PFCP
+Version Not Supported Response` message reports that the receiving
+entity does not support the PFCP version of a request.
+
+[cols="2,3,2",options="header"]
+|===
+| Message | Functionality | Applicability
+
+| `PFCP Heartbeat Request`
+| Checks that a peer PFCP entity is alive, and carries the Recovery Time Stamp of the sender.
+| Sxa, Sxb, Sxc, N4, N4mb.
+
+| `PFCP Heartbeat Response`
+| Responds to a `PFCP Heartbeat Request` message, and carries the Recovery Time Stamp of the responding PFCP entity.
+| Sxa, Sxb, Sxc, N4, N4mb.
+
+| `PFCP Version Not Supported Response`
+| Carries only a PFCP header, in which the Version field states the highest PFCP version that the sending entity supports.
+| Sxa, Sxb, Sxc, N4, N4mb.
+|===
+
+===== Association Messages
+
+Association messages set up, update, and release the PFCP association
+between a CP function and a UP function. A CP function uses the
+resources of a UP function, for example to establish PFCP sessions, only
+after the two functions set up a PFCP association.
+
+[cols="2,3,2",options="header"]
+|===
+| Message | Functionality | Applicability
+
+| `PFCP Association Setup Request`
+| Sets up a PFCP association, and carries the Node ID, the Recovery Time Stamp, and the supported features of the sender.
+| Sxa, Sxb, Sxc, N4, N4mb.
+
+| `PFCP Association Setup Response`
+| Reports the outcome of a `PFCP Association Setup Request` message.
+| Sxa, Sxb, Sxc, N4, N4mb.
+
+| `PFCP Association Update Request`
+| Modifies an existing PFCP association, for example to update the supported features or the available resources of the UP function.
+| Sxa, Sxb, Sxc, N4, N4mb.
+
+| `PFCP Association Update Response`
+| Reports the outcome of a `PFCP Association Update Request` message.
+| Sxa, Sxb, Sxc, N4, N4mb.
+
+| `PFCP Association Release Request`
+| Terminates an existing PFCP association. The CP function and the UP function then delete the PFCP sessions of that association locally.
+| Sxa, Sxb, Sxc, N4, N4mb.
+
+| `PFCP Association Release Response`
+| Reports the outcome of a `PFCP Association Release Request` message.
+| Sxa, Sxb, Sxc, N4, N4mb.
+|===
+
+===== PFD Management and Node Report Messages
+
+PFD Management messages provision Packet Flow Descriptions (PFDs) in the
+UP function for application detection. Node Report messages let the UP
+function report information that does not relate to a specific PFCP
+session.
+
+[cols="2,3,2",options="header"]
+|===
+| Message | Functionality | Applicability
+
+| `PFCP PFD Management Request`
+| Provisions PFDs in the UP function for one or more application identifiers.
+| Sxb, Sxc, N4.
+
+| `PFCP PFD Management Response`
+| Reports the outcome of a `PFCP PFD Management Request` message.
+| Sxb, Sxc, N4.
+
+| `PFCP Node Report Request`
+| Reports information that does not relate to a specific PFCP session to the CP function, for example a user plane path failure that affects all PFCP sessions towards a remote GTP-U peer.
+| Sxa, Sxb, Sxc, N4, N4mb.
+
+| `PFCP Node Report Response`
+| Reports the outcome of a `PFCP Node Report Request` message.
+| Sxa, Sxb, Sxc, N4, N4mb.
+|===
+
+===== Session Set Messages
+
+Session Set messages act on a set of PFCP sessions in one exchange,
+instead of on every affected PFCP session individually.
+
+[cols="2,3,2",options="header"]
+|===
+| Message | Functionality | Applicability
+
+| `PFCP Session Set Deletion Request`
+| Requests the peer to delete the PFCP sessions that a partial failure affected. Either the CP function or the UP function sends this message.
+| Sxa, Sxb, N4.
+
+| `PFCP Session Set Deletion Response`
+| Reports the outcome of a `PFCP Session Set Deletion Request` message.
+| Sxa, Sxb, N4.
+
+| `PFCP Session Set Modification Request`
+| Requests the UP function to send subsequent `PFCP Session Report Request` messages for a set of PFCP sessions to an alternative PGW-C, for example when a partial PGW-C failure affects those PFCP sessions.
+| Sxb, N4.
+
+| `PFCP Session Set Modification Response`
+| Reports the outcome of a `PFCP Session Set Modification Request` message.
+| Sxb, N4.
+|===
+
+===== Session Establishment and Deletion Messages
+
+These messages create and remove a PFCP session, together with the
+rules that the CP function provisioned in that PFCP session.
+
+[cols="2,3,2",options="header"]
+|===
+| Message | Functionality | Applicability
+
+| `PFCP Session Establishment Request`
+| Creates a PFCP session in the UP function, and provisions its initial PDRs, FARs, QERs, URRs, and BAR.
+| Sxa, Sxb, Sxc, N4, N4mb.
+
+| `PFCP Session Establishment Response`
+| Reports the outcome of a `PFCP Session Establishment Request` message, and carries the SEID that the UP function allocated.
+| Sxa, Sxb, Sxc, N4, N4mb.
+
+| `PFCP Session Deletion Request`
+| Deletes an existing PFCP session, together with all its rules.
+| Sxa, Sxb, Sxc, N4, N4mb.
+
+| `PFCP Session Deletion Response`
+| Reports the outcome of a `PFCP Session Deletion Request` message, and can carry a final usage report.
+| Sxa, Sxb, Sxc, N4, N4mb.
+|===
+
+===== Session Modification and Report Messages
+
+These messages update an existing PFCP session, and let the UP function
+report an event that relates to an individual PFCP session to the CP
+function.
+
+[cols="2,3,2",options="header"]
+|===
+| Message | Functionality | Applicability
+
+| `PFCP Session Modification Request`
+| Adds, modifies, or removes the PDRs, FARs, QERs, URRs, or BAR of an existing PFCP session.
+| Sxa, Sxb, Sxc, N4, N4mb.
+
+| `PFCP Session Modification Response`
+| Reports the outcome of a `PFCP Session Modification Request` message, and can carry a usage report for the affected rules.
+| Sxa, Sxb, Sxc, N4, N4mb.
+
+| `PFCP Session Report Request`
+| Reports an event of a PFCP session to the CP function, for example a usage report or the arrival of downlink data for a UE that is in idle mode.
+| Sxa, Sxb, Sxc, N4, N4mb.
+
+| `PFCP Session Report Response`
+| Reports the outcome of a `PFCP Session Report Request` message.
+| Sxa, Sxb, Sxc, N4, N4mb.
+|===
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 29.244
+a|
+* Clause 1 — Scope and applicable reference points
+* Clause 4.2 — UDP header and port numbers
+* Clause 5.2.1 — Packet forwarding model, covering PDR, FAR, QER, URR, and BAR
+* Clause 6.2 — PFCP node related procedures, covering heartbeat, PFD management, association, and node report
+* Clause 6.4 — Reliable delivery of PFCP messages
+* Clause 6.5 — PFCP messages bundling
+* Clause 7.2.2 — Message header, covering:
+** 7.2.2.2 the header for node related messages
+** 7.2.2.3 the header for session related messages
+** 7.2.2.4 the usage of the PFCP header
+* Clause 7.3 — Message types (Table 7.3-1)
+* Clause 7.4 — PFCP node related messages, covering:
+** 7.4.4.7 PFCP Version Not Supported Response
+** 7.4.6 PFCP Session Set Deletion
+** 7.4.7 PFCP Session Set Modification
+* Clause 7.5 — PFCP session related messages
+|===

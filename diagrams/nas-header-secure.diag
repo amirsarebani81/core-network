@@ -1,0 +1,9 @@
+packetdiag {
+  colwidth = 8
+
+  0-3: "Security Header Type"
+  4-7: "Protocol Discriminator"
+  8-39: "Message Authentication Code"
+  40-47: "Sequence Number"
+  48-55: "NAS Message (octet 7 onward)"
+}

@@ -1,0 +1,504 @@
+=== NAS (Non-Access-Stratum)
+
+==== Technical Overview
+
+The Non-Access-Stratum (NAS) protocol forms the highest stratum of the
+control plane between the UE and the MME at the LTE-Uu radio interface,
+a scope that TS 24.301 clause 4.1 defines. Between the UE and the MME,
+the E-UTRAN carries each NAS message transparently, and the S1AP chapter
+describes the S1AP messages that carry NAS messages over S1-MME.
+
+NAS comprises two protocols: the EPS Mobility Management (EMM) protocol
+and the EPS Session Management (ESM) protocol. The EMM protocol supports
+the mobility of the UE, which includes registering the UE with the
+network and tracking its location, and it also carries the procedures
+that control NAS security. The ESM protocol establishes, modifies, and
+releases the PDN connections and the EPS bearer contexts of the UE.
+
+The network can activate a default EPS bearer context during the attach
+procedure, when the UE requests PDN connectivity in its attach request,
+because an EMM message can carry an ESM message in an information
+element. In that case, the UE and the network run the attach procedure
+and the default EPS bearer context activation procedure in parallel,
+and TS 24.301 clause 4.2 defines this linkage between EMM and ESM.
+
+NAS security protects both EMM and ESM messages with integrity
+protection and ciphering, once the UE and the MME take an EPS security
+context into use. Ciphering is an operator option, and an operator that
+does not use ciphering configures the MME to always select the null
+ciphering algorithm, EPS Encryption Algorithm 0 (EEA0). TS 24.301 clause
+4.4 defines NAS security, and the Security Header Type field, which the
+General Message Format section below describes, states which protection
+a given NAS message carries.
+
+==== General Message Format
+
+Every NAS message except the `Service Request` message is a standard
+Layer 3 message as TS 24.007 defines it, and NAS arranges each of these
+messages either as a plain NAS message or as a security protected NAS
+message. TS 24.301 clause 9.1 defines both organizations.
+
+===== Plain NAS Message
+
+A plain NAS message carries a Protocol Discriminator, a Security Header
+Type or an EPS Bearer Identity, a Procedure Transaction Identity in an
+ESM message only, a Message Type, and zero or more other information
+elements (IEs). An EMM message and an ESM message use a different header
+layout, because only an ESM message carries an EPS Bearer Identity and a
+Procedure Transaction Identity.
+
+.NAS header for a plain EMM message
+[width=400]
+packetdiag::diagrams/nas-header-emm.diag[svg]
+
+`Protocol Discriminator`:: Bits 1 to 4 of octet 1. This field states
+which NAS protocol the message belongs to, EMM or ESM, and TS 24.301
+clause 9.2 refers to TS 24.007 for its coding.
+
+`Security Header Type`:: Bits 5 to 8 of octet 1 of an EMM message. This
+field states whether the message is a plain NAS message or a security
+protected NAS message, and which protection a security protected NAS
+message carries. TS 24.301 clause 9.3.1 defines this field, and the
+Security Header Type Values table below lists its values.
+
+`Message Type`:: Octet 2. This field states the message type, with a
+unique value for each EMM or ESM message, and TS 24.301 clause 9.8
+defines the value for each message type.
+
+.NAS header for a plain ESM message
+[width=400]
+packetdiag::diagrams/nas-header-esm.diag[svg]
+
+`EPS Bearer Identity`:: Bits 5 to 8 of octet 1 of an ESM message. This
+field identifies the EPS bearer context that the message applies to, or
+carries the value 0 when no EPS bearer identity is assigned. TS 24.301
+clause 9.3.2 defines this field.
+
+`Procedure Transaction Identity`:: Octet 1a of an ESM message. This field
+identifies the ESM procedure transaction that the message belongs to, so
+that the UE and the MME can match a response to its request. TS 24.301
+clause 9.4 defines this field.
+
+===== Security Protected NAS Message
+
+After the UE and the MME establish the secure exchange of NAS messages,
+the UE and the MME send every NAS message, apart from the `Service
+Request` message, in a security protected NAS message. The `Service
+Request` message is also integrity protected, but it carries its own
+security header, with Security Header Type `1100`, a key set identifier,
+a short sequence number, and a short Message Authentication Code, as TS
+24.301 clause 8.2.25 defines. A security
+protected NAS message places a Message Authentication Code and a
+Sequence Number in front of a complete plain NAS message, which can be
+either an EMM message or an ESM message. The Protocol Discriminator of
+the security protected NAS message itself always states EMM, as TS
+24.301 clause 9.2 defines.
+
+Before the secure exchange of NAS messages exists, the UE and the MME
+can send a small set of EMM messages without integrity protection, for
+example `Identity Request`, `Authentication Request`, and `Attach
+Request`. The only ESM message that the UE can send without integrity
+protection is a `PDN Connectivity Request` message that the UE carries
+in an `Attach Request` message before NAS security is activated. TS
+24.301 clauses 4.4.4.2 and 4.4.4.3 list these messages.
+
+.NAS header for a security protected NAS message
+[width=400]
+packetdiag::diagrams/nas-header-secure.diag[svg]
+
+`Message Authentication Code`:: Octets 2 to 5. This field carries the
+integrity protection value for the message, which the sender calculates
+over the Sequence Number and the NAS Message fields. TS 24.301 clause
+9.5 defines this field, and clause 4.4.3.3 defines its calculation.
+
+`Sequence Number`:: Octet 6. This field carries the eight least
+significant bits of the NAS COUNT of the sending entity, and the
+receiving entity uses the NAS COUNT to protect against replayed
+messages. TS 24.301 clauses 4.4.3 and 9.6 define this field.
+
+`NAS Message`:: Octet 7 onward. This field carries the complete plain
+NAS message that the Plain NAS Message section above describes. TS
+24.301 clause 9.7 defines this field.
+
+===== Security Header Type Values
+
+[cols="1,4",options="header"]
+|===
+| Value | Meaning
+
+| `0000`
+| Plain NAS message, not security protected.
+
+| `0001`
+| Integrity protected.
+
+| `0010`
+| Integrity protected and ciphered.
+
+| `0011`
+| Integrity protected with a new EPS security context. Only the
+`Security Mode Command` message can use this value.
+
+| `0100`
+| Integrity protected and ciphered with a new EPS security context. Only
+the `Security Mode Complete` message can use this value.
+
+| `0101`
+| Integrity protected and partially ciphered NAS message. Only the
+`Control Plane Service Request` message can use this value.
+
+| `1100`
+| Security header for the `Service Request` message, which is not a
+standard Layer 3 message.
+
+| `1101` to `1111`
+| Not used in this version of the protocol. A receiving entity
+interprets these values as `1100`.
+|===
+
+All other values are reserved. TS 24.301 clause 9.3.1 (Table 9.3.1)
+defines these values.
+
+==== Message Categories
+
+TS 24.301 clause 8.2 defines the EMM messages, and clause 8.3 defines
+the ESM messages. The tables below group these messages by function,
+and state which entity sends each message.
+
+===== EMM: Attach and Detach Messages
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Attach Request`
+| Starts the attach procedure, and carries the identity of the UE, the UE network capability, and an ESM message container.
+| UE → MME
+
+| `Attach Accept`
+| Reports that the network accepted the attach request, and carries the tracking area identity (TAI) list and an ESM message container. The message can also carry a new Globally Unique Temporary Identity (GUTI).
+| MME → UE
+
+| `Attach Complete`
+| Responds to an `Attach Accept` message.
+| UE → MME
+
+| `Attach Reject`
+| Reports that the network rejected the attach request, and states the reason.
+| MME → UE
+
+| `Detach Request`
+| Requests the release of the EMM context. Either the UE or the MME sends this message.
+| Both
+
+| `Detach Accept`
+| Reports that the detach procedure completed. Either the UE or the MME sends this message.
+| Both
+|===
+
+===== EMM: Tracking Area Update Messages
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Tracking Area Update Request`
+| Starts the tracking area updating procedure, for example after the UE enters a tracking area outside its current TAI list.
+| UE → MME
+
+| `Tracking Area Update Accept`
+| Reports that the network accepted the tracking area update, and carries EMM data such as an updated GUTI or TAI list.
+| MME → UE
+
+| `Tracking Area Update Complete`
+| Responds to a `Tracking Area Update Accept` message that changed the GUTI or assigned a new Temporary Mobile Subscriber Identity (TMSI).
+| UE → MME
+
+| `Tracking Area Update Reject`
+| Reports that the network rejected the tracking area update, and states the reason.
+| MME → UE
+|===
+
+===== EMM: Service Request Messages
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Service Request`
+| Requests the establishment of a NAS signaling connection and of the radio and S1 bearers. This message does not follow the structure of a standard Layer 3 message.
+| UE → MME
+
+| `Extended Service Request`
+| Starts a circuit-switched (CS) fallback or 1xCS fallback call, or responds to a mobile-terminated CS fallback request. The UE also uses this message for packet services when it needs to provide information that a `Service Request` message cannot carry.
+| UE → MME
+
+| `Control Plane Service Request`
+| Starts the service request procedure for a UE that uses control plane Cellular Internet of Things (CIoT) EPS optimization, and can carry an `ESM Data Transport` message.
+| UE → MME
+
+| `Service Reject`
+| Reports that the network rejected the service request procedure.
+| MME → UE
+
+| `Service Accept`
+| Reports that the network accepted a `Service Request`, an `Extended Service Request`, or a `Control Plane Service Request` message.
+| MME → UE
+|===
+
+===== EMM: Security Messages
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Authentication Request`
+| Starts authentication of the UE identity, and carries the NAS key set identifier and the random challenge (RAND) and authentication token (AUTN) parameters.
+| MME → UE
+
+| `Authentication Response`
+| Carries the authentication response that the UE calculated.
+| UE → MME
+
+| `Authentication Reject`
+| Reports that the authentication procedure failed, and instructs the UE to abort all EMM activities.
+| MME → UE
+
+| `Authentication Failure`
+| Reports that the UE could not authenticate the network, for example because of a synchronization failure.
+| UE → MME
+
+| `Identity Request`
+| Requests the UE to provide a specified identity, for example its IMSI.
+| MME → UE
+
+| `Identity Response`
+| Carries the identity that an `Identity Request` message requested.
+| UE → MME
+
+| `Security Mode Command`
+| Establishes NAS signaling security, and states the selected integrity and ciphering algorithms.
+| MME → UE
+
+| `Security Mode Complete`
+| Responds to a `Security Mode Command` message that the UE accepted.
+| UE → MME
+
+| `Security Mode Reject`
+| Reports that the UE rejected a `Security Mode Command` message.
+| UE → MME
+
+| `GUTI Reallocation Command`
+| Assigns a new GUTI to the UE, and optionally a new TAI list.
+| MME → UE
+
+| `GUTI Reallocation Complete`
+| Reports that the UE applied the GUTI that a `GUTI Reallocation Command` message assigned.
+| UE → MME
+|===
+
+===== EMM: NAS Transport and Status Messages
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Downlink NAS Transport`
+| Carries a Short Message Service (SMS) message in encapsulated format from the network to the UE.
+| MME → UE
+
+| `Uplink NAS Transport`
+| Carries an SMS message in encapsulated format from the UE to the network.
+| UE → MME
+
+| `Downlink Generic NAS Transport`
+| Carries an application message in encapsulated format from the network to the UE.
+| MME → UE
+
+| `Uplink Generic NAS Transport`
+| Carries an application message in encapsulated format from the UE to the network.
+| UE → MME
+
+| `CS Service Notification`
+| Informs the UE about a paging request with a CS call indicator that the MME received over the SGs interface, while a NAS signaling connection already exists for the UE.
+| MME → UE
+
+| `EMM Status`
+| Reports an EMM error condition, for example an unexpected message type. Either the UE or the MME sends this message.
+| Both
+
+| `EMM Information`
+| Sends EMM information to the UE while an EMM context exists, for example the network name or the local time zone.
+| MME → UE
+|===
+
+===== ESM: Default and Dedicated Bearer Context Messages
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Activate Default EPS Bearer Context Request`
+| Requests the UE to activate a default EPS bearer context.
+| MME → UE
+
+| `Activate Default EPS Bearer Context Accept`
+| Acknowledges that the UE activated the default EPS bearer context.
+| UE → MME
+
+| `Activate Default EPS Bearer Context Reject`
+| Reports that the UE rejected activation of the default EPS bearer context.
+| UE → MME
+
+| `Activate Dedicated EPS Bearer Context Request`
+| Requests the UE to activate a dedicated EPS bearer context that uses the same packet data network (PDN) address and access point name (APN) as an active default EPS bearer context.
+| MME → UE
+
+| `Activate Dedicated EPS Bearer Context Accept`
+| Acknowledges that the UE activated the dedicated EPS bearer context.
+| UE → MME
+
+| `Activate Dedicated EPS Bearer Context Reject`
+| Reports that the UE rejected activation of the dedicated EPS bearer context.
+| UE → MME
+
+| `Modify EPS Bearer Context Request`
+| Requests the UE to modify an active EPS bearer context, for example its quality of service (QoS) or its traffic flow template (TFT).
+| MME → UE
+
+| `Modify EPS Bearer Context Accept`
+| Acknowledges that the UE modified the active EPS bearer context.
+| UE → MME
+
+| `Modify EPS Bearer Context Reject`
+| Reports that the UE rejected the modification of an active EPS bearer context.
+| UE → MME
+
+| `Deactivate EPS Bearer Context Request`
+| Requests the UE to deactivate an active EPS bearer context, and states the reason.
+| MME → UE
+
+| `Deactivate EPS Bearer Context Accept`
+| Acknowledges that the UE deactivated the EPS bearer context.
+| UE → MME
+|===
+
+===== ESM: PDN Connectivity Messages
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `PDN Connectivity Request`
+| Starts the establishment of a PDN connection, and states the requested PDN type and, optionally, the APN.
+| UE → MME
+
+| `PDN Connectivity Reject`
+| Reports that the network rejected the establishment of the PDN connection, and states the reason.
+| MME → UE
+
+| `PDN Disconnect Request`
+| Starts the release of an existing PDN connection.
+| UE → MME
+
+| `PDN Disconnect Reject`
+| Reports that the network rejected the release of the PDN connection.
+| MME → UE
+|===
+
+===== ESM: Bearer Resource Messages
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `Bearer Resource Allocation Request`
+| Requests the network to allocate a dedicated bearer resource, for example for a new IP flow.
+| UE → MME
+
+| `Bearer Resource Allocation Reject`
+| Reports that the network rejected a `Bearer Resource Allocation Request` message.
+| MME → UE
+
+| `Bearer Resource Modification Request`
+| Requests the network to modify or release a dedicated bearer resource.
+| UE → MME
+
+| `Bearer Resource Modification Reject`
+| Reports that the network rejected a `Bearer Resource Modification Request` message.
+| MME → UE
+|===
+
+===== ESM: ESM Information, Status, and Transport Messages
+
+[cols="2,4,1",options="header"]
+|===
+| Message | Functionality | Direction
+
+| `ESM Information Request`
+| Requests the UE to provide ESM information, that is, protocol configuration options, the APN, or both. The MME sends this message only after NAS security is set up, and only when the UE set the ESM information transfer flag in its `PDN Connectivity Request` message, as TS 24.301 clause 6.6.1.2.2 defines.
+| MME → UE
+
+| `ESM Information Response`
+| Carries the ESM information that an `ESM Information Request` message requested.
+| UE → MME
+
+| `ESM Status`
+| Reports the status of an EPS bearer context or an ESM error condition. Either the UE or the MME sends this message.
+| Both
+
+| `ESM Dummy Message`
+| Fills the ESM message container of an attach procedure in which the UE does not request a PDN connection. Either the UE or the MME sends this message.
+| Both
+
+| `Notification`
+| Informs the UE about an event that is relevant for the upper layers, for example a cancelled Single Radio Voice Call Continuity (SRVCC) handover after which the UE needs to re-establish its IP Multimedia Subsystem (IMS) session.
+| MME → UE
+
+| `Remote UE Report`
+| Reports that a remote UE connected to or disconnected from a UE that acts as a Proximity Services (ProSe) UE-to-network relay.
+| UE → MME
+
+| `Remote UE Report Response`
+| Acknowledges receipt of a `Remote UE Report` message.
+| MME → UE
+
+| `ESM Data Transport`
+| Carries user data in encapsulated format, for a UE that uses control plane CIoT EPS optimization. Either the UE or the MME sends this message.
+| Both
+|===
+
+TS 24.301 clause 8.3.17 describes the `Modify EPS Bearer Context Reject`
+message as sent "by the UE or the network", but the Direction entry of
+the same clause states "UE to network", and only the UE rejects a
+modification in the procedure of clause 6.4.3.4. This document follows
+the Direction entry.
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 24.301
+a|
+* Clause 4.1 — Overview of the NAS
+* Clause 4.2 — Linkage between the protocols for EPS mobility management and EPS session management
+* Clause 4.4 — NAS security, covering:
+** 4.4.3 NAS COUNT and replay protection
+** 4.4.3.3 integrity protection and verification
+** 4.4.4.2 and 4.4.4.3 messages accepted without integrity protection
+* Clause 6.4.3.4 — EPS bearer context modification not accepted by the UE
+* Clause 6.6.1.2.2 — ESM information request initiated by the network
+* Clause 8.2 — EPS mobility management messages
+* Clause 8.2.25 — Service request
+* Clause 8.3 — EPS session management messages
+* Clause 9.1 — General message format
+* Clause 9.2 — Protocol discriminator
+* Clause 9.3 — Security header type and EPS bearer identity
+* Clause 9.4 — Procedure transaction identity
+* Clause 9.5 — Message authentication code
+* Clause 9.6 — Sequence number
+* Clause 9.7 — NAS message
+* Clause 9.8 — Message type
+|===

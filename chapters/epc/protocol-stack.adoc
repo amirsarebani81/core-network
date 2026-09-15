@@ -2,4 +2,8 @@
 
 include::s1ap.adoc[]
 
+include::nas.adoc[]
+
 include::gtpv2c.adoc[]
+
+include::pfcp.adoc[]

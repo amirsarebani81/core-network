@@ -1,0 +1,8 @@
+packetdiag {
+  colwidth = 8
+
+  0-3: "EPS Bearer Identity"
+  4-7: "Protocol Discriminator"
+  8-15: "Procedure Transaction Identity"
+  16-23: "Message Type"
+}

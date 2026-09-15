@@ -1,0 +1,14 @@
+packetdiag {
+  colwidth = 32
+
+  0-2: "Version"
+  3: "Spare"
+  4: "Spare"
+  5: "FO=0"
+  6: "MP=0"
+  7: "S=0"
+  8-15: "Message Type"
+  16-31: "Message Length"
+  32-55: "Sequence Number"
+  56-63: "Spare"
+}
