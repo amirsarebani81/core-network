@@ -98,6 +98,12 @@ Treat the documentation as living, not archival:
   asciidoctor's default near-black color instead of the theme's — invisible
   on a light page, but a real contrast bug on `terminal`'s dark page.
 - `output/` — build output (gitignored).
+- `.github/workflows/pages.yml` — builds the book on every push to `main`
+  and publishes it to GitHub Pages (HTML as `index.html`, plus the PDF).
+  The HTML must stay self-contained: `build.sh` passes `-a data-uri -a
+  allow-uri-read` so Kroki diagrams are embedded rather than linked to
+  `localhost:8000`, and the workflow fails if any `localhost:8000`
+  reference survives.
 
 ## Build
 

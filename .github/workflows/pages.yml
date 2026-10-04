@@ -1,0 +1,80 @@
+name: Publish to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  THEME: corporate
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      kroki:
+        image: yuzutech/kroki
+        ports:
+          - 8000:8000
+        env:
+          KROKI_MERMAID_HOST: mermaid
+      mermaid:
+        image: yuzutech/kroki-mermaid
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Install AsciiDoc toolchain
+        run: gem install --no-document asciidoctor asciidoctor-pdf asciidoctor-kroki rouge
+
+      - name: Wait for Kroki
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/health >/dev/null && exit 0
+            sleep 2
+          done
+          echo "Kroki did not become healthy" >&2
+          exit 1
+
+      - name: Build PDF and HTML
+        run: bash build.sh all "$THEME"
+
+      - name: Assemble site
+        run: |
+          mkdir -p site
+          cp output/core-network.html site/index.html
+          cp output/core-network.pdf site/core-network.pdf
+          if grep -q 'localhost:8000' site/index.html; then
+            echo "index.html references localhost:8000" >&2
+            exit 1
+          fi
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

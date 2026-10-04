@@ -114,6 +114,7 @@ build_html() {
   asciidoctor \
     -r asciidoctor-kroki \
     -a data-uri \
+    -a allow-uri-read \
     -a docinfodir="$DOCINFODIR" \
     "${EXTRA_ATTRS[@]}" \
     main.adoc -o output/core-network.html

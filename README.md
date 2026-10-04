@@ -76,7 +76,7 @@ Or run the underlying commands directly:
 
 ```bash
 asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme.yml -a pdf-themesdir=theme -a allow-uri-read -a cache-uri main.adoc -o output/core-network.pdf
-asciidoctor    -r asciidoctor-kroki main.adoc -o output/core-network.html
+asciidoctor    -r asciidoctor-kroki -a data-uri -a allow-uri-read main.adoc -o output/core-network.html
 ```
 
 `allow-uri-read` is required because diagrams are fetched as remote images
@@ -85,6 +85,11 @@ diagram's alt text and URL instead of rendering it. `cache-uri` avoids
 re-fetching unchanged diagrams on every rebuild (needs the optional
 `open-uri-cached` gem — harmless if it isn't installed, just skips the
 cache).
+
+For the HTML, `data-uri` together with `allow-uri-read` embeds every diagram
+in the page as a data URI. Without `allow-uri-read`, the HTML keeps `<img>`
+links to `http://localhost:8000/...`, which only resolve on a machine that
+runs Kroki — so a published copy would show broken diagrams.
 
 ## 4. Choosing a theme
 
@@ -127,7 +132,7 @@ attributes:
 asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme-slate.yml -a pdf-themesdir=theme -a allow-uri-read -a cache-uri main.adoc -o output/core-network.pdf
 
 # HTML, "forest" theme
-asciidoctor -r asciidoctor-kroki -a data-uri -a docinfodir=theme/forest main.adoc -o output/core-network.html
+asciidoctor -r asciidoctor-kroki -a data-uri -a allow-uri-read -a docinfodir=theme/forest main.adoc -o output/core-network.html
 
 # PDF, "terminal" theme (style themes also need the table/rouge attributes build.sh sets)
 asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme-terminal.yml -a pdf-themesdir=theme -a allow-uri-read -a cache-uri -a table-frame=topbot -a table-grid=rows -a table-stripes=even -a rouge-style=monokai main.adoc -o output/core-network.pdf
@@ -154,3 +159,18 @@ asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme-terminal.ym
 3. Add a case for `<name>` in the `THEME` switch in `build.sh`, including
    `TABLE_FRAME`/`TABLE_GRID`/`TABLE_STRIPES`/`ROUGE_STYLE` if the theme
    changes table structure or code highlighting.
+
+## 5. Publishing to GitHub Pages
+
+`.github/workflows/pages.yml` builds the book and publishes it to
+<https://amirsarebani81.github.io/core-network/> on every push to `main`
+(or manually from the **Actions** tab via *Run workflow*). It:
+
+1. starts Kroki as a service container on `localhost:8000`, so
+   `:kroki-server-url:` in `main.adoc` works unchanged;
+2. runs `bash build.sh all "$THEME"` (`THEME` is set at the top of the
+   workflow — change it there to publish a different theme);
+3. publishes `output/core-network.html` as `index.html`, alongside
+   `core-network.pdf` (at `.../core-network/core-network.pdf`).
+
+One-time setup: **Settings → Pages → Source: GitHub Actions**.
