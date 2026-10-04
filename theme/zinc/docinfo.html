@@ -1,0 +1,199 @@
+<style>
+  :root {
+    --z-bg: #FAFAF9;
+    --z-fg: #18181B;
+    --z-muted: #71717A;
+    --z-faint: #A1A1AA;
+    --z-line: #E4E4E7;
+    --z-accent: #2563EB;
+    --z-accent-hover: #1D4ED8;
+    --z-chip: #F4F4F5;
+    --z-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+
+    --cn-accent: var(--z-accent);
+    --cn-accent-fg: #FFFFFF;
+    --cn-bar-bg: var(--z-bg);
+    --cn-bar-fg: var(--z-fg);
+    --cn-surface: var(--z-bg);
+    --cn-border: var(--z-line);
+    --cn-muted: var(--z-muted);
+    --cn-sidebar-bg: var(--z-bg);
+    --cn-footer-bg: var(--z-bg);
+    --cn-footer-fg: var(--z-faint);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --z-bg: #0F0F11;
+      --z-fg: #F4F4F5;
+      --z-muted: #A1A1AA;
+      --z-faint: #71717A;
+      --z-line: #27272A;
+      --z-accent: #60A5FA;
+      --z-accent-hover: #93C5FD;
+      --z-chip: #1C1C1F;
+      --cn-accent-fg: #0F0F11;
+    }
+  }
+
+  body {
+    background-color: var(--z-bg);
+    color: var(--z-fg);
+    font-family: var(--z-font);
+    -webkit-font-smoothing: antialiased;
+  }
+  #header, #content, #footnotes, #footer {
+    background-color: transparent;
+  }
+  #footer { border-top: 1px solid var(--z-line); }
+
+  body .cn-topbar {
+    font-family: var(--z-font);
+    box-shadow: none;
+    border-bottom: 1px solid var(--z-line);
+  }
+  body .cn-topbar .cn-topbar-pdf {
+    border-color: var(--z-line);
+    border-radius: 999px;
+    background: var(--z-chip);
+    color: var(--z-muted);
+  }
+  body .cn-topbar a.cn-topbar-pdf:hover { color: var(--z-fg); border-color: var(--z-faint); opacity: 1; }
+  body .cn-search-panel { --pagefind-ui-font: var(--z-font); }
+
+  h1, h2, h3, #toctitle, .sidebarblock > .content > .title, h4, h5, h6,
+  .subheader, .admonitionblock td.content > .title, .audioblock > .title,
+  .exampleblock > .title, .imageblock > .title, .listingblock > .title,
+  .literalblock > .title, .stemblock > .title, .openblock > .title,
+  .paragraph > .title, .quoteblock > .title, table.tableblock > .title,
+  .verseblock > .title, .videoblock > .title, .dlist > .title,
+  .olist > .title, .ulist > .title, .qlist > .title, .hdlist > .title,
+  #toctitle, .sidebarblock > .content > .title {
+    font-family: var(--z-font);
+    color: var(--z-fg);
+  }
+  h1, h2, h3, h4 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  #header > h1:first-child {
+    font-family: var(--z-font);
+    color: var(--z-fg);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  #header .details {
+    color: var(--z-muted);
+    border-color: var(--z-line);
+  }
+  #header .details a, #header .details span.email a,
+  #header .details br+span.author::before {
+    color: var(--z-muted);
+  }
+
+  #toctitle {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--z-faint);
+  }
+
+  #content h1 > a.link, h2 > a.link, h3 > a.link, #toctitle > a.link,
+  .sidebarblock > .content > .title > a.link, h4 > a.link, h5 > a.link,
+  h6 > a.link {
+    color: var(--z-fg);
+  }
+  #content h1 > a.link:hover, h2 > a.link:hover, h3 > a.link:hover,
+  #toctitle > a.link:hover, .sidebarblock > .content > .title > a.link:hover,
+  h4 > a.link:hover, h5 > a.link:hover, h6 > a.link:hover {
+    color: var(--z-accent);
+  }
+
+  a { color: var(--z-accent); text-decoration: none; }
+  a:hover, a:focus { color: var(--z-accent-hover); text-decoration: underline; }
+
+  .quoteblock blockquote::before { color: var(--z-faint); }
+
+  :not(pre):not([class^=L]) > code, code, tt, kbd {
+    background-color: var(--z-chip);
+    color: var(--z-fg);
+    border-color: var(--z-line);
+  }
+  pre, pre.highlight, pre.rouge,
+  .listingblock > .content > pre:not(.highlight),
+  .literalblock pre {
+    background-color: var(--z-chip);
+    color: var(--z-fg);
+    border: 1px solid var(--z-line);
+    border-radius: 8px;
+  }
+
+  table, table.tableblock {
+    background-color: transparent;
+    color: var(--z-fg);
+    border-color: var(--z-line);
+  }
+  table.tableblock {
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 0.85em;
+  }
+  table.tableblock td, table.tableblock th,
+  th.tableblock, td.tableblock {
+    border-color: var(--z-line);
+  }
+  table tr th, table tr td,
+  tbody tr th, tbody tr th p, tfoot tr th, tfoot tr th p,
+  p.tableblock {
+    color: var(--z-fg);
+  }
+  table thead tr th, table thead tr td,
+  table tfoot tr th, table tfoot tr td {
+    background-color: transparent;
+    color: var(--z-faint);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  table tr.even, table tr.alt,
+  table.stripes-all > * > tr, table.stripes-odd > * > tr:nth-of-type(odd),
+  table.stripes-even > * > tr:nth-of-type(even),
+  table.stripes-hover > * > tr:hover {
+    background-color: transparent;
+  }
+  table.tableblock > caption.title {
+    caption-side: top;
+    text-align: center;
+    color: var(--z-muted);
+  }
+
+  blockquote, blockquote p, .quoteblock blockquote, .quoteblock p,
+  .verseblock pre, .admonitionblock > table td.content,
+  #content > h1:first-child:not([class]), p a > code:hover {
+    color: var(--z-fg);
+  }
+  .quoteblock .attribution cite, .verseblock .attribution cite {
+    color: var(--z-muted);
+  }
+
+  #toc.toc2 {
+    background-color: var(--cn-sidebar-bg);
+    border-right-color: var(--z-line);
+  }
+  #toc a { color: var(--z-muted); }
+  #toc a:hover { color: var(--z-fg); text-decoration: none; }
+
+  hr { border-color: var(--z-line); }
+
+  .imageblock > .content {
+    text-align: center;
+  }
+  .imageblock > .title {
+    text-align: center;
+    color: var(--z-muted);
+  }
+</style>

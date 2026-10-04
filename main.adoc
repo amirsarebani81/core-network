@@ -10,8 +10,8 @@ Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :icons: font
 :source-highlighter: rouge
 :docinfo: shared
-:docinfodir: theme
-:pdf-theme: core-network-theme.yml
+:docinfodir: theme/zinc
+:pdf-theme: core-network-theme-zinc.yml
 :pdf-themesdir: theme
 :kroki-server-url: http://localhost:8000
 :sectanchors:

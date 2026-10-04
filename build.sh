@@ -12,20 +12,22 @@ TARGET (default: all)
   html    Build the HTML only
   all     Build both PDF and HTML
 
-THEME (default: corporate)
-  corporate    Navy blue, serif body, shaded table headers (default)
+THEME (default: zinc)
+  corporate    Navy blue, serif body, shaded table headers
   slate        Blue-grey recolor of corporate
   forest       Dark green recolor of corporate
   editorial    Sans-serif, minimalist borderless tables, amber accent
   manuscript   Classic serif, ivory page, fully-ruled tables, burgundy accent
   terminal     Dark page, monospace headings, monokai code highlighting
+  zinc         Matches amirsarebani81.github.io: zinc greys, blue accent, auto dark mode (default)
 
 Options:
   -h, --help   Show this help message and exit
 
 Examples:
-  build.sh                   # PDF + HTML, corporate theme
-  build.sh pdf                # PDF only, corporate theme
+  build.sh                   # PDF + HTML, zinc theme
+  build.sh pdf                # PDF only, zinc theme
+  build.sh all corporate      # PDF + HTML, corporate theme
   build.sh all slate          # PDF + HTML, slate theme
   build.sh html forest        # HTML only, forest theme
   build.sh all editorial      # PDF + HTML, editorial theme
@@ -41,7 +43,7 @@ case "${1:-}" in
 esac
 
 TARGET="${1:-all}"
-THEME="${2:-corporate}"
+THEME="${2:-zinc}"
 mkdir -p output
 
 TABLE_FRAME=""
@@ -84,8 +86,15 @@ case "$THEME" in
     TABLE_STRIPES="even"
     ROUGE_STYLE="monokai"
     ;;
+  zinc)
+    PDF_THEME="core-network-theme-zinc.yml"
+    DOCINFODIR="theme/zinc"
+    TABLE_FRAME="topbot"
+    TABLE_GRID="rows"
+    TABLE_STRIPES="none"
+    ;;
   *)
-    echo "Unknown theme: $THEME (use corporate, slate, forest, editorial, manuscript, or terminal)"
+    echo "Unknown theme: $THEME (use corporate, slate, forest, editorial, manuscript, terminal, or zinc)"
     exit 1
     ;;
 esac

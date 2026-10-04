@@ -76,9 +76,13 @@ bash build.sh html    # HTML only
 Or run the underlying commands directly:
 
 ```bash
-asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme.yml -a pdf-themesdir=theme -a allow-uri-read -a cache-uri main.adoc -o output/core-network.pdf
-asciidoctor -r asciidoctor-kroki -r asciidoctor-multipage -b multipage_html5 -a multipage-level=2 -a data-uri -a allow-uri-read -a docinfodir=theme main.adoc -D output/html
+asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme-zinc.yml -a pdf-themesdir=theme -a allow-uri-read -a cache-uri -a table-frame=topbot -a table-grid=rows -a table-stripes=none main.adoc -o output/core-network.pdf
+asciidoctor -r asciidoctor-kroki -r asciidoctor-multipage -b multipage_html5 -a multipage-level=2 -a data-uri -a allow-uri-read -a docinfodir=theme/zinc -a table-frame=topbot -a table-grid=rows -a table-stripes=none main.adoc -D output/html
 ```
+
+These commands use the default `zinc` theme; see
+[Choosing a theme](#4-choosing-a-theme) for the attributes of the other
+themes.
 
 `allow-uri-read` is required because diagrams are fetched as remote images
 from the Kroki server; without it, `asciidoctor-pdf` silently prints the
@@ -112,30 +116,39 @@ warning.
 
 ## 4. Choosing a theme
 
-Six themes are available for both the PDF and HTML output. Pick one by
+Seven themes are available for both the PDF and HTML output. Pick one by
 passing its name as the second argument to `build.sh`:
 
 ```bash
-bash build.sh all corporate    # default: navy blue, serif body, shaded table headers
+bash build.sh all corporate    # navy blue, serif body, shaded table headers
 bash build.sh all slate        # blue-grey recolor of corporate
 bash build.sh all forest       # dark green recolor of corporate
 bash build.sh all editorial    # sans-serif, minimalist borderless tables, amber accent
 bash build.sh all manuscript   # classic serif, ivory page, fully-ruled tables, burgundy accent
 bash build.sh all terminal     # dark page, monospace headings, monokai code highlighting
+bash build.sh all zinc         # default: matches amirsarebani81.github.io: zinc greys, blue accent, auto dark mode
 
 bash build.sh pdf slate        # a single target also takes the theme argument
 bash build.sh html forest
 ```
 
-`corporate`, `slate`, and `forest` only change colors; layout, fonts, and
-table style stay the same as the default. `editorial`, `manuscript`, and
+`corporate` is the base theme that every other theme extends. `slate` and
+`forest` only change its colors; layout, fonts, and table style stay the
+same as `corporate`. `editorial`, `manuscript`, and
 `terminal` are style themes: each also changes the base font family
 (sans-serif, serif, or monospace headings), the table structure (borderless,
 fully-ruled, or row-ruled — via the `table-frame`/`table-grid`/`table-stripes`
 document attributes, which `build.sh` sets per theme), and, for `terminal`,
 the page background and syntax-highlighting palette (`rouge-style=monokai`).
-`corporate` is used when no theme is given, so existing invocations of
-`bash build.sh` are unaffected.
+`zinc` is a style theme that matches the author's home page
+(amirsarebani81.github.io): system sans-serif (Noto Sans in the PDF), zinc
+greys with a blue accent, row-ruled tables with small uppercase headers, and,
+in the HTML only, an automatic dark palette through `prefers-color-scheme`.
+`zinc` is used when no theme is given, both by `bash build.sh` and by the
+GitHub Pages workflow, and `main.adoc` sets `pdf-theme` and `docinfodir` to
+its files. The `zinc` table style comes from the
+`table-frame`/`table-grid`/`table-stripes` attributes that `build.sh` passes,
+so a direct `asciidoctor` invocation must pass them too.
 
 Note: the architecture and call-flow diagrams are pre-rendered SVGs with a
 white background (`images/*.svg`, `diagrams/*.puml`), so on the `terminal`
@@ -147,6 +160,9 @@ To run the underlying commands directly with a non-default theme, override
 attributes:
 
 ```bash
+# PDF, "corporate" theme
+asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme.yml -a pdf-themesdir=theme -a allow-uri-read -a cache-uri main.adoc -o output/core-network.pdf
+
 # PDF, "slate" theme
 asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme-slate.yml -a pdf-themesdir=theme -a allow-uri-read -a cache-uri main.adoc -o output/core-network.pdf
 

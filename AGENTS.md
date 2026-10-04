@@ -79,21 +79,25 @@ Treat the documentation as living, not archival:
   harmless).
 - `diagrams/*.puml` — PlantUML sequence diagrams, rendered via the Kroki
   service referenced in `main.adoc`'s `:kroki-server-url:` attribute.
-- `theme/core-network-theme.yml` — default PDF theme (asciidoctor-pdf),
-  "corporate". Five more themes each `extends: core-network` and live
+- `theme/core-network-theme.yml` — base PDF theme (asciidoctor-pdf),
+  "corporate". Six more themes each `extends: core-network` and live
   alongside it: `theme/core-network-theme-slate.yml` and
   `-forest.yml` are color-only recolors; `-editorial.yml`, `-manuscript.yml`,
-  and `-terminal.yml` are style themes that also change the font family,
+  `-terminal.yml`, and `-zinc.yml` are style themes that also change the font family,
   page background, and table structure. Selected via
-  `bash build.sh <target> <theme-name>` — see `README.md`. A theme that
+  `bash build.sh <target> <theme-name>` — see `README.md`. `zinc` is the
+  default: `build.sh`, the Pages workflow, and the `:pdf-theme:` and
+  `:docinfodir:` attributes in `main.adoc` all use it. A theme that
   introduces a font outside the bundled catalog (Noto Serif, Noto Sans,
   M+ 1mn) must declare it under `font.catalog` with a `GEM_FONTS_DIR/*.ttf`
   path (see `core-network-theme-editorial.yml`), or asciidoctor-pdf fails
   the build with "<font> is not a known font".
-- `theme/docinfo.html` — HTML head overrides (`:docinfo:`/`:docinfodir:` in
-  `main.adoc`); keeps HTML colors in sync with `core-network-theme.yml`.
+- `theme/docinfo.html` — HTML head overrides for the `corporate` theme
+  (loaded through `:docinfo:` and the `docinfodir` that `build.sh` passes);
+  keeps HTML colors in sync with `core-network-theme.yml`.
   Only affects the HTML backend, not the PDF. `theme/slate/`, `theme/forest/`,
-  `theme/editorial/`, `theme/manuscript/`, and `theme/terminal/` each hold a
+  `theme/editorial/`, `theme/manuscript/`, `theme/terminal/`, and
+  `theme/zinc/` each hold a
   `docinfo.html` counterpart to one PDF theme above; keep every pair's
   colors (and, for the style themes, fonts/backgrounds) in sync when editing
   a theme. Two selectors in every one of these files need to stay
@@ -120,7 +124,12 @@ Treat the documentation as living, not archival:
   "PDF" links work locally.
   The `corporate` theme's `theme/docinfo.html` also carries a
   `prefers-color-scheme: dark` palette; when you change a corporate color,
-  check whether its dark-mode counterpart needs the same change.
+  check whether its dark-mode counterpart needs the same change. The `zinc`
+  theme mirrors the palette of the author's home page
+  (`amirsarebani81.github.io`, `index.html`) and also has a dark palette;
+  its `theme/zinc/docinfo.html` defines the colors once as `--z-*`
+  variables and only redefines those variables for dark mode, so keep new
+  rules on the variables rather than on literal colors.
 - `scripts/multipage-full-toc.rb` — loaded by `build.sh` after
   `asciidoctor-multipage`; overrides its TOC so that the landing page
   (`main.html`) gets the full outline instead of the chapter titles only.
