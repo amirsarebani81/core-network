@@ -116,19 +116,37 @@ build_html() {
   asciidoctor \
     -r asciidoctor-kroki \
     -r asciidoctor-multipage \
+    -r ./scripts/multipage-full-toc.rb \
     -b multipage_html5 \
     -a data-uri \
     -a allow-uri-read \
     -a docinfodir="$DOCINFODIR" \
     -a multipage-level=2 \
+    -a docdatetime="$(git log -1 --format=%cs 2>/dev/null || date +%F)" \
     "${EXTRA_ATTRS[@]}" \
     main.adoc -D output/html
+  cp theme/favicon.svg output/html/
+  ruby scripts/postprocess-html.rb output/html
+  build_search_index
   echo "==> HTML written to output/html/ (open output/html/main.html)"
+}
+
+build_search_index() {
+  local args=(--site output/html)
+  if command -v pagefind >/dev/null 2>&1; then
+    pagefind "${args[@]}"
+  elif python3 -c 'import pagefind' >/dev/null 2>&1; then
+    python3 -m pagefind "${args[@]}"
+  elif command -v npx >/dev/null 2>&1; then
+    npx --yes pagefind@1 "${args[@]}"
+  else
+    echo "==> pagefind not found; skipping the search index (pip install 'pagefind[extended]')"
+  fi
 }
 
 case "$TARGET" in
   pdf) build_pdf ;;
   html) build_html ;;
-  all) build_pdf; build_html ;;
+  all) build_pdf; build_html; cp output/core-network.pdf output/html/ ;;
   *) echo "Unknown target: $TARGET (use pdf, html, or all)"; exit 1 ;;
 esac

@@ -48,7 +48,7 @@ layout, because only an ESM message carries an EPS Bearer Identity and a
 Procedure Transaction Identity.
 
 .NAS header for a plain EMM message
-[width=400]
+[width=400,role=packet-diagram]
 packetdiag::diagrams/nas-header-emm.diag[svg]
 
 `Protocol Discriminator`:: Bits 1 to 4 of octet 1. This field states
@@ -66,7 +66,7 @@ unique value for each EMM or ESM message, and TS 24.301 clause 9.8
 defines the value for each message type.
 
 .NAS header for a plain ESM message
-[width=400]
+[width=400,role=packet-diagram]
 packetdiag::diagrams/nas-header-esm.diag[svg]
 
 `EPS Bearer Identity`:: Bits 5 to 8 of octet 1 of an ESM message. This
@@ -103,7 +103,7 @@ in an `Attach Request` message before NAS security is activated. TS
 24.301 clauses 4.4.4.2 and 4.4.4.3 list these messages.
 
 .NAS header for a security protected NAS message
-[width=400]
+[width=400,role=packet-diagram]
 packetdiag::diagrams/nas-header-secure.diag[svg]
 
 `Message Authentication Code`:: Octets 2 to 5. This field carries the

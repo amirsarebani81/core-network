@@ -1,0 +1,373 @@
+<script>document.documentElement.classList.add('js');</script>
+<style>
+  html { scroll-padding-top: 4rem; }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding-top: 3rem;
+  }
+  #header, #footer { flex: none; }
+  #content { flex: 1 0 auto; }
+  #header, #content, #footer { min-width: 0; }
+
+  .cn-topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1001;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 1rem;
+    background: var(--cn-bar-bg);
+    color: var(--cn-bar-fg);
+    font-family: "Open Sans", "DejaVu Sans", sans-serif;
+    font-size: 0.9rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  }
+  .cn-topbar a, .cn-topbar a:hover, .cn-topbar a:focus,
+  .cn-topbar button {
+    color: var(--cn-bar-fg);
+    text-decoration: none;
+  }
+  .cn-topbar-title {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .cn-topbar-spacer { flex: 1; }
+  .cn-topbar-version { opacity: 0.75; white-space: nowrap; }
+  .cn-topbar-pdf {
+    white-space: nowrap;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    padding: 0.2rem 0.6rem;
+  }
+  .cn-topbar-pdf:hover { opacity: 0.85; }
+  .cn-toc-toggle {
+    display: none;
+    background: none;
+    border: 0;
+    font-size: 1.4rem;
+    line-height: 1;
+    padding: 0.25rem;
+    cursor: pointer;
+  }
+
+  body:not(#main) #header > h1,
+  body:not(#main) #header > .details { display: none; }
+  #header > h1 { overflow-wrap: break-word; }
+  #header .details { overflow-wrap: anywhere; }
+
+  #toc .toc-root { display: none; }
+  #toc.toc2 #toctitle, #toctitle {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cn-muted);
+  }
+  #toc ul { font-family: "Open Sans", "DejaVu Sans", sans-serif; }
+  #toc .toc-current { color: var(--cn-accent); }
+  #toc a:has(> .toc-current) {
+    display: block;
+    margin-left: -0.6rem;
+    padding: 0.1rem 0.5rem;
+    border-left: 3px solid var(--cn-accent);
+    border-radius: 0 4px 4px 0;
+    background: color-mix(in srgb, var(--cn-accent) 12%, transparent);
+  }
+
+  h1, h2, h3, h4, h5, h6, #toctitle { font-weight: 600; }
+  #header > h1 { font-size: 2.25em; line-height: 1.2; letter-spacing: -0.01em; }
+  #content h2 { font-size: 1.9em; letter-spacing: -0.01em; }
+  #content h3 { font-size: 1.5em; }
+  #content h4 { font-size: 1.25em; }
+  #content h5, #content h6 { font-size: 1.1em; }
+
+  #preamble,
+  #content .paragraph,
+  #content .ulist,
+  #content .olist,
+  #content .dlist,
+  #content .admonitionblock,
+  #content .listingblock,
+  #content .literalblock,
+  .cn-pager-wrap {
+    max-width: 46rem;
+  }
+  td .paragraph, td .ulist, td .olist, td .dlist { max-width: none; }
+
+  .imageblock > .content {
+    background: #FFFFFF;
+    border: 1px solid var(--cn-border);
+    border-radius: 6px;
+    padding: 0.75rem;
+  }
+  .imageblock.packet-diagram img { width: 100%; max-width: 44rem; height: auto; }
+  .imageblock.cn-zoomable img { cursor: zoom-in; }
+  .imageblock.cn-zoomable > .content::after {
+    content: "Click the diagram to enlarge it";
+    position: sticky;
+    left: 0;
+    display: block;
+    margin-top: 0.5rem;
+    font-family: "Open Sans", "DejaVu Sans", sans-serif;
+    font-size: 0.75rem;
+    color: #6B7280;
+    text-align: right;
+  }
+  .cn-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    overflow: auto;
+    padding: 3.5rem 1.5rem 1.5rem;
+    background: rgba(12, 16, 24, 0.9);
+    cursor: zoom-out;
+  }
+  .cn-lightbox img {
+    margin: auto;
+    max-width: none;
+    background: #FFFFFF;
+    border-radius: 4px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  }
+  .cn-lightbox-close {
+    position: fixed;
+    top: 0.75rem;
+    right: 1rem;
+    z-index: 2001;
+    background: rgba(255, 255, 255, 0.15);
+    color: #FFFFFF;
+    border: 0;
+    border-radius: 4px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  html.cn-noscroll, html.cn-noscroll body { overflow: hidden; }
+
+  td .nav-footer, .nav-footer > p:empty { display: none; }
+  .cn-pager-wrap {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--cn-border);
+    font-family: "Open Sans", "DejaVu Sans", sans-serif;
+  }
+  .cn-up { font-size: 0.85rem; color: var(--cn-muted); margin-bottom: 0.75rem; }
+  .cn-pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .cn-pager a {
+    display: block;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--cn-border);
+    border-radius: 8px;
+    background: var(--cn-surface);
+    text-decoration: none;
+    line-height: 1.35;
+    transition: border-color 0.15s;
+  }
+  .cn-pager a:hover { border-color: var(--cn-accent); }
+  .cn-pager a.cn-next { grid-column: 2; text-align: right; }
+  .cn-pager small {
+    display: block;
+    margin-bottom: 0.2rem;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cn-muted);
+  }
+  .cn-pager span { font-weight: 600; }
+
+  #preamble { margin-bottom: 2rem; }
+  #preamble > .sectionbody > [class="paragraph"]:first-of-type p { color: inherit; }
+  .cn-button a, a.cn-button {
+    display: inline-block;
+    margin-top: 0.25rem;
+    padding: 0.45rem 1rem;
+    border-radius: 6px;
+    background: var(--cn-accent);
+    color: var(--cn-accent-fg);
+    font-family: "Open Sans", "DejaVu Sans", sans-serif;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .cn-button a:hover, a.cn-button:hover { color: var(--cn-accent-fg); opacity: 0.9; }
+  body#main .nav-footer { display: none; }
+
+  .cn-pagelist > ul { list-style: none; margin-left: 0; padding-left: 0; }
+  .cn-pagelist li { margin: 0 0 0.35em; }
+  .cn-pagelist li > p { margin: 0; }
+  .cn-num {
+    display: inline-block;
+    min-width: 2.5em;
+    color: var(--cn-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  body#main .cn-toc-toggle { display: none; }
+  .cn-book-toc {
+    max-width: 46rem;
+    font-family: "Open Sans", "DejaVu Sans", sans-serif;
+    line-height: 1.5;
+  }
+  .cn-book-toc-title {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--cn-border);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cn-muted);
+  }
+  .cn-book-toc ul { list-style: none; margin: 0; padding: 0; }
+  .cn-book-toc ul ul { padding-left: 1.5rem; }
+  .cn-book-toc li { margin: 0.2rem 0; }
+  .cn-book-toc a { text-decoration: none; }
+  .cn-book-toc a:hover { text-decoration: underline; }
+  .cn-book-toc .sectlevel1 > li { margin-top: 1.25rem; }
+  .cn-book-toc .sectlevel1 > li > a { font-size: 1.2rem; font-weight: 600; }
+  .cn-book-toc .sectlevel2 > li > a { font-weight: 600; }
+  .cn-book-toc .sectlevel3, .cn-book-toc .sectlevel4 { font-size: 0.92rem; }
+
+  .cn-topbar-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.12);
+    border: 0;
+    border-radius: 4px;
+    padding: 0.25rem 0.6rem;
+    font: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .cn-topbar-search[hidden] { display: none; }
+  .cn-topbar-search:hover { background: rgba(255, 255, 255, 0.2); }
+  .cn-topbar-search kbd {
+    font: inherit;
+    font-size: 0.75rem;
+    padding: 0 0.35rem;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    opacity: 0.7;
+    background: none;
+    color: inherit;
+    box-shadow: none;
+  }
+  .cn-search {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 4rem 1rem 1rem;
+    background: rgba(12, 16, 24, 0.6);
+  }
+  .cn-search[hidden] { display: none; }
+  .cn-search-panel {
+    width: min(44rem, 100%);
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+    padding: 1rem;
+    border-radius: 8px;
+    background: var(--cn-surface);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    --pagefind-ui-primary: var(--cn-accent);
+    --pagefind-ui-text: currentColor;
+    --pagefind-ui-background: var(--cn-surface);
+    --pagefind-ui-border: var(--cn-border);
+    --pagefind-ui-tag: var(--cn-sidebar-bg);
+    --pagefind-ui-font: "Open Sans", "DejaVu Sans", sans-serif;
+    --pagefind-ui-scale: 0.85;
+  }
+
+  #footer { background: var(--cn-footer-bg); }
+  #footer-text { color: var(--cn-footer-fg); }
+
+  @media screen and (min-width: 768px) {
+    #toc.toc2 { top: 3rem; height: calc(100% - 3rem); }
+  }
+
+  @media screen and (max-width: 767px) {
+    .cn-toc-toggle { display: block; }
+    .cn-topbar-version { display: none; }
+    html.js #toc { display: none; }
+    html.js body.cn-toc-open #toc {
+      display: block;
+      position: fixed;
+      top: 3rem;
+      left: 0;
+      bottom: 0;
+      z-index: 1000;
+      width: min(85vw, 20rem);
+      margin: 0;
+      padding: 1rem;
+      overflow-y: auto;
+      background: var(--cn-sidebar-bg);
+      border-right: 1px solid var(--cn-border);
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+    }
+    #header > h1 { font-size: 1.75em; }
+    #content h2 { font-size: 1.5em; }
+    #content h3 { font-size: 1.3em; }
+    table.tableblock { display: block; overflow-x: auto; }
+    .cn-pager { grid-template-columns: 1fr; }
+    .cn-pager a.cn-next { grid-column: 1; }
+    .cn-topbar-search kbd, .cn-search-label { display: none; }
+    .cn-topbar-search { padding: 0.4rem 0.55rem; }
+
+    .imageblock.cn-wide > .content { overflow-x: auto; }
+    .imageblock.cn-wide img {
+      max-width: none;
+      width: min(var(--cn-natural-width, 100%), 250%);
+    }
+    .imageblock.cn-zoomable > .content::after { content: "Tap the diagram to enlarge it"; }
+    .imageblock.cn-wide > .content::after {
+      content: "Scroll sideways, or tap the diagram to enlarge it";
+      text-align: left;
+    }
+  }
+
+  @media print {
+    .cn-topbar, #toc, .cn-pager-wrap, .nav-footer, .cn-search,
+    h2 > a.anchor, h3 > a.anchor, h4 > a.anchor, h5 > a.anchor, h6 > a.anchor {
+      display: none !important;
+    }
+    body { display: block; padding-top: 0; }
+    #preamble, #content .paragraph, #content .ulist, #content .olist,
+    #content .dlist, #content .listingblock, #content .literalblock {
+      max-width: none;
+    }
+    .imageblock > .content { border: 0; padding: 0; }
+    .imageblock.cn-zoomable > .content::after { content: none; }
+    .imageblock.cn-wide img { width: auto; max-width: 100%; }
+    .imageblock, table.tableblock tr { break-inside: avoid; }
+    #footer { background: none; }
+    #footer-text { color: #000000; }
+  }
+</style>
+<header class="cn-topbar">
+  <button class="cn-toc-toggle" type="button" aria-label="Show the table of contents" aria-expanded="false">&#9776;</button>
+  <a class="cn-topbar-title" href="main.html">{doctitle}</a>
+  <span class="cn-topbar-spacer"></span>
+  <button class="cn-topbar-search" type="button" hidden aria-label="Search the book" aria-haspopup="dialog"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="6.5" cy="6.5" r="5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10.5 10.5 15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="cn-search-label">Search</span><kbd>/</kbd></button>
+  <span class="cn-topbar-version">v{revnumber}</span>
+  <a class="cn-topbar-pdf" href="core-network.pdf">PDF</a>
+</header>
+<div class="cn-search" hidden role="dialog" aria-modal="true" aria-label="Search the book">
+  <div class="cn-search-panel"><div id="cn-search-ui"></div></div>
+</div>

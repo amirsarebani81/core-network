@@ -1,4 +1,17 @@
 <style>
+  :root {
+    --cn-accent: #C2570B;
+    --cn-accent-fg: #FFFFFF;
+    --cn-bar-bg: #1A1A1A;
+    --cn-bar-fg: #FFFFFF;
+    --cn-surface: #FFFFFF;
+    --cn-border: #DDDDDD;
+    --cn-muted: #6B6B6B;
+    --cn-sidebar-bg: #F8F8F7;
+    --cn-footer-bg: #1A1A1A;
+    --cn-footer-fg: #DDDDDD;
+  }
+
   body {
     font-family: "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: #1A1A1A;
@@ -68,19 +81,5 @@
   }
   .imageblock > .title {
     text-align: center;
-  }
-
-  /* Multi-page HTML: pin the footer to the bottom of the viewport on
-     short pages instead of letting it float under a block of empty space. */
-  body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-  #header, #footer {
-    flex: none;
-  }
-  #content {
-    flex: 1 0 auto;
   }
 </style>

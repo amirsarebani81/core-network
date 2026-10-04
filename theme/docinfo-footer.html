@@ -1,0 +1,144 @@
+<script>
+(function () {
+  var toggle = document.querySelector('.cn-toc-toggle');
+  if (toggle) {
+    toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = document.body.classList.toggle('cn-toc-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', function (e) {
+      if (document.body.classList.contains('cn-toc-open') && !e.target.closest('#toc')) {
+        document.body.classList.remove('cn-toc-open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  var nav = document.querySelector('#content > .nav-footer');
+  if (nav) {
+    var links = {};
+    nav.querySelectorAll('a').forEach(function (a) {
+      var label = (a.previousSibling && a.previousSibling.textContent) || '';
+      if (/Previous/.test(label)) links.prev = a;
+      else if (/Up/.test(label)) links.up = a;
+      else if (/Next/.test(label)) links.next = a;
+    });
+    var card = function (a, cls, caption) {
+      return '<a class="' + cls + '" href="' + a.getAttribute('href') + '"><small>' +
+        caption + '</small><span>' + a.innerHTML + '</span></a>';
+    };
+    var html = '';
+    if (links.up && links.up.getAttribute('href') !== 'main.html') {
+      html += '<div class="cn-up">&uarr; Part of <a href="' + links.up.getAttribute('href') +
+        '">' + links.up.innerHTML + '</a></div>';
+    }
+    html += '<nav class="cn-pager" aria-label="Pages">';
+    if (links.prev) html += card(links.prev, 'cn-prev', '&larr; Previous');
+    if (links.next) html += card(links.next, 'cn-next', 'Next &rarr;');
+    html += '</nav>';
+    var wrap = document.createElement('div');
+    wrap.className = 'cn-pager-wrap';
+    wrap.innerHTML = html;
+    nav.replaceWith(wrap);
+  }
+
+  var openLightbox = function (img) {
+    var box = document.createElement('div');
+    box.className = 'cn-lightbox';
+    var big = document.createElement('img');
+    big.src = img.src;
+    big.alt = img.alt;
+    var natural = img.naturalWidth;
+    big.style.width = Math.max(natural, Math.min(window.innerWidth - 48, natural * 2.5)) + 'px';
+    var close = document.createElement('button');
+    close.className = 'cn-lightbox-close';
+    close.type = 'button';
+    close.textContent = 'Close (Esc)';
+    box.appendChild(close);
+    box.appendChild(big);
+    document.body.appendChild(box);
+    document.documentElement.classList.add('cn-noscroll');
+    var dismiss = function () {
+      box.remove();
+      document.documentElement.classList.remove('cn-noscroll');
+      document.removeEventListener('keydown', onKey);
+    };
+    var onKey = function (e) { if (e.key === 'Escape') dismiss(); };
+    box.addEventListener('click', dismiss);
+    document.addEventListener('keydown', onKey);
+  };
+  var markZoomable = function (img) {
+    var block = img.closest('.imageblock');
+    block.classList.add('cn-zoomable');
+    if (img.naturalWidth > 600) {
+      block.classList.add('cn-wide');
+      img.style.setProperty('--cn-natural-width', img.naturalWidth + 'px');
+    }
+  };
+  document.querySelectorAll('#content .imageblock img').forEach(function (img) {
+    if (img.complete) markZoomable(img);
+    else img.addEventListener('load', function () { markZoomable(img); });
+    img.addEventListener('click', function () { openLightbox(img); });
+  });
+
+  var searchButton = document.querySelector('.cn-topbar-search');
+  var searchBox = document.querySelector('.cn-search');
+  if (searchButton && searchBox && location.protocol !== 'file:') {
+    searchButton.hidden = false;
+    var searchLoaded = false;
+    var openSearch = function () {
+      searchBox.hidden = false;
+      searchButton.setAttribute('aria-expanded', 'true');
+      document.documentElement.classList.add('cn-noscroll');
+      if (!searchLoaded) {
+        searchLoaded = true;
+        var css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = 'pagefind/pagefind-ui.css';
+        document.head.appendChild(css);
+        var script = document.createElement('script');
+        script.src = 'pagefind/pagefind-ui.js';
+        script.onload = function () {
+          new PagefindUI({
+            element: '#cn-search-ui',
+            baseUrl: location.pathname.replace(/[^/]*$/, ''),
+            showSubResults: true,
+            showImages: false,
+            autofocus: true
+          });
+        };
+        script.onerror = function () {
+          document.getElementById('cn-search-ui').textContent =
+            'The search index is not available. Build it with Pagefind; see README.md.';
+        };
+        document.head.appendChild(script);
+      } else {
+        var input = searchBox.querySelector('input');
+        if (input) input.focus();
+      }
+    };
+    var closeSearch = function () {
+      searchBox.hidden = true;
+      searchButton.setAttribute('aria-expanded', 'false');
+      document.documentElement.classList.remove('cn-noscroll');
+      searchButton.focus();
+    };
+    searchButton.addEventListener('click', openSearch);
+    searchBox.addEventListener('click', function (e) {
+      if (e.target === searchBox) closeSearch();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (searchBox.hidden) {
+        var typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
+        if (e.key === '/' && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+          openSearch();
+        }
+      } else if (e.key === 'Escape') {
+        closeSearch();
+      }
+    });
+  }
+})();
+</script>

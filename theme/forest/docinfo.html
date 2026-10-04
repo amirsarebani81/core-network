@@ -1,4 +1,17 @@
 <style>
+  :root {
+    --cn-accent: #1B4332;
+    --cn-accent-fg: #FFFFFF;
+    --cn-bar-bg: #1B4332;
+    --cn-bar-fg: #FFFFFF;
+    --cn-surface: #FFFFFF;
+    --cn-border: #D9E4DD;
+    --cn-muted: #52665A;
+    --cn-sidebar-bg: #F8F8F7;
+    --cn-footer-bg: #1B4332;
+    --cn-footer-fg: #E3EEE7;
+  }
+
   h1, h2, h3, #toctitle, .sidebarblock > .content > .title, h4, h5, h6,
   .subheader, .admonitionblock td.content > .title, .audioblock > .title,
   .exampleblock > .title, .imageblock > .title, .listingblock > .title,
@@ -51,19 +64,5 @@
   }
   .imageblock > .title {
     text-align: center;
-  }
-
-  /* Multi-page HTML: pin the footer to the bottom of the viewport on
-     short pages instead of letting it float under a block of empty space. */
-  body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-  #header, #footer {
-    flex: none;
-  }
-  #content {
-    flex: 1 0 auto;
   }
 </style>

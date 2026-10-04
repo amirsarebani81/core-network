@@ -1,4 +1,17 @@
 <style>
+  :root {
+    --cn-accent: #FFB454;
+    --cn-accent-fg: #1E1E1E;
+    --cn-bar-bg: #181818;
+    --cn-bar-fg: #FFB454;
+    --cn-surface: #252526;
+    --cn-border: #3C3C3C;
+    --cn-muted: #9DA5B4;
+    --cn-sidebar-bg: #181818;
+    --cn-footer-bg: #181818;
+    --cn-footer-fg: #9DA5B4;
+  }
+
   body {
     background-color: #1E1E1E;
     color: #D4D4D4;
@@ -75,6 +88,28 @@
   table.tableblock td, table.tableblock th {
     border-color: #3C3C3C;
   }
+  table tr th, table tr td,
+  tbody tr th, tbody tr th p, tfoot tr th, tfoot tr th p,
+  p.tableblock {
+    color: #D4D4D4;
+  }
+  table, table.tableblock {
+    background-color: transparent;
+  }
+  table tr.even, table tr.alt,
+  table.stripes-all > * > tr, table.stripes-odd > * > tr:nth-of-type(odd),
+  table.stripes-even > * > tr:nth-of-type(even),
+  table.stripes-hover > * > tr:hover {
+    background-color: #252526;
+  }
+  blockquote, blockquote p, .quoteblock blockquote, .quoteblock p,
+  .verseblock pre, .admonitionblock > table td.content,
+  #content > h1:first-child:not([class]), p a > code:hover {
+    color: #D4D4D4;
+  }
+  .quoteblock .attribution cite, .verseblock .attribution cite {
+    color: #9DA5B4;
+  }
   table.tableblock > caption.title {
     caption-side: top;
     text-align: center;
@@ -95,19 +130,5 @@
   .imageblock > .title {
     text-align: center;
     color: #9DA5B4;
-  }
-
-  /* Multi-page HTML: pin the footer to the bottom of the viewport on
-     short pages instead of letting it float under a block of empty space. */
-  body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-  #header, #footer {
-    flex: none;
-  }
-  #content {
-    flex: 1 0 auto;
   }
 </style>

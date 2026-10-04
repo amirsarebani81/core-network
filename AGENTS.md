@@ -97,6 +97,38 @@ Treat the documentation as living, not archival:
   without an explicit override for them the title and byline silently keep
   asciidoctor's default near-black color instead of the theme's — invisible
   on a light page, but a real contrast bug on `terminal`'s dark page.
+  Each of these `docinfo.html` files also defines the `--cn-*` CSS custom
+  properties (accent, top-bar, border, footer colors) on `:root`.
+- `theme/docinfo-header.html` and `theme/docinfo-footer.html` — the
+  theme-independent HTML site layout (fixed top bar with the search and
+  PDF links, title shown only on the landing page, text-width cap,
+  landing-page table of contents, previous/next cards, click-to-enlarge
+  diagrams that scroll sideways on phones, highlighted current TOC entry,
+  search dialog, print stylesheet, mobile TOC drawer). Each
+  `theme/<name>/` directory symlinks both files rather than copying them,
+  so edit layout once here and put colors only in the per-theme
+  `docinfo.html` via the `--cn-*` variables. The landing-page abstract in
+  `main.adoc` sits inside `ifdef::backend-multipage_html5[]`, so it is
+  HTML-only; `bash build.sh all` copies the PDF into `output/html/` so the
+  "PDF" links work locally.
+  The `corporate` theme's `theme/docinfo.html` also carries a
+  `prefers-color-scheme: dark` palette; when you change a corporate color,
+  check whether its dark-mode counterpart needs the same change.
+- `scripts/multipage-full-toc.rb` — loaded by `build.sh` after
+  `asciidoctor-multipage`; overrides its TOC so that the landing page
+  (`main.html`) gets the full outline instead of the chapter titles only.
+  Other pages keep the pruned TOC for their own branch.
+- `scripts/postprocess-html.rb` — runs after the HTML build: per-page
+  `<title>`, Open Graph tags, the favicon MIME type, the full table of
+  contents in the body of `main.html` (`.cn-book-toc`, which replaces the
+  chapter list, and the sidebar is removed from that page), the numbered
+  sub-page list on each chapter page (`.cn-pagelist`), and the
+  `data-pagefind-*` attributes for search. `build.sh` then builds the
+  Pagefind search index into `output/html/pagefind/` (skipped with a
+  message if Pagefind is not installed) and copies `theme/favicon.svg`.
+- Packet-format diagrams (`packetdiag::`) carry `role=packet-diagram`,
+  which scales them up to the text width in the HTML only; keep the role
+  on any new packet diagram.
 - `output/` — build output (gitignored). `bash build.sh html` writes a
   multi-page site to `output/html/` (via `asciidoctor-multipage`, split at
   level-2 sections) — open `output/html/main.html`, not a single file.

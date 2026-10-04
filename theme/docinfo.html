@@ -1,4 +1,17 @@
 <style>
+  :root {
+    --cn-accent: #2E4A6B;
+    --cn-accent-fg: #FFFFFF;
+    --cn-bar-bg: #2E4A6B;
+    --cn-bar-fg: #FFFFFF;
+    --cn-surface: #FFFFFF;
+    --cn-border: #DDE3EA;
+    --cn-muted: #5B6B7D;
+    --cn-sidebar-bg: #F8F8F7;
+    --cn-footer-bg: #2E4A6B;
+    --cn-footer-fg: #E6ECF2;
+  }
+
   h1, h2, h3, #toctitle, .sidebarblock > .content > .title, h4, h5, h6,
   .subheader, .admonitionblock td.content > .title, .audioblock > .title,
   .exampleblock > .title, .imageblock > .title, .listingblock > .title,
@@ -53,17 +66,123 @@
     text-align: center;
   }
 
-  /* Multi-page HTML: pin the footer to the bottom of the viewport on
-     short pages instead of letting it float under a block of empty space. */
-  body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-  #header, #footer {
-    flex: none;
-  }
-  #content {
-    flex: 1 0 auto;
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --cn-accent: #8DB4E2;
+      --cn-accent-fg: #14202E;
+      --cn-bar-bg: #1A2A3D;
+      --cn-bar-fg: #E6ECF2;
+      --cn-surface: #1F2833;
+      --cn-border: #34404E;
+      --cn-muted: #9AA8B8;
+      --cn-sidebar-bg: #141B24;
+      --cn-footer-bg: #1A2A3D;
+      --cn-footer-fg: #B8C4D2;
+    }
+
+    body {
+      background-color: #11171F;
+      color: #D5DCE4;
+    }
+    #header, #content, #footnotes, #footer {
+      background-color: transparent;
+    }
+    #footer { background-color: var(--cn-footer-bg); }
+
+    h1, h2, h3, #toctitle, .sidebarblock > .content > .title, h4, h5, h6,
+    .subheader, .admonitionblock td.content > .title, .audioblock > .title,
+    .exampleblock > .title, .imageblock > .title, .listingblock > .title,
+    .literalblock > .title, .stemblock > .title, .openblock > .title,
+    .paragraph > .title, .quoteblock > .title, table.tableblock > .title,
+    .verseblock > .title, .videoblock > .title, .dlist > .title,
+    .olist > .title, .ulist > .title, .qlist > .title, .hdlist > .title,
+    #toctitle, .sidebarblock > .content > .title {
+      color: #A9C6E8;
+    }
+
+    #header > h1:first-child {
+      color: #A9C6E8;
+    }
+    #header .details {
+      color: #9AA8B8;
+      border-color: #34404E;
+    }
+    #header .details a, #header .details span.email a,
+    #header .details br+span.author::before {
+      color: #B8C4D2;
+    }
+
+    #content h1 > a.link, h2 > a.link, h3 > a.link, #toctitle > a.link,
+    .sidebarblock > .content > .title > a.link, h4 > a.link, h5 > a.link,
+    h6 > a.link {
+      color: #A9C6E8;
+    }
+    #content h1 > a.link:hover, h2 > a.link:hover, h3 > a.link:hover,
+    #toctitle > a.link:hover, .sidebarblock > .content > .title > a.link:hover,
+    h4 > a.link:hover, h5 > a.link:hover, h6 > a.link:hover {
+      color: #CFE0F3;
+    }
+
+    a { color: #8DB4E2; }
+    a:hover, a:focus { color: #B5D0EF; }
+
+    .quoteblock blockquote::before { color: #A9C6E8; }
+
+    :not(pre):not([class^=L]) > code, code, tt, kbd {
+      background-color: #1F2833;
+      color: #E3E9EF;
+      border-color: #34404E;
+    }
+    pre, pre.highlight, pre.rouge,
+    .listingblock > .content > pre:not(.highlight),
+    .literalblock pre {
+      background-color: #1F2833;
+      color: #E3E9EF;
+      border-color: #34404E;
+    }
+
+    table, table.tableblock {
+      background-color: transparent;
+      color: #D5DCE4;
+      border-color: #34404E;
+    }
+    table.tableblock td, table.tableblock th,
+    th.tableblock, td.tableblock {
+      border-color: #34404E;
+    }
+    table tr th, table tr td,
+    tbody tr th, tbody tr th p, tfoot tr th, tfoot tr th p,
+    p.tableblock {
+      color: #D5DCE4;
+    }
+    blockquote, blockquote p, .quoteblock blockquote, .quoteblock p,
+    .verseblock pre, .admonitionblock > table td.content,
+    #content > h1:first-child:not([class]), p a > code:hover {
+      color: #D5DCE4;
+    }
+    .quoteblock .attribution cite, .verseblock .attribution cite {
+      color: #9AA8B8;
+    }
+    table thead tr th, table thead tr td,
+    table tfoot tr th, table tfoot tr td {
+      background-color: #1A2A3D;
+      color: #E6ECF2;
+    }
+    table tr.even, table tr.alt,
+    table.stripes-all > * > tr, table.stripes-odd > * > tr:nth-of-type(odd),
+    table.stripes-even > * > tr:nth-of-type(even),
+    table.stripes-hover > * > tr:hover {
+      background-color: #18202A;
+    }
+    table.tableblock > caption.title { color: #9AA8B8; }
+
+    #toc.toc2 {
+      background-color: var(--cn-sidebar-bg);
+      border-right-color: #34404E;
+    }
+    #toc a { color: #B8C4D2; }
+
+    hr { border-color: #34404E; }
   }
 </style>

@@ -1,7 +1,7 @@
 = Core Network: Architecture and Signaling Procedures
 Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :doctype: book
-:revnumber: 0.14.0
+:revnumber: 0.14.1
 :revdate: 2026-10-04
 :toc: left
 :toclevels: 4
@@ -14,6 +14,25 @@ Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :pdf-theme: core-network-theme.yml
 :pdf-themesdir: theme
 :kroki-server-url: http://localhost:8000
+:sectanchors:
+:sectlinks:
+:description: A reference to the architecture of the Evolved Packet Core (EPC) and the signaling procedures between its network elements, with call flows and 3GPP TS clause citations.
+:favicon: favicon.svg
+ifdef::backend-multipage_html5[]
+:email!:
+endif::[]
+
+ifdef::backend-multipage_html5[]
+This book describes the architecture of the Evolved Packet Core (EPC) and
+the signaling procedures that run between its network elements. Each
+procedure has a call flow diagram and a step-by-step description of its
+messages, and each technical claim cites the 3GPP Technical Specification
+(TS) and clause that defines it, so that a network engineer can move
+directly between this book and the specifications.
+
+[.cn-button]
+link:core-network.pdf[Download the PDF edition]
+endif::[]
 
 include::chapters/epc/architecture-and-specifications.adoc[]
 

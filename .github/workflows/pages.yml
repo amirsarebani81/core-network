@@ -63,6 +63,10 @@ jobs:
             echo "the HTML pages above reference localhost:8000" >&2
             exit 1
           fi
+          if [ ! -f site/pagefind/pagefind-ui.js ]; then
+            echo "the Pagefind search index is missing (build.sh runs it through npx)" >&2
+            exit 1
+          fi
 
       - name: Add GoatCounter analytics
         if: vars.GOATCOUNTER_CODE != ''

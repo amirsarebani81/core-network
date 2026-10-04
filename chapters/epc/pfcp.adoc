@@ -55,7 +55,7 @@ Every node related message, for example `PFCP Heartbeat Request` or
 is 8 octets long. TS 29.244 clause 7.2.2.2 defines this header.
 
 .PFCP header for a node related message
-[width=500]
+[width=500,role=packet-diagram]
 packetdiag::diagrams/pfcp-header-node.diag[svg]
 
 `Version`:: Bits 8 to 6 of octet 1. This field states the PFCP version,
@@ -96,7 +96,7 @@ clause 7.2.2.4 defines how a PFCP entity uses the fields of both
 headers.
 
 .PFCP header for a session related message
-[width=500]
+[width=500,role=packet-diagram]
 packetdiag::diagrams/pfcp-header-session.diag[svg]
 
 `FO`:: Bit 3 of octet 1. This is the Follow On flag; a value of 1 means

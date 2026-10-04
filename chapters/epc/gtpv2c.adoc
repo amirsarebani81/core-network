@@ -42,7 +42,7 @@ Indication` messages use the header without a Tunnel Endpoint Identifier
 (TEID), which is 8 octets long.
 
 .GTPv2-C header without a TEID
-[width=500]
+[width=500,role=packet-diagram]
 packetdiag::diagrams/gtpv2c-header-no-teid.diag[svg]
 
 `Version`:: Bits 8 to 6 of octet 1. This field states the GTP-C
@@ -70,7 +70,7 @@ Apart from the Echo and Version Not Supported Indication messages, every
 GTPv2-C message uses the header with a TEID, which is 12 octets long.
 
 .GTPv2-C header with a TEID
-[width=500]
+[width=500,role=packet-diagram]
 packetdiag::diagrams/gtpv2c-header-with-teid.diag[svg]
 
 `TEID`:: Octets 5 to 8. This field identifies a tunnel endpoint in the
