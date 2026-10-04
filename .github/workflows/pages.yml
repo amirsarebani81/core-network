@@ -64,6 +64,25 @@ jobs:
             exit 1
           fi
 
+      - name: Add GoatCounter analytics
+        if: vars.GOATCOUNTER_CODE != ''
+        env:
+          GOATCOUNTER_CODE: ${{ vars.GOATCOUNTER_CODE }}
+        run: |
+          if ! [[ "$GOATCOUNTER_CODE" =~ ^[a-z0-9-]+$ ]]; then
+            echo "GOATCOUNTER_CODE must contain only a-z, 0-9, and '-'" >&2
+            exit 1
+          fi
+          snippet="<script data-goatcounter=\"https://${GOATCOUNTER_CODE}.goatcounter.com/count\" async src=\"//gc.zgo.at/count.js\"></script>"
+          find site -name '*.html' -exec sed -i "s|</body>|${snippet}\n</body>|" {} +
+          total=$(find site -name '*.html' | wc -l)
+          tagged=$(grep -rl --include='*.html' 'data-goatcounter' site | wc -l)
+          echo "GoatCounter snippet added to $tagged of $total pages"
+          if [ "$tagged" -ne "$total" ]; then
+            echo "some pages have no </body> tag" >&2
+            exit 1
+          fi
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3

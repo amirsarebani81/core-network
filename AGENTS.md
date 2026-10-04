@@ -106,6 +106,10 @@ Treat the documentation as living, not archival:
   stay self-contained: `build.sh` passes `-a data-uri -a allow-uri-read`
   so Kroki diagrams are embedded rather than linked to `localhost:8000`,
   and the workflow fails if any page still references `localhost:8000`.
+  If the `GOATCOUNTER_CODE` repository variable is set, the workflow
+  inserts the GoatCounter analytics script before `</body>` in every
+  published page. Keep analytics out of `theme/docinfo-*.html`, so that
+  forks and local builds don't report page views.
 
 ## Build
 
