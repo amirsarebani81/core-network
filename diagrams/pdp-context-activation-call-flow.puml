@@ -1,0 +1,32 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "UE" as UE
+participant "RNC" as RNC
+participant "SGSN" as SGSN
+participant "GGSN" as GGSN
+participant "PCRF/AAA" as PCRF
+
+UE -> SGSN: NAS: Activate PDP Context Request
+
+SGSN -> GGSN: GTPv1-C: Create PDP Context Request
+
+opt External AAA or policy authorization
+    GGSN -> PCRF: Diameter (Gx): Credit-Control-Request (CCR-I) /\nRADIUS: Access-Request
+    PCRF -> GGSN: Diameter (Gx): Credit-Control-Answer (CCA-I) /\nRADIUS: Access-Accept
+end
+
+GGSN -> SGSN: GTPv1-C: Create PDP Context Response
+
+SGSN -> RNC: RANAP: RAB Assignment Request
+RNC -> UE: RRC: Radio Bearer Setup
+UE -> RNC: RRC: Radio Bearer Setup Complete
+RNC -> SGSN: RANAP: RAB Assignment Response
+
+opt Direct Tunnel or downgraded QoS
+    SGSN -> GGSN: GTPv1-C: Update PDP Context Request
+    GGSN -> SGSN: GTPv1-C: Update PDP Context Response
+end
+
+SGSN -> UE: NAS: Activate PDP Context Accept
+@enduml

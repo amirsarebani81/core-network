@@ -1,0 +1,4 @@
+[#_gprs_functional_description_and_information_flows]
+== Functional Description and Information Flows
+
+include::pdp-context-activation-procedure.adoc[]

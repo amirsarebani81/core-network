@@ -1,0 +1,460 @@
+[#_gprs_pdp_context_activation_procedure]
+=== PDP Context Activation Procedure
+
+==== Technical Overview
+
+The Packet Data Protocol (PDP) Context Activation procedure is the
+session management procedure that the User Equipment (UE) starts to
+establish a PDP context with a Gateway GPRS Support Node (GGSN) in a
+General Packet Radio Service (GPRS) core network with the Gn/Gp
+architecture (TS 23.060 clause 9.2.2.1). TS 24.008 calls the UE the
+Mobile Station (MS); this chapter uses the term UE throughout. The
+procedure activates the default PDP context for a given PDP address and
+Access Point Name (APN), and the UE activates any additional PDP context
+for the same PDP address and APN with the secondary PDP context
+activation procedure instead (TS 24.008 clause 6.1.3.1). The Serving
+GPRS Support Node (SGSN) and the GGSN exchange the control-plane
+messages of the procedure over the Gn/Gp interface with the GPRS
+Tunnelling Protocol version 1 for the control plane (GTPv1-C), which
+TS 29.060 defines. The PDP context provides IP or non-IP connectivity
+between the UE and the external Packet Data Network (PDN) that the APN
+identifies. The procedure has these high-level effects:
+
+On the UE:: The UE starts the procedure with a Non-Access Stratum (NAS)
+Session Management (SM) message over the radio interface. The SM state
+of the UE moves from `PDP-INACTIVE` to `PDP-ACTIVE-PENDING` when the UE
+sends the request, and to `PDP-ACTIVE` when the UE receives the
+acceptance (TS 24.008 clause 6.1.3.1.1). The UE receives the allocated
+PDP address and the negotiated Quality of Service (QoS).
+
+On the SGSN:: The SGSN validates the request against the PDP context
+subscription records of the subscriber, and selects a GGSN for the
+requested APN through a Domain Name System (DNS) interrogation
+(TS 23.060 clause 9.2.2.1 and Annex A). The SGSN then creates the PDP
+context in the GGSN over the Gn/Gp interface, and sets up the Radio
+Access Bearer (RAB) with the Radio Network Controller (RNC) in Iu mode,
+or runs the packet flow context procedures with the Base Station
+Subsystem (BSS) in A/Gb mode.
+
+On the GGSN:: The GGSN creates an entry in its PDP context table,
+generates a Charging ID, and allocates the PDP address (TS 23.060 clause
+9.2.2.1). For authentication and authorization, the GGSN can interact
+with an external Authentication, Authorization, and Accounting (AAA)
+server through the Remote Authentication Dial-In User Service (RADIUS)
+over the Gi reference point (TS 29.061 clause 16), and with the Policy
+and Charging Rules Function (PCRF) over the Gx reference point
+(TS 29.212). The GGSN then routes PDP Packet Data Units (PDUs) between
+the GPRS backbone and the external PDN.
+
+==== Call Flow
+
+The call flow shows the Iu mode variant of the procedure, which TS 23.060
+clause 9.2.2.1 shows in Figure 64. Two parts of the call flow are
+optional: the external AAA or policy authorization at the GGSN, and the
+Update PDP Context exchange, which the SGSN starts for Direct Tunnel or
+after a QoS downgrade. The call flow omits the optional Invoke Trace
+step and the Customised Applications for Mobile network Enhanced Logic
+(CAMEL) procedures C1 and C2 of TS 23.060 clause 9.2.2.1, and
+it expands step 5 of Figure 64, Radio Access Bearer Setup, into the
+messages of the RAB Assignment procedure (TS 23.060 clause 12.7.4.1).
+
+.PDP context activation procedure call flow
+plantuml::diagrams/pdp-context-activation-call-flow.puml[svg]
+
+==== Step-by-Step Description
+
+. The *UE* starts the activation by sending a NAS SM `Activate PDP
+Context Request` message (TS 24.008 clause 9.5.1) to the *SGSN* through
+the radio access network. When the UE sends this message, the UE enters
+the `PDP-ACTIVE-PENDING` state and starts timer T3380, whose value is 30
+seconds (TS 24.008 Table 11.2c). The message carries the Transaction
+Identifier (TI), the Requested Network Service Access Point Identifier
+(NSAPI), the Requested Logical Link Control (LLC) Service Access Point
+Identifier (SAPI), the Requested QoS, and the Requested PDP address. The
+Requested PDP address carries the PDP type number, for example IPv4,
+IPv6, IPv4v6, or non IP (TS 24.008 clause 10.5.6.4), and the UE leaves the
+address itself empty (TS 23.060 clause 9.2.2.1, step 1). The Requested
+QoS carries attributes such as the Traffic Class, the Maximum Bit Rate
+(MBR), the Guaranteed Bit Rate (GBR), the Delivery Order, the Residual
+Bit Error Rate (BER), and the Transfer Delay (TS 24.008 clause
+10.5.6.5). The message can also carry the APN, the Protocol
+Configuration Options (PCO), for example a request for DNS server or
+Proxy Call Session Control Function (P-CSCF) addresses (TS 24.008
+clause 10.5.6.3), and the Request type, that is "initial request",
+"handover", or "emergency" (TS 24.008 clause 6.1.3.1.1).
+
+. The *SGSN* validates the request against the PDP context subscription
+records of the subscriber, and derives a GGSN address from the APN
+through a DNS interrogation according to the selection rules of
+TS 23.060 Annex A. If the SGSN cannot derive a GGSN address, or if the
+request is not valid according to Annex A, the SGSN rejects the
+activation (TS 23.060 clause 9.2.2.1, step 4). Otherwise, the SGSN sends
+a GTPv1-C `Create PDP Context Request` message (TS 29.060 clause 7.3.1)
+to the selected *GGSN* over the Gn/Gp interface. The mandatory
+Information Elements (IEs) of the message are the Tunnel Endpoint Identifier (TEID) Data I, that is
+the SGSN TEID for downlink user-plane data, the NSAPI, the SGSN Address
+for signalling, the SGSN Address for user traffic, and the Quality of
+Service Profile. Under the conditions that TS 29.060 Table 5 states, the
+message also carries the International Mobile Subscriber Identity
+(IMSI), the Selection mode, the TEID Control Plane, that is the SGSN
+TEID for control-plane messages, the End User Address, which holds the
+PDP type and an empty PDP address for dynamic allocation, the APN, the
+Mobile Station International Subscriber Directory Number (MSISDN), the
+Charging Characteristics, and the International Mobile Equipment
+Identity and Software Version (IMEI(SV)). Optional IEs include the
+Routeing Area Identity (RAI), the PCO, the Radio Access Technology (RAT)
+Type, for example Universal Mobile Telecommunications System (UMTS)
+Terrestrial Radio Access Network (UTRAN), and the
+User Location Information, which holds the Cell Global Identity (CGI),
+the Service Area Identity (SAI), or the RAI of the UE (TS 29.060 clause
+7.7.51).
+
+. When the *GGSN* receives the request, the GGSN can perform external
+authorization and policy control before the GGSN answers. If the GGSN
+acts as the Policy and Charging Enforcement Function (PCEF) of dynamic
+Policy and Charging Control (PCC), the GGSN sends a Diameter
+`Credit-Control-Request` (CCR) message with the `CC-Request-Type`
+Attribute-Value Pair (AVP) set to `INITIAL_REQUEST` to the *PCRF* over
+the Gx reference point (TS 29.212 clause 4.5.1). This message carries
+the user identity in the `Subscription-Id` AVP, the IMEI(SV) in the
+`User-Equipment-Info` AVP, the `IP-CAN-Type` AVP set to `3GPP-GPRS`
+(TS 29.212 clause 5.3.27), the APN in the `Called-Station-Id` AVP, and
+the UE IPv4 address or IPv6 prefix in the `Framed-IP-Address` or
+`Framed-IPv6-Prefix` AVP. For GPRS access, the message also carries the
+requested QoS in the `QoS-Information` AVP, the location of the UE, and
+the SGSN address (TS 29.212 clauses A.3.1 and A.3.3.1). If the APN
+requires authentication by an external AAA server, the GGSN sends a
+RADIUS `Access-Request` message to an external *AAA* server over the Gi
+reference point (TS 29.061 clause 16.3.1). This message carries the
+`User-Name` attribute, the `User-Password` attribute when the user
+authenticates with the Password Authentication Protocol (PAP) or the
+`CHAP-Password` attribute when the user authenticates with the
+Challenge Handshake Authentication Protocol (CHAP), the
+`NAS-IP-Address` attribute, which holds the GGSN IPv4 address, or the
+`NAS-Identifier` attribute, which holds the GGSN hostname, and the
+`Called-Station-Id` attribute, which holds the APN (TS 29.061 clause
+16.4.1, Table 1).
+
+. The *PCRF* returns a Diameter `Credit-Control-Answer` (CCA) message to
+the *GGSN* over the Gx reference point, or the external *AAA* server
+returns a RADIUS `Access-Accept` message to the GGSN over the Gi
+reference point. In the CCA message, the PCRF can provide PCC rules in
+the `Charging-Rule-Install` AVP, event triggers in the `Event-Trigger`
+AVP, and the authorized QoS in the `QoS-Information` AVP (TS 29.212
+clauses 4.5.2, 4.5.3, 4.5.5, and 5.6.3); a successful answer carries the
+`Result-Code` AVP set to `DIAMETER_SUCCESS` (2001) (IETF RFC 6733 section 7.1.2). In
+the `Access-Accept` message, the AAA server can provide the UE IPv4
+address in the `Framed-IP-Address` attribute, the IPv6 prefix in the
+`Framed-IPv6-Prefix` attribute, and the DNS server addresses in the
+`MS-Primary-DNS-Server` and `MS-Secondary-DNS-Server` attributes or in
+the `3GPP-IPv6-DNS-Servers` sub-attribute (TS 29.061 clause 16.4.2).
+
+. The *GGSN* creates an entry in its PDP context table, generates a
+Charging ID, and allocates a PDP address according to the selected PDP
+type (TS 23.060 clause 9.2.2.1, step 4). The GGSN then returns a GTPv1-C
+`Create PDP Context Response` message (TS 29.060 clause 7.3.2) to the
+*SGSN* over the Gn/Gp interface. On success, the message carries the
+Cause, set to "Request accepted" (128), the TEID Data I, that is the
+GGSN TEID for uplink user-plane data, the TEID Control Plane, that is
+the GGSN TEID for control-plane messages, the Charging ID, the End User
+Address, which holds the allocated PDP address, the GGSN Address for
+Control Plane, the GGSN Address for user traffic, and the Quality of
+Service Profile. Under the conditions and options of TS 29.060 Table 6,
+the message can also carry the Reordering required IE, the NSAPI, the
+PCO, the Bearer Control Mode (BCM), and the APN Restriction. The PCO
+carries the BCM and optional PDP parameters for the UE (TS 23.060 clause
+9.2.2.1, step 4), for example the DNS server and P-CSCF addresses that
+the UE requested (TS 24.008 clause 10.5.6.3). When the GGSN indicates
+the BCM in the PCO, the GGSN also includes the Bearer Control Mode IE
+with the same value (TS 29.060 clause 7.3.2).
+
+. When the *SGSN* receives the accepted response, the SGSN re-verifies the
+negotiated QoS against the subscribed QoS profile (TS 23.060 clause
+9.2.2.1, step 4) and starts the radio resource setup. In Iu mode, the
+SGSN sends a Radio Access Network Application Part (RANAP) `RAB
+Assignment Request` message (TS 25.413 clause 9.1.3) to the *RNC* over
+the IuPs interface; in A/Gb mode, the SGSN can instead run the BSS
+packet flow context procedures with the BSS (TS 23.060 clause 9.2.2.1,
+step 7). For each RAB to set up, the message carries the RAB ID, which
+contains the NSAPI of the PDP context (TS 25.413 clause 9.2.1.2), and
+the RAB Parameters, which hold the RAB attributes such as the Traffic
+Class, the Maximum Bit Rate, the Guaranteed Bit Rate, and the
+Allocation/Retention Priority (TS 25.413 clause 9.2.1.3). The message
+also carries the Transport Layer Address and the Iu Transport
+Association, that is the GTP TEID for uplink data (TS 25.413 clauses
+8.2.2, 9.2.2.1, and 9.2.2.2). These two IEs identify the user plane of the SGSN, or the user
+plane of the GGSN when the SGSN uses Direct Tunnel (TS 23.060 clause
+12.7.4.1).
+
+. The *RNC* sets up the radio bearers for the RAB and sends a Radio
+Resource Control (RRC) `Radio Bearer Setup` message (TS 25.331 clause
+10.2.33) to the *UE* over the Uu interface. The message carries the RRC
+transaction identifier and the RAB information to setup list. For each
+RAB, this list carries the RAB info, which contains the RAB identity and
+the Core Network (CN) domain identity, and the RB information to setup
+list. For each Radio Bearer (RB), the RB information to setup contains
+the RB identity, the Radio Link Control (RLC) info, the RB mapping info,
+and optionally the Packet Data Convergence Protocol (PDCP) info
+(TS 25.331 clauses 10.3.4.8, 10.3.4.10, and 10.3.4.20).
+
+. The *UE* configures the radio bearers and returns an RRC `Radio Bearer
+Setup Complete` message (TS 25.331 clause 10.2.34) to the *RNC* over the
+Uu interface. The message carries the RRC transaction identifier.
+
+. The *RNC* returns a RANAP `RAB Assignment Response` message (TS 25.413
+clause 9.1.4) to the *SGSN* over the IuPs interface. For each RAB that
+the RNC set up, the message carries the RAB ID, the Transport Layer
+Address, that is the RNC user-plane address, and the Iu Transport
+Association, that is the RNC TEID for downlink data (TS 25.413 clause
+8.2.2).
+
+. If the SGSN established Direct Tunnel during the RAB setup, the *SGSN*
+sends a GTPv1-C `Update PDP Context Request` message (TS 29.060 clause
+7.3.3) to the *GGSN* over the Gn/Gp interface. If the QoS attributes
+were downgraded during the RAB setup, the SGSN can send the same message
+to inform the GGSN of the downgraded QoS attributes (TS 23.060 clause
+9.2.2.1, step 8). For Direct Tunnel, the message carries the RNC address
+for user plane, the RNC TEID for downlink data, the No QoS negotiation
+indication, and the Direct Tunnel Indicator (DTI) (TS 23.060 clause
+9.2.2.1, step 8); the DTI is a bit of the Direct Tunnel Flags IE
+(TS 29.060 clause 7.7.81). In both cases, the SGSN sets the No QoS
+negotiation indication, which tells the GGSN to accept the QoS
+attributes without negotiation (TS 23.060 clause 9.2.2.1, step 8). The
+mandatory IEs of the message are the TEID Data I, the NSAPI, the SGSN
+Address for Control Plane, the SGSN Address for User Traffic, and the
+Quality of Service Profile (TS 29.060 Table 7).
+
+. The *GGSN* updates the PDP context and returns a GTPv1-C `Update PDP
+Context Response` message (TS 29.060 clause 7.3.4) to the *SGSN* over
+the Gn/Gp interface, with the Cause set to "Request accepted" (128).
+With Direct Tunnel, the GGSN updates the address for user plane and the
+TEID for downlink data to those of the RNC (TS 23.060 clause 12.7.4.1),
+and the GGSN does not change its own allocated user-plane TEID and IP
+address in the response (TS 29.060 clause 7.3.3). Under the conditions
+of TS 29.060 Table 9, the message also carries the TEID Data I, the TEID
+Control Plane, the Charging ID, the GGSN Address for Control Plane, the
+GGSN Address for User Traffic, and the Quality of Service Profile. The
+GGSN does not
+include a PCO in this response when the No QoS negotiation indication
+is set (TS 23.060 clause 9.2.2.1, step 8).
+
+. The *SGSN* inserts the NSAPI and the GGSN address in its PDP context,
+selects the Radio Priority and the Packet Flow Identifier based on the
+negotiated QoS, and sends a NAS SM `Activate PDP Context Accept` message
+(TS 24.008 clause 9.5.2) to the *UE* (TS 23.060 clause 9.2.2.1, step 9).
+The message carries the TI, the Negotiated LLC SAPI, the Negotiated QoS,
+and the Radio priority. The message can also carry the PDP address,
+which holds the PDP type number and the allocated address, the PCO, the
+Packet Flow Identifier, and an SM cause, for example #50 "PDP type IPv4
+only allowed" when the network grants a single address type for an
+IPv4v6 request (TS 24.008 clause 6.1.3.1). The PCO carries the BCM
+(TS 23.060 clause 9.2.2.1, step 9) and can carry the DNS server and
+P-CSCF addresses (TS 24.008 clause 10.5.6.3). If the message carries no
+BCM, the UE applies the Bearer Control Mode `MS_Only` (TS 23.060 clause
+9.2.2.1, step 9). When the UE receives this message, the UE stops timer
+T3380 and enters the `PDP-ACTIVE` state (TS 24.008 clause 6.1.3.1.1).
+The SGSN can now route PDP PDUs between the GGSN and the UE.
+
+==== Summary of Key Information Elements
+
+The following table summarizes the key IEs of the main messages of the
+procedure, grouped by protocol.
+
+[cols="2,3,5",options="header"]
+|===
+| Protocol | Message | Key IEs
+
+| NAS SM (TS 24.008)
+| `Activate PDP Context Request`
+| TI, Requested NSAPI, Requested LLC SAPI, Requested QoS, Requested PDP address (PDP type number), APN, PCO, Request type
+
+| NAS SM (TS 24.008)
+| `Activate PDP Context Accept`
+| TI, Negotiated LLC SAPI, Negotiated QoS, Radio priority, PDP address, PCO, Packet Flow Identifier, SM cause
+
+| GTPv1-C (TS 29.060)
+| `Create PDP Context Request`
+| IMSI, TEID Data I, TEID Control Plane, NSAPI, End User Address, APN, Quality of Service Profile, PCO, SGSN Address for signalling, SGSN Address for user traffic
+
+| GTPv1-C (TS 29.060)
+| `Create PDP Context Response`
+| Cause ("Request accepted", 128), TEID Data I, TEID Control Plane, Charging ID, End User Address, PCO, GGSN Address for Control Plane, GGSN Address for user traffic, Quality of Service Profile
+
+| GTPv1-C (TS 29.060)
+| `Update PDP Context Request`
+| TEID Data I, NSAPI, SGSN Address for Control Plane, SGSN Address for User Traffic, Quality of Service Profile, Direct Tunnel Flags (DTI)
+
+| Diameter over Gx (TS 29.212)
+| `Credit-Control-Request` (CCR-I)
+| `CC-Request-Type` (`INITIAL_REQUEST`), `Subscription-Id`, `Called-Station-Id` (APN), `IP-CAN-Type` (`3GPP-GPRS`), `QoS-Information`
+
+| Diameter over Gx (TS 29.212)
+| `Credit-Control-Answer` (CCA-I)
+| `Result-Code` (`DIAMETER_SUCCESS`), `Charging-Rule-Install`, `QoS-Information`, `Event-Trigger`
+
+| RADIUS over Gi (TS 29.061)
+| `Access-Request`
+| `User-Name`, `User-Password` or `CHAP-Password`, `NAS-IP-Address` or `NAS-Identifier`, `Called-Station-Id` (APN)
+
+| RANAP (TS 25.413)
+| `RAB Assignment Request`
+| RAB ID, RAB Parameters, Transport Layer Address, Iu Transport Association (GTP TEID)
+|===
+
+==== Possible Failures and Required Actions
+
+The GTPv1-C Cause values in this section come from TS 29.060 clause
+7.7.1, Table 38, and the mapping from GTPv1-C Cause values to NAS SM
+Cause values comes from TS 29.060 Annex B, Table B.1. Where Table B.1
+lists more than one SM Cause value for a GTPv1-C Cause value, the SGSN
+can send any of them, as an implementation choice (TS 29.060 Table B.1,
+NOTE 3). When the UE receives an `Activate PDP Context Reject` message,
+the UE stops timer T3380 and enters or remains in the `PDP-INACTIVE`
+state (TS 24.008 clause 6.1.3.1.3.1).
+
+External authentication failure or APN access denial:: During steps 3
+and 4, the external AAA server can reject the authentication of the
+user with an `Access-Reject` message, and the GGSN then rejects the
+request with GTP Cause #209, "User authentication failed" (TS 29.061
+clause 16.1 and TS 29.060 clause 7.3.2). The GGSN uses GTP Cause
+#222, "APN access denied – no subscription", when the APN requires a
+subscription that the subscriber does not have. GTP Cause #209 maps to
+SM Cause #29, "User authentication failed", and GTP Cause #222 maps to
+SM Cause #33, "Requested service option not subscribed", or to SM Cause
+#27, "Missing or unknown APN". The nodes then act as follows:
++
+. The GGSN returns a `Create PDP Context Response` message with GTP Cause
+#209 or #222 to the SGSN.
+. The SGSN sends an `Activate PDP Context Reject` message with the mapped
+SM Cause, #29, #33, or #27, to the UE.
+. The UE stops timer T3380 and enters the `PDP-INACTIVE` state.
+. If the reject message carries a Back-off timer value IE with a value
+that is neither zero nor deactivated, the UE starts a back-off timer for
+the combination of the Public Land Mobile Network (PLMN) and the APN,
+and does not send another `Activate PDP Context Request` message for
+the same APN in the PLMN until the back-off timer expires. If the value
+indicates that the timer is deactivated, the UE does not send that
+message until the UE is switched off or the Subscriber Identity Module
+(SIM) or Universal SIM (USIM) is removed; if the
+value is zero, the UE can send that message again (TS 24.008 clause
+6.1.3.1.3.3). Without that IE, after SM Cause #27 or #33 the UE applies
+a back-off timer with the configured SM_RetryWaitTime value when the UE
+is registered in its Home PLMN (HPLMN) or in a PLMN in the Equivalent
+HPLMN (EHPLMN) list. Otherwise, or when no SM_RetryWaitTime value is
+configured, the UE applies the default value of 12 minutes. After SM
+Cause #29 without that IE, TS 24.008 leaves the start of a back-off
+timer unspecified.
+
+GGSN resource exhaustion or dynamic address occupation:: The GGSN can
+lack the resources to accept the `Create PDP Context Request` message of
+step 2. In this case, the GGSN uses GTP Cause #199, "No resources
+available", GTP Cause #211, "All dynamic PDP addresses are occupied", or
+GTP Cause #212, "No memory is available" (TS 29.060 clause 7.3.2). GTP
+Cause #211 maps to SM Cause #26, "Insufficient resources", and GTP
+Causes #199 and #212 each map to SM Cause #26 or to SM Cause #34,
+"Service option temporarily out of order". The nodes then act as
+follows:
++
+. The GGSN returns a `Create PDP Context Response` message with GTP Cause
+#199, #211, or #212 to the SGSN.
+. The SGSN sends an `Activate PDP Context Reject` message with SM Cause
+#26 or #34 to the UE. With SM Cause #26, the SGSN can include a Back-off
+timer value IE, which carries a value for timer T3396, unless the
+request type was "emergency" (TS 24.008 clause 6.1.3.1.3.1).
+. The UE stops timer T3380 and enters the `PDP-INACTIVE` state.
+. If the UE receives SM Cause #26 with a Back-off timer value that is
+neither zero nor deactivated, the UE starts timer T3396. Until timer
+T3396 expires or stops, the UE does not send another `Activate PDP
+Context Request`, `Activate Secondary PDP Context Request`, or `Modify
+PDP Context Request` message for the same APN, except for the cases
+that TS 24.008 clause 6.1.3.3 identifies. The UE can still start a PDP
+context activation for emergency bearer services while timer T3396
+runs (TS 24.008 clause 6.1.3.1.3.2).
+
+Unknown APN or APN restriction conflict:: If the SGSN cannot derive a
+GGSN address for the requested APN, the SGSN rejects the activation
+without any GTPv1-C exchange (TS 23.060 clause 9.2.2.1, step 4). The
+GGSN uses GTP Cause #219, "Missing or unknown APN", for example when the
+GGSN does not support the APN (TS 29.060 clause 7.3.2). The GGSN checks
+the Maximum APN Restriction that the SGSN sent against the APN
+Restriction of the new PDP context, and rejects the request on a
+conflict (TS 23.060 clause 9.2.2.1, step 4). GTP Cause #223, "APN
+Restriction type incompatibility with currently active PDP Contexts",
+indicates that the GGSN did not create the PDP context because the PDP
+context would break the coexistence rules of TS 23.060 clause 15.4
+(TS 29.060 clause 7.7.1). GTP Cause #219 maps to SM Cause
+#27, "Missing or unknown APN", and GTP Cause #223 maps to SM Cause #112,
+"APN restriction value incompatible with active PDP context". The nodes
+then act as follows:
++
+. The SGSN detects the failure itself, or the GGSN returns a `Create PDP
+Context Response` message with GTP Cause #219 or #223 to the SGSN.
+. The SGSN sends an `Activate PDP Context Reject` message to the UE,
+with SM Cause #27 or #112 when the GGSN rejected the request.
+. The UE stops timer T3380 and enters the `PDP-INACTIVE` state.
+. After SM Cause #27, the UE applies the back-off behavior of the first
+failure case in this section, per combination of PLMN and APN. After a
+PLMN change, the UE can send a new `Activate PDP Context Request`
+message for the same APN in the new PLMN if no back-off timer runs, and
+none is deactivated, for that combination (TS 24.008 clause
+6.1.3.1.3.3).
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.060
+a|
+* Clause 9.2.2.1 — PDP Context Activation Procedure for A/Gb mode and Iu mode, and Figures 63 and 64
+* Clause 9.2.2.1A — PDP Context Activation Procedure using S4, for comparison
+* Clause 12.7.4.1 — RAB Assignment Procedure Using Gn/Gp
+* Clause 15.4 — APN Restriction and the coexistence of PDP contexts
+* Annex A — APN and GGSN selection
+
+| TS 24.008
+a|
+* Clause 6.1.3.1 — PDP context activation, including the successful (6.1.3.1.1) and unsuccessful (6.1.3.1.3) cases initiated by the MS
+* Clauses 9.5.1, 9.5.2, and 9.5.3 — `Activate PDP Context Request`, `Activate PDP Context Accept`, and `Activate PDP Context Reject` message contents
+* Clauses 10.5.6.3, 10.5.6.4, and 10.5.6.5 — Protocol configuration options IE, Packet data protocol address IE, and Quality of service IE
+* Clause 10.5.6.6 and Table 10.5.157 — SM cause IE; clause 10.5.6.6a — SM cause 2 IE, which the `Activate PDP Context Accept` message uses
+* Clause 11.2.3 and Table 11.2c — SM timers T3380 and T3396 on the MS side
+
+| TS 29.060
+a|
+* Clauses 7.3.1 and 7.3.2 — `Create PDP Context Request` and `Create PDP Context Response` message contents (Tables 5 and 6)
+* Clauses 7.3.3 and 7.3.4 — `Update PDP Context Request` and `Update PDP Context Response` message contents (Tables 7 and 9)
+* Clause 7.7.1 and Table 38 — Cause IE values
+* Clause 7.7.81 — Direct Tunnel Flags IE
+* Annex B (normative), Table B.1 — Mapping from Gn/Gp Cause values to NAS SM Cause values
+
+| TS 29.061
+a|
+* Clause 16.1 — RADIUS authentication and authorization, including the handling of `Access-Reject`
+* Clause 16.3.1 — RADIUS authentication and accounting message flows for the IP PDP type
+* Clauses 16.4.1 and 16.4.2 — `Access-Request` and `Access-Accept` attributes (Tables 1 and 2)
+
+| TS 25.413
+a|
+* Clause 8.2 — RAB Assignment procedure
+* Clauses 9.1.3 and 9.1.4 — `RAB Assignment Request` and `RAB Assignment Response` message contents
+* Clauses 9.2.1.2, 9.2.1.3, 9.2.2.1, and 9.2.2.2 — RAB ID, RAB Parameters, Transport Layer Address, and Iu Transport Association IEs
+
+| TS 25.331
+a|
+* Clauses 10.2.33 and 10.2.34 — `Radio Bearer Setup` and `Radio Bearer Setup Complete` message contents
+* Clauses 10.3.4.8, 10.3.4.10, and 10.3.4.20 — RAB info, RAB information for setup, and RB information to setup IEs
+
+| TS 29.212
+a|
+* Clause 4.5.1 — Request for PCC rules at IP-CAN session establishment
+* Clauses 4.5.2, 4.5.3, and 4.5.5 — Provisioning of PCC rules, of event triggers, and of authorized QoS
+* Clause 5.3.27 — IP-CAN-Type AVP
+* Clauses 5.6.2 and 5.6.3 — CC-Request and CC-Answer command formats
+* Clauses A.3.1 and A.3.3.1 — GPRS-specific aspects of the request for PCC rules and of the provisioning of authorized QoS per IP-CAN bearer
+
+| IETF RFC 6733
+a|
+* Section 7.1.2 — `DIAMETER_SUCCESS` (2001) result code
+|===
