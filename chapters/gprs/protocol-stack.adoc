@@ -1,0 +1,4 @@
+[#_gprs_protocol_stack]
+== Protocol Stack
+
+include::gtpv1c.adoc[]

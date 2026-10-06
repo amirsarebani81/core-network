@@ -60,7 +60,10 @@ which TS 29.061 defines (TS 23.060 clause 5.1).
 [#_gprs_technical_specifications]
 === Technical Specifications
 
+* *3GPP TS 23.007* _Restoration procedures_
 * *3GPP TS 23.060* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); General Packet Radio Service (GPRS); Service description; Stage 2_
+* *3GPP TS 23.246* _Multimedia Broadcast/Multicast Service (MBMS); Architecture and functional description_
+* *3GPP TS 23.401* _LTE; General Packet Radio Service (GPRS) enhancements for Evolved Universal Terrestrial Radio Access Network (E-UTRAN) access_
 * *3GPP TS 24.008* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); LTE; 5G; Mobile radio interface Layer 3 specification; Core network protocols; Stage 3_
 * *3GPP TS 25.331* _Universal Mobile Telecommunications System (UMTS); Radio Resource Control (RRC); Protocol specification_
 * *3GPP TS 25.401* _Universal Mobile Telecommunications System (UMTS); UTRAN overall description_
@@ -69,3 +72,6 @@ which TS 29.061 defines (TS 23.060 clause 5.1).
 * *3GPP TS 29.060* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); General Packet Radio Service (GPRS); GPRS Tunnelling Protocol (GTP) across the Gn and Gp interface_
 * *3GPP TS 29.061* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); LTE; 5G; Interworking between the Public Land Mobile Network (PLMN) supporting packet based services and Packet Data Networks (PDN)_
 * *3GPP TS 29.212* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; Policy and Charging Control (PCC); Reference points_
+* *3GPP TS 29.274* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; 3GPP Evolved Packet System (EPS); Evolved General Packet Radio Service (GPRS) Tunnelling Protocol for Control plane (GTPv2-C); Stage 3_
+* *3GPP TS 29.281* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; General Packet Radio System (GPRS) Tunnelling Protocol User Plane (GTPv1-U)_
+* *3GPP TS 32.295* _Telecommunication management; Charging management; Charging Data Record (CDR) transfer_

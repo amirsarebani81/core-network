@@ -1,7 +1,7 @@
 = Core Network: Architecture and Signaling Procedures
 Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :doctype: book
-:revnumber: 1.1.0
+:revnumber: 1.2.0
 :revdate: 2026-10-07
 :toc: left
 :toclevels: 4
@@ -40,10 +40,13 @@ endif::[]
 
 [partintro]
 This part describes the General Packet Radio Service (GPRS) core
-network: its network elements, the interfaces between them, and the PDP
-context activation procedure.
+network: its network elements and the interfaces between them, the
+GTPv1-C protocol that carries signaling between the GPRS Support Nodes,
+and the PDP context activation procedure.
 
 include::chapters/gprs/architecture-and-specifications.adoc[]
+
+include::chapters/gprs/protocol-stack.adoc[]
 
 include::chapters/gprs/functional-description-and-information-flows.adoc[]
 

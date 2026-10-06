@@ -1,0 +1,16 @@
+packetdiag {
+  colwidth = 32
+
+  0-2: "Version"
+  3: "PT"
+  4: "*"
+  5: "E"
+  6: "S"
+  7: "PN"
+  8-15: "Message Type"
+  16-31: "Length"
+  32-63: "TEID"
+  64-79: "Sequence Number"
+  80-87: "N-PDU Number"
+  88-95: "Next Ext. Header Type"
+}

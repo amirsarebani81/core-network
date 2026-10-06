@@ -1,0 +1,827 @@
+[#_gprs_gtpv1c]
+=== GTPv1-C
+
+==== Technical Overview
+
+The GPRS Tunnelling Protocol (GTP) is the protocol between the General
+Packet Radio Service (GPRS) Support Nodes (GSNs) of the GPRS Core, and
+TS 29.060 defines both its control plane (GTP-C) and its user plane
+(GTP-U) (TS 29.060 clause 4.1).
+This section describes version 1 of the control plane, GTPv1-C, which
+the Serving GPRS Support Node (SGSN) and the Gateway GPRS Support Node
+(GGSN) use to create, modify, and delete the tunnels that carry the
+Packet Data Protocol (PDP) contexts of a subscriber. TS 29.060 calls the
+subscriber's device the Mobile Station (MS); this section uses the term
+User Equipment (UE) throughout, as the rest of the book does.
+
+GTPv1-C applies over the Gn interface, between GSNs in the same Public
+Land Mobile Network (PLMN), and over the Gp interface, between GSNs in
+different PLMNs (TS 29.060 clause 4.1). The Iu interface between the
+SGSN and the Universal Mobile Telecommunications System (UMTS)
+Terrestrial Radio Access Network (UTRAN) carries only GTP-U, and on that
+interface the Radio Access Network Application Part (RANAP), together
+with the signaling part of GTP-U, performs the control function for the
+user plane. A Mobility Management Entity (MME) can also use GTPv1-C
+towards a Gn/Gp SGSN, for roaming and for inter-access mobility as
+TS 23.401 Annex D specifies (TS 29.060 clause 4.1).
+
+From Release 8 onwards, TS 29.281 is the normative specification of the
+GTPv1 user plane, and it supersedes the GTP-U provisions of TS 29.060
+(TS 29.060 clause 1). TS 29.060 clause 6 still defines one header
+format for both GTP-C and GTP-U. Release 8 also removed the interworking
+between GTPv1 and GTPv0, so a GTPv1 entity of Release 8 or later can
+listen on the GTPv0 port 3386 or not; if it listens on that port, it
+should silently discard any GTPv0 message that it receives (TS 29.060
+clause 4.2).
+
+===== Transport
+
+GTPv1-C runs over the User Datagram Protocol (UDP) and the Internet
+Protocol (IP), which together form the only path protocol that TS 29.060
+clause 10.1 defines for GTP version 1. The control-plane protocol stack
+in TS 29.060 clause 8 (Figure 63) shows only GTP-C on top of this path
+protocol, and leaves the lower layers open.
+
+.GTPv1-C protocol stack on the Gn and Gp interfaces
+[cols="1,3",options="header"]
+|===
+| Layer | Protocol
+
+| Application
+| GTPv1-C (TS 29.060)
+
+| Transport
+| UDP (IETF RFC 768), destination port 2123 for a request message
+
+| Network
+| IP (IETF RFC 791)
+
+| Data link and physical
+| Not specified by TS 29.060
+|===
+
+A GSN sends a GTPv1-C request message to the registered UDP destination
+port 2123 from a locally allocated source port. The peer GSN sends the
+response message from the destination port of the request to the source
+port of the request, and to the IP source address of the request (TS
+29.060 clauses 10.1.1.1, 10.1.1.2, and 10.1.2.2). GTP-U request messages
+and encapsulated user data packets (T-PDUs) use the registered GTP-U
+port 2152 instead (TS 29.060 clauses 10.1.1.1 and 10.1.1.3).
+
+===== Paths and Tunnels
+
+The GTP-C control-plane flow is logically associated with the GTP-U
+tunnels, but separate from them (TS 29.060 clause 8.1). Between each pair
+of GSNs there are one or more paths, and each path can carry one or more
+tunnels. A GSN can maintain a path with `Echo Request` and `Echo
+Response` messages, so that it detects a connectivity failure towards
+the peer GSN in a timely manner (TS 29.060 clause 8.1). How often a GSN
+sends `Echo Request` is implementation specific, but TS 29.060 clause
+7.2.1 states that a GSN shall not send it more often than every 60 s on
+each path.
+
+The `Echo Response` message carries the Restart Counter of the sending
+GSN in its Recovery information element (IE). The receiving GSN compares
+this value with the Restart Counter that it stored for the peer, and
+stores the received value if it has no stored value (TS 29.060 clause
+7.2.2). A received value that is larger than the stored value, taking
+the integer roll-over into account, means that the peer has restarted,
+whereas a smaller value means a possible race condition, in which case
+the GSN discards the received value (TS 23.007 clause 18). When an SGSN
+detects that a GGSN has restarted, the SGSN considers all PDP contexts
+that use that GGSN as inactive, and a GGSN handles a restart of an SGSN
+in the same way (TS 29.060 clause 7.2.2).
+
+===== Reliable Delivery
+
+Because UDP does not guarantee delivery, a GSN starts the T3-RESPONSE
+timer when it sends a request message, and it retransmits the request
+if no response arrives before the timer expires, up to a total of
+N3-REQUESTS attempts (TS 29.060 clause 7.6). Both the T3-RESPONSE value
+and the N3-REQUESTS value are configurable per procedure. The GSN
+matches each response to its request through the Sequence Number in the
+header, which the responding GSN copies from the request, and it
+discards a duplicated response (TS 29.060 clauses 7.6 and 8.2).
+
+A GSN also keeps a path counter, which it resets each time it receives
+a response on the path and increments each time T3-RESPONSE expires for
+a message on the path. When the counter exceeds N3-REQUESTS, the GSN
+considers the path down and notifies the upper layer, so that the upper
+layer can delete the PDP contexts that use the path (TS 29.060 clause
+11.2).
+
+The `SGSN Context Response` message is a special case, because the new
+SGSN answers it with an `SGSN Context Acknowledge` message that carries
+the same Sequence Number, unless the old SGSN rejected the `SGSN Context
+Request`. The old SGSN therefore applies the rules of a request message
+to an `SGSN Context Response` message for which it expects an `SGSN
+Context Acknowledge` message (TS 29.060 clause 7.6).
+
+==== Packet Format
+
+GTPv1-C uses the GTP header that TS 29.060 clause 6 defines for both
+GTP-C and GTP-U. The header has a mandatory part of 8 octets, followed
+by the optional `Sequence Number`, `N-PDU Number`, and `Next Extension
+Header Type` fields, which are all present whenever at least one of the
+`S`, `PN`, and `E` flags is set to 1. Because every GTPv1-C message sets
+the `S` flag to 1 (TS 29.060 clause 8.2), the GTPv1-C header is at least
+12 octets long, and it grows by the length of any extension headers that
+follow it.
+
+GTP version 2 for the control plane (GTPv2-C), which the Evolved Packet
+Core (EPC) uses, has one header format with a Tunnel Endpoint Identifier
+(TEID) and one without (TS 29.274 clauses 5.1, 5.3, and 5.4). GTPv1-C,
+by contrast, has a single header format in which the `TEID` field is
+always present (TS 29.060 clause 6).
+
+===== Header
+
+.GTPv1-C header
+[width=500,role=packet-diagram]
+packetdiag::diagrams/gtpv1c-header.diag[svg]
+
+`Version`:: Bits 8 to 6 of octet 1. This field states the GTP version,
+and GTPv1-C sets it to decimal 1 (TS 29.060 clause 8.2).
+
+`PT`:: Bit 5 of octet 1. This is the Protocol Type flag, which
+distinguishes GTP (value 1) from the charging protocol GTP' (value 0),
+which TS 32.295 defines. GTPv1-C sets it to 1 (TS 29.060 clauses 6 and
+8.2).
+
+`*`:: Bit 4 of octet 1. This bit is spare; the sender sets it to 0, and
+the receiver does not evaluate it (TS 29.060 clause 6, Figure 2).
+
+`E`:: Bit 3 of octet 1. This is the Extension Header flag; a value of 1
+means that the `Next Extension Header Type` field is present and that
+the receiver interprets it, and a value of 0 means that the receiver
+does not interpret that field (TS 29.060 clause 6).
+
+`S`:: Bit 2 of octet 1. This is the Sequence Number flag, and GTPv1-C
+sets it to 1 (TS 29.060 clause 8.2).
+
+`PN`:: Bit 1 of octet 1. This is the N-PDU Number flag. GTPv1-C sets it
+to 0, and a GTP-C receiver does not return an error when this flag is
+set to 1 (TS 29.060 clause 8.2).
+
+`Message Type`:: Octet 2. This field states the message type, with a
+unique value for each GTPv1-C message. The tables in the Message
+Categories section below list these values (TS 29.060 clause 7.1,
+Table 1).
+
+`Length`:: Octets 3 to 4. This field states the length of the message in
+octets, excluding the mandatory first 8 octets of the header. The
+`Sequence Number`, `N-PDU Number`, and `Next Extension Header Type`
+fields and any extension headers count as part of the length.
+
+`TEID`:: Octets 5 to 8. This field identifies the tunnel endpoint in the
+receiving GTP-C entity, and the sending entity sets it to the value
+that the receiving entity assigned. For a Tunnel Management message, the
+TEID identifies all PDP contexts with the same PDP address, or with the
+same pair of IPv4 and IPv6 addresses for PDP type IPv4v6, and the same
+Access Point Name (APN); for any other message, it identifies the UE and
+its context data (TS 29.060 clause 8.2).
+
+`Sequence Number`:: Octets 9 to 10. This field identifies a request
+message on the path, as a value from 0 to 65535, and the responding GSN
+copies it into the response. The receiver ignores this field in a
+message that has no response, which is the case for `Version Not
+Supported`, `RAN Information Relay`, and `Supported Extension Headers
+Notification` (TS 29.060 clause 8.2).
+
+`N-PDU Number`:: Octet 11. TS 29.060 clause 6 defines this field for
+the inter-SGSN Routeing Area Update procedure and some inter-system
+handover procedures, in which it coordinates the data transmission for
+the acknowledged mode of communication between the UE and the SGSN.
+GTPv1-C does not interpret this field (TS 29.060 clause 8.2).
+
+`Next Extension Header Type`:: Octet 12. This field states the type of
+the extension header that follows this field, and the value `0000 0000`
+means that no extension header follows (TS 29.060 clause 6, Figure 5).
+
+The sending GSN sets the `TEID` field to all zeroes in each of the
+following cases (TS 29.060 clause 8.2):
+
+* A `Create PDP Context Request` message, or a `Create MBMS Context
+  Request` message for the Multimedia Broadcast Multicast Service
+  (MBMS), when the GGSN has not yet assigned a TEID for the control
+  plane to the SGSN for that UE.
+* The `Echo Request`, `Echo Response`, `Version Not Supported`, and
+  `Supported Extension Headers Notification` messages.
+* The `Identification Request`, `Identification Response`, `SGSN Context
+  Request`, and `Forward Relocation Request` messages.
+* The `PDU Notification Request`, `MBMS Notification Request`, and `RAN
+  Information Relay` messages, and every Location Management message.
+* A `Relocation Cancel Request` message, unless the new SGSN has already
+  assigned its TEID for the control plane to the old SGSN.
+* An `MBMS Registration Request` message, while the successful
+  assignment of the TEID for the control plane is not yet confirmed, and
+  an `MBMS Session Start Request` message for an MBMS broadcast service.
+* A response to a message that refers to a PDP context which the
+  receiving GSN does not recognize; such a response carries the Cause
+  value "Non-existent" or "Context not found".
+
+===== Extension Headers
+
+When the `E` flag is set to 1, the `Next Extension Header Type` field
+in octet 12 of the header states the type of the first extension
+header. Each extension header consists of an `Extension Header Length`
+field, which states the length of the extension header in units of 4
+octets, the extension header content, and a `Next Extension Header Type`
+field, which states the type of the next extension header, or 0 when no
+other extension header follows (TS 29.060 clause 6, Figure 3).
+
+Bits 8 and 7 of an extension header type tell the receiver how to handle
+the extension header when the receiver does not know its type (TS 29.060
+clause 6, Figure 4). A receiver that gets an unknown extension header
+marked as "comprehension not required" reads the `Next Extension Header
+Type` field of that extension header, which it locates through the
+`Extension Header Length` field. For an unknown extension header that is
+marked as "comprehension required", the receiver answers a request with
+the Cause value "unknown mandatory extension header", sends a `Supported
+Extension Headers Notification` message to the originator, and logs an
+error (TS 29.060 clause 6).
+
+.GTPv1 extension header types
+[cols="1,2,3",options="header"]
+|===
+| Value | Extension header | Use
+
+| `0000 0000`
+| No more extension headers
+| Ends the chain of extension headers.
+
+| `0000 0001`
+| MBMS support indication
+| An SGSN that supports MBMS adds it to `Create PDP Context Request`, `Update PDP Context Request`, `SGSN Context Request`, and `Forward Relocation Response` messages (TS 29.060 clause 6.1.4).
+
+| `0000 0010`
+| MS Info Change Reporting support indication
+| An SGSN that supports MS Info Change Reporting adds it to `Create PDP Context Request` and `Update PDP Context Request` messages, when operator policy permits location reporting to the GGSN operator (TS 29.060 clause 6.1.5).
+
+| `1100 0000`
+| PDCP PDU number
+| Carries the Packet Data Convergence Protocol (PDCP) sequence number of N-PDUs that are not yet acknowledged, for example at Serving Radio Network Subsystem (SRNS) relocation (TS 29.060 clause 6.1.1).
+
+| `1100 0001`
+| Suspend Request
+| At inter-SGSN handover, the new 2G SGSN adds it to an `SGSN Context Request` message after it receives a Suspend message from the Base Station Subsystem (BSS), when a UE that supports Dual Transfer Mode (DTM) has an ongoing circuit-switched call and moves to a cell that does not support DTM (TS 29.060 clause 6.1.2).
+
+| `1100 0010`
+| Suspend Response
+| The old SGSN adds it to the `SGSN Context Response` message that answers a Suspend Request (TS 29.060 clause 6.1.3).
+|===
+
+TS 29.060 reserves the extension header types `0010 0000`, `0100 0000`,
+and `1000 0001` for GTP-U (TS 29.060 clause 6, Figure 5), and TS 29.281
+defines them as the Service Class Indicator, UDP Port, and RAN Container
+extension headers (TS 29.281 clause 5.2.1, Figure 5.2.1-3).
+
+===== Information Elements
+
+The information elements of a GTPv1-C message follow the header, either
+in Type-Value (TV) or in Type-Length-Value (TLV) format (TS 29.060 clause
+7.7.0). The most significant bit of the 1-octet `Type` field selects the
+format: a value of 0 means TV format, in which the type value alone
+determines the fixed length of the IE, and a value of 1 means TLV format,
+in which a 2-octet `Length` field follows the `Type` field. The `Length`
+field excludes the `Type` and `Length` fields themselves.
+
+The sender sorts the IEs of a message in ascending order of their type
+values (TS 29.060 clause 7.7.0). A message carries at most one IE of each
+type, except for a list of IEs that can repeat, for example the
+PDP Context, Network layer Service Access Point Identifier (NSAPI),
+Tunnel Endpoint Identifier Data II, and Charging
+Characteristics IEs (TS 29.060 clause 8.2). Each message definition marks
+each of its IEs as Mandatory, Conditional, or Optional (TS 29.060 clause
+7.1.1).
+
+The difference between the two formats matters for error handling. A
+receiver skips an unknown TLV IE by its `Length` field, whereas after an
+unknown TV IE, which has no `Length` field, the receiver discards the
+rest of the message (TS 29.060 clause 11.1.9).
+
+==== Message Categories
+
+TS 29.060 clause 7 groups the GTPv1-C messages into six categories:
+Path Management Messages, Tunnel Management Messages, Location
+Management Messages, Mobility Management Messages, MBMS Messages, and
+MS Info Change Reporting Messages. Every GTPv1-C message applies over
+the Gn and Gp interfaces, so the tables below state the direction of
+each message instead of its interface. The `Type` column gives the
+decimal message type value from TS 29.060 clause 7.1, Table 1.
+
+Table 1 also lists message types that only the charging protocol GTP'
+uses, such as `Node Alive Request` and `Data Record Transfer Request`
+(TS 32.295), and message types that only GTP-U uses, such as `Error
+Indication`, `End Marker`, and `G-PDU` (TS 29.281). The tables below
+leave these message types out.
+
+===== Path Management Messages
+
+Path management messages check that a peer GSN is alive and reachable,
+and report which GTP version and which extension headers a GSN
+supports. Any pair of GSNs, and a GSN and a Radio Network Controller
+(RNC), can exchange these messages (TS 29.060 clause 7.2.0).
+
+[cols="3,1,2,4",options="header"]
+|===
+| Message | Type | Direction | Functionality
+
+| `Echo Request`
+| 1
+| GSN to GSN
+| Checks that the peer GSN is alive.
+
+| `Echo Response`
+| 2
+| GSN to GSN
+| Confirms that the GSN is alive, and reports its Restart Counter in the Recovery IE.
+
+| `Version Not Supported`
+| 3
+| GSN to GSN
+| Tells the sender of a message with an unsupported GTP version which latest version the receiving GSN supports. The message consists of the GTP header only.
+
+| `Supported Extension Headers Notification`
+| 31
+| GSN to GSN
+| Lists the extension headers that the GSN supports, after the GSN received an extension header that it was required to interpret but could not.
+|===
+
+===== Tunnel Management Messages
+
+Tunnel management messages create, modify, and delete the PDP contexts
+and their tunnels between the SGSN and the GGSN, and support the
+network-requested activation of a PDP context (TS 29.060 clause 7.3).
+
+[cols="3,1,2,4",options="header"]
+|===
+| Message | Type | Direction | Functionality
+
+| `Create PDP Context Request`
+| 16
+| SGSN to GGSN
+| Creates a PDP context in the GGSN, and the tunnel between the SGSN and the GGSN for that PDP context, during the PDP Context Activation procedure.
+
+| `Create PDP Context Response`
+| 17
+| GGSN to SGSN
+| Reports whether the GGSN created the PDP context, and returns the End User Address, the negotiated Quality of Service (QoS), and the TEIDs and addresses of the GGSN.
+
+| `Update PDP Context Request`
+| 18
+| SGSN to GGSN, or GGSN to SGSN
+| Changes the QoS or the path of an existing PDP context, for example during an inter-SGSN Routeing Area Update, during the PDP Context Modification procedure, or when the SGSN sets up Direct Tunnel. The GGSN can also send this message, for example to request the location of the UE.
+
+| `Update PDP Context Response`
+| 19
+| GGSN to SGSN, or SGSN to GGSN
+| Reports the outcome of an `Update PDP Context Request`.
+
+| `Delete PDP Context Request`
+| 20
+| SGSN to GGSN, or GGSN to SGSN
+| Deactivates a PDP context, or all PDP contexts of a Packet Data Network (PDN) connection, during GPRS Detach or PDP context deactivation. This message takes precedence over any other Tunnel Management message in a collision.
+
+| `Delete PDP Context Response`
+| 21
+| GGSN to SGSN, or SGSN to GGSN
+| Reports the outcome of a `Delete PDP Context Request`.
+
+| `Initiate PDP Context Activation Request`
+| 22
+| GGSN to SGSN
+| Asks the SGSN to start the Secondary PDP Context Activation procedure, for network-requested bearer control.
+
+| `Initiate PDP Context Activation Response`
+| 23
+| SGSN to GGSN
+| Reports whether the UE activated the secondary PDP context, rejected it, did not respond before timer T3385 expired, or was temporarily not reachable because of power saving.
+
+| `PDU Notification Request`
+| 27
+| GGSN to SGSN
+| Asks the SGSN to request the UE to activate a PDP context, during the Network-Requested PDP Context Activation procedure, after the GGSN received a T-PDU for a PDP address that has no PDP context.
+
+| `PDU Notification Response`
+| 28
+| SGSN to GGSN
+| Reports whether the network-requested PDP context activation proceeds.
+
+| `PDU Notification Reject Request`
+| 29
+| SGSN to GGSN
+| Reports that the network-requested PDP context activation proceeded but that the UE did not establish the PDP context, and states the reason.
+
+| `PDU Notification Reject Response`
+| 30
+| GGSN to SGSN
+| Reports the outcome of a `PDU Notification Reject Request`.
+|===
+
+TS 29.060 also lists the `Error Indication` message (type 26) among the
+Tunnel Management messages, but clause 7.3.7 refers to TS 29.281 for
+its specification, and Table 1 marks it as a GTP-U message only. A GSN
+sends the `Error Indication` message to the GTP-U port 2152 rather than
+to the GTP-C port (TS 29.060 clause 10.1.1.4).
+
+===== Location Management Messages
+
+Location management messages are optional. They support the
+Network-Requested PDP Context Activation procedure when the GGSN has no
+Signalling System No. 7 (SS7) Mobile Application Part (MAP) interface,
+the Gc interface, to the Home Location Register (HLR). In this case, the
+GGSN exchanges GTPv1-C messages with a GTP-MAP protocol-converting GSN,
+which converts them to and from the MAP messages that it exchanges with
+the HLR (TS 29.060 clause 7.4.0).
+
+[cols="3,1,2,4",options="header"]
+|===
+| Message | Type | Direction | Functionality
+
+| `Send Routeing Information for GPRS Request`
+| 32
+| GGSN to protocol-converting GSN
+| Asks for the IP address of the SGSN that serves the UE, which the International Mobile Subscriber Identity (IMSI) of the UE identifies.
+
+| `Send Routeing Information for GPRS Response`
+| 33
+| Protocol-converting GSN to GGSN
+| Reports whether the protocol-converting GSN accepted the request. Only an accepted response can carry the IP address of the serving SGSN, the MAP error code from the HLR, and the reason for which the Mobile station Not Reachable for GPRS (MNRG) flag is set.
+
+| `Failure Report Request`
+| 34
+| GGSN to protocol-converting GSN
+| Asks the protocol-converting GSN to set the MNRG flag for the IMSI in the HLR.
+
+| `Failure Report Response`
+| 35
+| Protocol-converting GSN to GGSN
+| Reports the outcome of a `Failure Report Request`.
+
+| `Note MS GPRS Present Request`
+| 36
+| Protocol-converting GSN to GGSN
+| Tells the GGSN that the UE is reachable for GPRS again. The GGSN then clears the MNRG flag and stores the SGSN address from the request in each PDP context of the IMSI.
+
+| `Note MS GPRS Present Response`
+| 37
+| GGSN to protocol-converting GSN
+| Reports the outcome of a `Note MS GPRS Present Request`.
+|===
+
+===== Mobility Management Messages
+
+Mobility management messages transfer the data of a UE from the old
+SGSN to the new SGSN during the GPRS Attach and inter-SGSN Routeing Area
+Update procedures, and the new SGSN derives the address of the old SGSN
+from the old Routeing Area Identity (RAI) (TS 29.060 clause 7.5.0). The
+Forward Relocation and Relocation Cancel messages of this category also
+support the SRNS Relocation and packet-switched (PS) handover procedures
+(TS 29.060 clauses 7.5.6 to 7.5.10). The requirements of this category
+for an SGSN also apply to an MME that supports GTPv1-C for roaming and
+inter-access mobility towards a Gn/Gp SGSN (TS 29.060 clause 7.5.0).
+
+[cols="3,1,2,4",options="header"]
+|===
+| Message | Type | Direction | Functionality
+
+| `Identification Request`
+| 48
+| New SGSN to old SGSN
+| Asks for the IMSI of a UE that identified itself with a Packet Temporary Mobile Subscriber Identity (P-TMSI) at GPRS Attach, after the UE changed SGSN since it detached.
+
+| `Identification Response`
+| 49
+| Old SGSN to new SGSN
+| Reports whether the old SGSN accepted the request. An accepted response carries the IMSI of the UE, and can also carry Authentication Triplet or Authentication Quintuplet IEs.
+
+| `SGSN Context Request`
+| 50
+| New SGSN to old SGSN
+| Asks for the Mobility Management (MM) context and the PDP contexts of the UE.
+
+| `SGSN Context Response`
+| 51
+| Old SGSN to new SGSN
+| Returns the MM context and the PDP contexts of the UE, or rejects the request.
+
+| `SGSN Context Acknowledge`
+| 52
+| New SGSN to old SGSN
+| Confirms that the new SGSN received the PDP contexts and is ready to receive user data. The old SGSN starts to forward user data packets only after it receives this message.
+
+| `Forward Relocation Request`
+| 53
+| Old SGSN to new SGSN
+| Carries the information that the new SGSN needs to perform SRNS Relocation with the target RNC, or PS handover with the target BSS.
+
+| `Forward Relocation Response`
+| 54
+| New SGSN to old SGSN
+| Reports the outcome of a `Forward Relocation Request`. For SRNS Relocation and PS handover to Iu mode, it can carry the Radio Access Bearer (RAB) Setup Information and the UTRAN transparent container from the target RNC; for PS handover to A/Gb mode, it can carry the BSS Container.
+
+| `Forward Relocation Complete`
+| 55
+| New SGSN to old SGSN
+| Tells the old SGSN that the SRNS Relocation or the PS handover finished successfully.
+
+| `Relocation Cancel Request`
+| 56
+| Old SGSN to new SGSN
+| Cancels an SRNS Relocation or a PS handover, at the request of the source RNC or the source BSS.
+
+| `Relocation Cancel Response`
+| 57
+| New SGSN to old SGSN
+| Reports the outcome of a `Relocation Cancel Request`.
+
+| `Forward SRNS Context`
+| 58
+| Old SGSN to new SGSN
+| Relays the RANAP Forward SRNS Context message, with one RAB Context IE for each RAB context, to the new SGSN, which forwards it to the target RNC, for a hard handover with a switch in the core network. The old SGSN also sends this message, with the PDU Numbers IE, during PS handover in the cases that TS 29.060 clause 7.5.13 lists.
+
+| `Forward Relocation Complete Acknowledge`
+| 59
+| Old SGSN to new SGSN
+| Reports the outcome of a `Forward Relocation Complete`.
+
+| `Forward SRNS Context Acknowledge`
+| 60
+| New SGSN to old SGSN
+| Reports the outcome of a `Forward SRNS Context`.
+
+| `UE Registration Query Request`
+| 61
+| SGSN to MME
+| Asks an MME whether a UE is registered there, for circuit-switched and packet-switched coordination in shared UTRAN and GSM EDGE Radio Access Network (GERAN) access.
+
+| `UE Registration Query Response`
+| 62
+| MME to SGSN
+| Reports whether the UE is registered in the MME, and with which core network operator.
+
+| `RAN Information Relay`
+| 70
+| SGSN to SGSN or MME
+| Tunnels a RAN INFORMATION message, which the SGSN received from a BSS or a Radio Network Subsystem (RNS), to the destination SGSN or MME.
+|===
+
+TS 29.060 clause 7.6 treats `Forward Relocation Complete` and `Forward
+SRNS Context` as request messages, and `SGSN Context Acknowledge`,
+`Forward Relocation Complete Acknowledge`, and `Forward SRNS Context
+Acknowledge` as response messages, for the purpose of reliable delivery.
+
+===== MBMS Messages
+
+MBMS messages are control-plane messages between the SGSN and the GGSN
+that support MBMS in accordance with TS 23.246, and TS 29.060 divides
+them into UE-specific messages and service-specific messages (TS 29.060
+clause 7.5A.0). The UE-specific messages create, update, and delete the
+MBMS UE context of one UE, and the service-specific messages register
+the SGSN for an MBMS service and control the MBMS Bearer Context and the
+sessions of that service, which the Broadcast Multicast Service Centre
+(BM-SC) triggers (TS 29.060 clauses 7.5A.1 and 7.5A.2).
+
+.UE-specific MBMS messages
+[cols="3,1,2,4",options="header"]
+|===
+| Message | Type | Direction | Functionality
+
+| `MBMS Notification Request`
+| 96
+| GGSN to SGSN
+| Asks the SGSN to request the UE to activate an MBMS UE context, after the GGSN received an Internet Group Management Protocol (IGMP) or Multicast Listener Discovery (MLD) join message from the UE and the BM-SC authorized the request.
+
+| `MBMS Notification Response`
+| 97
+| SGSN to GGSN
+| Reports whether the MBMS context activation proceeds.
+
+| `MBMS Notification Reject Request`
+| 98
+| SGSN to GGSN
+| Reports that the UE did not establish the MBMS UE context, for example because the UE rejected the activation or did not respond, and states the reason.
+
+| `MBMS Notification Reject Response`
+| 99
+| GGSN to SGSN
+| Reports the outcome of an `MBMS Notification Reject Request`.
+
+| `Create MBMS Context Request`
+| 100
+| SGSN to GGSN
+| Creates an MBMS UE context in the GGSN, and a GTP-C tunnel for it without a GTP-U tunnel, during the MBMS Context Activation procedure.
+
+| `Create MBMS Context Response`
+| 101
+| GGSN to SGSN
+| Reports whether the GGSN created the MBMS UE context.
+
+| `Update MBMS Context Request`
+| 102
+| SGSN to GGSN
+| Updates an MBMS UE context, for example during an inter-SGSN Routeing Area Update.
+
+| `Update MBMS Context Response`
+| 103
+| GGSN to SGSN
+| Reports the outcome of an `Update MBMS Context Request`.
+
+| `Delete MBMS Context Request`
+| 104
+| SGSN to GGSN, or GGSN to SGSN
+| Deletes an MBMS UE context, for example at GPRS Detach or after the UE sent an IGMP or MLD leave message.
+
+| `Delete MBMS Context Response`
+| 105
+| GGSN to SGSN, or SGSN to GGSN
+| Reports the outcome of a `Delete MBMS Context Request`.
+|===
+
+.Service-specific MBMS messages
+[cols="3,1,2,4",options="header"]
+|===
+| Message | Type | Direction | Functionality
+
+| `MBMS Registration Request`
+| 112
+| SGSN to GGSN
+| Registers the SGSN with the GGSN for an MBMS service, so that the SGSN receives the session attributes and data of that service, and creates an MBMS Bearer Context.
+
+| `MBMS Registration Response`
+| 113
+| GGSN to SGSN
+| Reports the outcome of an `MBMS Registration Request`, and carries the Temporary Mobile Group Identity (TMGI) that the BM-SC allocated.
+
+| `MBMS De-Registration Request`
+| 114
+| SGSN to GGSN, or GGSN to SGSN
+| From the SGSN, tells the GGSN that the SGSN no longer needs the session attributes and data of an MBMS service. From the GGSN, de-registers the SGSN as part of the BM-SC-initiated MBMS De-Registration procedure.
+
+| `MBMS De-Registration Response`
+| 115
+| GGSN to SGSN, or SGSN to GGSN
+| Reports the outcome of an `MBMS De-Registration Request`.
+
+| `MBMS Session Start Request`
+| 116
+| GGSN to SGSN
+| Asks the SGSN to set up the MBMS user-plane resources and the radio bearers of an MBMS session, when the BM-SC is ready to send data.
+
+| `MBMS Session Start Response`
+| 117
+| SGSN to GGSN
+| Reports the outcome of an `MBMS Session Start Request`.
+
+| `MBMS Session Stop Request`
+| 118
+| GGSN to SGSN, or SGSN to GGSN
+| Releases the MBMS user-plane resources of a session when the BM-SC has no more data to send, or removes the SGSN from an MBMS broadcast service.
+
+| `MBMS Session Stop Response`
+| 119
+| SGSN to GGSN, or GGSN to SGSN
+| Reports the outcome of an `MBMS Session Stop Request`.
+
+| `MBMS Session Update Request`
+| 120
+| GGSN to SGSN
+| Changes the service area of an ongoing MBMS broadcast session.
+
+| `MBMS Session Update Response`
+| 121
+| SGSN to GGSN
+| Reports the outcome of an `MBMS Session Update Request`.
+|===
+
+===== MS Info Change Reporting Messages
+
+These messages report changes in the location or the Closed Subscriber
+Group (CSG) information of a UE from the SGSN to the GGSN, after the GGSN
+requested such reports (TS 29.060 clause 7.5B.1.1). An SGSN indicates
+its support for location change reporting with the MS Info Change
+Reporting support indication extension header, and its support for CSG
+information change reporting with the CCRSI flag in the Extended Common
+Flags IE (TS 29.060 clause 7.5B.1.0).
+
+[cols="3,1,2,4",options="header"]
+|===
+| Message | Type | Direction | Functionality
+
+| `MS Info Change Notification Request`
+| 128
+| SGSN to GGSN
+| Reports a change of the User Location Information (ULI) or of the User CSG Information (UCI) of the UE.
+
+| `MS Info Change Notification Response`
+| 129
+| GGSN to SGSN
+| Acknowledges an `MS Info Change Notification Request`.
+|===
+
+==== Error Handling
+
+TS 29.060 clause 11.1 defines how a GSN handles a message with unknown,
+unforeseen, or erroneous content, and the GSN applies clauses 11.1.1 to
+11.1.13 in decreasing order of priority. A message that the GSN
+"silently discards" is one that it discards without further processing;
+TS 29.060 clause 11.1 adds that the GSN should log the event and count
+the error in a statistics counter. For the purpose of these rules, the
+`Error Indication`, `Version Not Supported`, `RAN Information Relay`,
+`Supported Extension Headers Notification`, and `SGSN Context
+Acknowledge` messages count as response messages.
+
+[cols="3,4,1",options="header"]
+|===
+| Error condition | Behavior of the receiving GSN | TS 29.060 clause
+
+| Unsupported GTP version
+| Returns a `Version Not Supported` message that carries the latest version it supports in the `Version` field, and discards the received message.
+| 11.1.1
+
+| Message too short to contain the GTP header
+| Silently discards the message.
+| 11.1.2
+
+| Length of a request inconsistent with the `Length` field
+| Returns a response with the Cause value "Invalid message format". For a response with the same error, it silently discards the message.
+| 11.1.2
+
+| Unknown message type, or a message that the GSN does not expect, such as a response without an outstanding request
+| Silently discards the message.
+| 11.1.3, 11.1.4
+
+| Mandatory IE missing from a request
+| Discards the request, and returns a response with the Cause value "Mandatory IE missing".
+| 11.1.5
+
+| Mandatory IE with a value outside its defined range
+| Discards the request, and returns a response with the Cause value "Mandatory IE incorrect".
+| 11.1.7
+
+| Unknown IE type
+| Ignores the IE: skips an unknown TLV IE by its `Length` field, and discards the rest of the message after an unknown TV IE. If the GSN cannot interpret the rest of the message because of the ignored IE, it discards the message, and for a request returns a response with the Cause value "Invalid message format".
+| 11.1.9
+
+| IEs out of sequence
+| Discards the message, and for a request returns a response with the Cause value "Invalid message format".
+| 11.1.10
+
+| Repeated IE where repetition is not specified
+| Handles the first occurrence of the IE, and ignores the repetitions.
+| 11.1.12
+|===
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 29.060
+a|
+* Clause 1 — Scope, and the relationship between TS 29.060 and TS 29.281 for the GTPv1 user plane
+* Clause 4.1 — General description, interfaces, and GTP-C and GTP-U roles
+* Clause 4.2 — Removal of GTPv1 to GTPv0 interworking
+* Clause 6 — GTP header, extension header format (Figure 3), handling of unknown extension headers (Figure 4), and extension header types (Figure 5)
+* Clause 6.1 — Extension headers
+* Clause 7.1 and Table 1 — Message types
+* Clause 7.1.1 — Presence requirements of IEs
+* Clause 7.2 — Path Management Messages
+* Clause 7.3 — Tunnel Management Messages
+* Clause 7.4 — Location Management Messages
+* Clause 7.5 — Mobility Management Messages
+* Clause 7.5A — MBMS Messages
+* Clause 7.5B.1 — MS Info Change Reporting Messages
+* Clause 7.6 — Reliable delivery of signalling messages
+* Clause 7.7.0 — IE encoding in TV and TLV format
+* Clause 8 — Control plane protocol stack (Figure 63), and usage of the GTP-C header
+* Clause 10.1 — UDP/IP path protocol, port numbers, and IP addresses
+* Clause 11 — Error handling and path failure
+
+| TS 29.281
+a|
+* GTPv1 user plane (GTP-U), including the `Error Indication`, `End Marker`, and `G-PDU` messages
+* Clause 5.2.1 and Figure 5.2.1-3 — Extension header types that GTP-U uses
+
+| TS 29.274
+a|
+* Clauses 5.1, 5.3, and 5.4 — GTPv2-C header formats with and without a TEID
+
+| TS 23.401
+a|
+* Annex D — Roaming and inter-access mobility between Gn/Gp SGSNs and MMEs, for which an MME uses GTPv1-C (TS 29.060 clause 4.1)
+
+| TS 23.246
+a|
+* MBMS architecture and procedures, in accordance with which the GTPv1-C MBMS messages are used (TS 29.060 clause 7.5A.0)
+
+| TS 32.295
+a|
+* GTP' charging protocol, which uses the message types that TS 29.060 Table 1 marks for GTP' only
+
+| TS 23.007
+a|
+* Clause 18 — GTP-C based restart procedures, including the comparison of a received Restart Counter with the stored value
+|===
