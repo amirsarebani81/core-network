@@ -2,3 +2,5 @@
 == Functional Description and Information Flows
 
 include::pdp-context-activation-procedure.adoc[]
+
+include::pdp-context-deactivation-procedure.adoc[]

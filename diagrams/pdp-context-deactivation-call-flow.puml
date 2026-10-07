@@ -1,0 +1,37 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "UE" as UE
+participant "RNC" as RNC
+participant "SGSN" as SGSN
+participant "GGSN" as GGSN
+participant "PCRF/AAA" as PCRF
+
+UE -> SGSN: NAS: Deactivate PDP Context Request
+
+SGSN -> GGSN: GTPv1-C: Delete PDP Context Request
+
+opt Policy session update or termination
+    GGSN -> PCRF: Diameter (Gx): Credit-Control-Request (CCR-U or CCR-T)
+    PCRF -> GGSN: Diameter (Gx): Credit-Control-Answer (CCA-U or CCA-T)
+end
+
+opt RADIUS accounting stop
+    GGSN -> PCRF: RADIUS: Accounting-Request (STOP)
+end
+
+GGSN -> SGSN: GTPv1-C: Delete PDP Context Response
+
+opt RADIUS accounting stop
+    PCRF -> GGSN: RADIUS: Accounting-Response
+end
+
+SGSN -> UE: NAS: Deactivate PDP Context Accept
+
+opt Radio Access Bearer release
+    SGSN -> RNC: RANAP: RAB Assignment Request
+    RNC -> UE: RRC: Radio Bearer Release
+    UE -> RNC: RRC: Radio Bearer Release Complete
+    RNC -> SGSN: RANAP: RAB Assignment Response
+end
+@enduml

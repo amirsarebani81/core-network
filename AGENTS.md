@@ -61,6 +61,12 @@ Treat the documentation as living, not archival:
   below.
 - If a change makes an existing TODO or open question obsolete, remove it
   instead of leaving it stale.
+- Keep the prose of parent pages — the landing-page abstract and the part
+  introductions in `main.adoc`, and any introduction in a chapter file that
+  only `include::`s other files — general: describe the scope (network
+  elements and interfaces, protocols, procedures) without naming individual
+  protocols or procedures, so that adding one only needs a new
+  `include::` line and no prose change.
 
 ## Repository layout
 
@@ -198,3 +204,16 @@ This documentation describes standardized 3GPP procedures (GPRS and EPC/EPS). Ci
 the specific 3GPP TS number and clause when adding technical claims (e.g.
 "TS 29.274 clause 7.2.1"), and cross-check node/interface/message names
 against the referenced spec or existing diagrams rather than assuming.
+
+## Commits
+
+When you create a commit, follow the convention of the existing history:
+
+- The message is a single subject line with no body.
+- Write the subject in the imperative mood with a capital first letter and
+  no trailing period, and keep it short, e.g. "Add PDP context deactivation
+  procedure", "Update GPRS architecture", or "Fix architecture diagram in
+  HTML build".
+- Don't use prefixes such as `feat:`, `docs:`, or `WIP:`.
+- Don't add anything else to the message: no `Co-Authored-By` or other
+  trailers, no attribution to an AI tool, and no generated-by notes.
