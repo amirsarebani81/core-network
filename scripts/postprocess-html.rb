@@ -28,6 +28,14 @@ def numbered_page_list(html)
   end
 end
 
+def footer_copyright(html)
+  copyright = html[/<meta name="copyright" content="([^"]*)"/, 1]
+  return html unless copyright
+
+  notice = copyright.sub('CC BY-NC-ND 4.0', '<a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" rel="license">CC BY-NC-ND 4.0</a>')
+  html.sub(%r{(<div id="footer-text">.*?)(\s*</div>)}m) { "#{$1}<br>\n<span class=\"cn-copyright\">#{notice}</span>#{$2}" }
+end
+
 def landing_toc(html)
   outline = html[%r{<div id="toc" class="toc2">.*?(<ul class="sectlevel[01]">.*</ul>)\s*</div>\s*</div>\s*<div id="content"}m, 1]
   abort 'main.html: no table of contents found' unless outline
@@ -72,5 +80,6 @@ Dir.glob(File.join(dir, '*.html')).sort.each do |path|
   html.sub!('</head>') { og.join("\n") + "\n</head>" }
 
   html = is_main ? landing_toc(html) : numbered_page_list(html)
+  html = footer_copyright(html)
   File.write(path, html)
 end

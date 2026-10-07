@@ -18,6 +18,8 @@ Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :sectlinks:
 :description: A reference to the architecture of the GPRS core network and the Evolved Packet Core (EPC), and to the signaling procedures between their network elements, with call flows and 3GPP TS clause citations.
 :favicon: favicon.svg
+:copyright: © 2026 Amir Hossein Sarebani. Licensed under CC BY-NC-ND 4.0.
+:license-url: https://creativecommons.org/licenses/by-nc-nd/4.0/
 ifdef::backend-multipage_html5[]
 :email!:
 endif::[]
@@ -34,6 +36,30 @@ directly between this book and the specifications.
 
 [.cn-button]
 link:core-network.pdf[Download the PDF edition]
+endif::[]
+
+ifdef::backend-pdf[]
+[colophon]
+== Copyright and License
+
+Copyright © 2026 Amir Hossein Sarebani.
+
+This work is licensed under the Creative Commons
+Attribution-NonCommercial-NoDerivatives 4.0 International License
+(CC BY-NC-ND 4.0). You can copy and redistribute it in any medium or
+format for non-commercial purposes, provided that you credit the author
+and do not distribute modified versions. The license text is available at
+{license-url}[{license-url}].
+
+The latest edition is published at
+https://amirsarebani81.github.io/core-network/[], and its source is
+available at https://github.com/amirsarebani81/core-network[].
+
+3GPP(TM) is a trade mark of ETSI, registered for the benefit of its
+Members and of the 3GPP Organizational Partners. The 3GPP specifications
+that this book cites are copyright of the 3GPP Organizational Partners.
+This book is an independent work and is not affiliated with or endorsed
+by 3GPP or ETSI.
 endif::[]
 
 = Part I: GPRS Core

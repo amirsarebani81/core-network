@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you refer to this book, please cite it as below."
+type: generic
+title: "Core Network: Architecture and Signaling Procedures"
+abstract: >-
+  A reference book on the architecture of the GPRS core network and the
+  Evolved Packet Core (EPC), and on the signaling procedures between their
+  network elements, with call flows and 3GPP TS clause citations.
+authors:
+  - family-names: Sarebani
+    given-names: Amir Hossein
+    website: "https://amirsarebani81.github.io/"
+version: 1.3.0
+date-released: 2026-10-07
+url: "https://amirsarebani81.github.io/core-network/"
+repository-code: "https://github.com/amirsarebani81/core-network"
+license: CC-BY-NC-ND-4.0
+keywords:
+  - 3GPP
+  - GPRS
+  - EPC
+  - mobile core network
+  - signaling
+  - call flow

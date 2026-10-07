@@ -6,7 +6,8 @@ Instructions for AI agents working in this repository.
 
 A docs-as-code reference document covering the architecture and signaling
 procedures of the mobile core network (GPRS and EPC). Source is AsciiDoc, built into
-PDF and HTML. See `README.md` for the full toolchain and install steps.
+PDF and HTML. `README.md` is the public front page of the repository;
+see `docs/BUILDING.md` for the full toolchain and install steps.
 
 ## Writing style
 
@@ -85,7 +86,7 @@ Treat the documentation as living, not archival:
   `-forest.yml` are color-only recolors; `-editorial.yml`, `-manuscript.yml`,
   `-terminal.yml`, and `-zinc.yml` are style themes that also change the font family,
   page background, and table structure. Selected via
-  `bash build.sh <target> <theme-name>` — see `README.md`. `zinc` is the
+  `bash build.sh <target> <theme-name>` — see `docs/BUILDING.md`. `zinc` is the
   default: `build.sh`, the Pages workflow, and the `:pdf-theme:` and
   `:docinfodir:` attributes in `main.adoc` all use it. A theme that
   introduces a font outside the bundled catalog (Noto Serif, Noto Sans,
@@ -139,12 +140,31 @@ Treat the documentation as living, not archival:
   contents in the body of `main.html` (`.cn-book-toc`, which replaces the
   chapter list, and the sidebar is removed from that page), the numbered
   sub-page list on each chapter page (`.cn-pagelist`), and the
-  `data-pagefind-*` attributes for search. `build.sh` then builds the
+  `data-pagefind-*` attributes for search, and the copyright line in each
+  page footer (`.cn-copyright`, taken from the `:copyright:` attribute in
+  `main.adoc`). `build.sh` then builds the
   Pagefind search index into `output/html/pagefind/` (skipped with a
   message if Pagefind is not installed) and copies `theme/favicon.svg`.
 - Packet-format diagrams (`packetdiag::`) carry `role=packet-diagram`,
   which scales them up to the text width in the HTML only; keep the role
   on any new packet diagram.
+- `LICENSE`, `LICENSES/` — dual license: the book content (`main.adoc`,
+  `chapters/`, `diagrams/`, `drawio/`, `images/`) is CC BY-NC-ND 4.0, and
+  the build tooling (`build.sh`, `docker-compose.yml`, `scripts/`,
+  `theme/`, `.github/`) is MIT. A new top-level path needs to be added to
+  the matching list in `LICENSE` and in the License section of
+  `README.md`. The copyright notice appears in `main.adoc` (the
+  `:copyright:` attribute and a PDF-only `[colophon]` section, which also
+  carries the 3GPP trade mark notice), in `README.md`, and in `LICENSE`;
+  keep these consistent. Don't copy text, tables, or figures verbatim from
+  3GPP specifications: describe them in your own words and cite the clause,
+  because the 3GPP material is not covered by this repository's license.
+- `docs/BUILDING.md` — maintainer documentation: toolchain, build, themes,
+  and the Pages workflow. Update it together with `build.sh` and
+  `.github/workflows/pages.yml`.
+- `CITATION.cff` — citation metadata for GitHub's "Cite this repository"
+  button; update `version` and `date-released` when `:revnumber:` and
+  `:revdate:` change in `main.adoc`.
 - `output/` — build output (gitignored). `bash build.sh html` writes a
   multi-page site to `output/html/` (via `asciidoctor-multipage`, split at
   level-2 sections) — open `output/html/main.html`, not a single file.

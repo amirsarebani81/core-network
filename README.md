@@ -1,212 +1,95 @@
-# Core Network Documentation
+# Core Network: Architecture and Signaling Procedures
 
-A docs-as-code reference document covering the architecture and signaling
-procedures of the mobile core network, in two parts: the GPRS core network
-(Part I) and the Evolved Packet Core, EPC (Part II).
+A reference book on the architecture of the mobile packet core network and
+the signaling procedures between its network elements, with call flow
+diagrams and citations to the 3GPP Technical Specification (TS) clause that
+defines each procedure.
 
-## Stack
+[![Publish to GitHub Pages](https://github.com/amirsarebani81/core-network/actions/workflows/pages.yml/badge.svg)](https://github.com/amirsarebani81/core-network/actions/workflows/pages.yml)
+[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/content-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
+[![License: MIT](https://img.shields.io/badge/tooling-MIT-blue.svg)](LICENSES/MIT.txt)
 
-| Concern            | Tool                                           |
-|--------------------|------------------------------------------------|
-| Source format      | AsciiDoc (`.adoc`)                             |
-| PDF output         | `asciidoctor-pdf` (pure Ruby, no LaTeX needed) |
-| HTML output        | `asciidoctor` + `asciidoctor-multipage` (multi-page HTML5) |
-| Diagrams           | Kroki (Mermaid / Graphviz / D2 / packetdiag …) |
-| Diagram server     | Docker Compose (local, private)                |
+**[Read online](https://amirsarebani81.github.io/core-network/)** ·
+**[Download the PDF](https://amirsarebani81.github.io/core-network/core-network.pdf)**
 
-## 1. Install
+## About
 
-### Debian/Ubuntu
+The book covers two generations of the packet core:
 
-```bash
-# Ruby + AsciiDoc toolchain
-sudo apt-get update
-sudo apt-get install -y ruby-full build-essential
-sudo gem install asciidoctor asciidoctor-pdf asciidoctor-diagram asciidoctor-kroki asciidoctor-multipage rouge
+- **Part I: GPRS Core**, the General Packet Radio Service core network.
+- **Part II: Evolved Packet Core (EPC)**, with Control and User Plane
+  Separation (CUPS).
 
-# Docker, for the local Kroki diagram server (skip if you already have Docker)
-sudo apt-get install -y docker.io docker-compose-plugin
-sudo usermod -aG docker "$USER"   # log out/in (or `newgrp docker`) for this to take effect
-```
+For each generation, the book describes the network elements and the
+interfaces between them, the protocols that carry signaling between the
+network elements, and the signaling procedures that run over those
+protocols. Each procedure has a call flow diagram and a step-by-step
+description of its messages. Each technical claim cites the TS and clause
+that defines it, so you can move directly between the book and the
+specifications.
 
-### Fedora
+The book is written for network engineers who work with, test, or
+troubleshoot mobile core networks and who also read the 3GPP specifications.
 
-```bash
-sudo dnf install -y ruby ruby-devel gcc make
-sudo gem install asciidoctor asciidoctor-pdf asciidoctor-diagram asciidoctor-kroki asciidoctor-multipage rouge
-sudo dnf install -y docker docker-compose
-```
+**Status:** the book is a work in progress, and chapters are added over
+time. The online edition always reflects the latest version of the `main`
+branch.
 
-### macOS (Homebrew)
+## Feedback and contributions
 
-```bash
-brew install ruby
-gem install asciidoctor asciidoctor-pdf asciidoctor-diagram asciidoctor-kroki asciidoctor-multipage rouge
-brew install --cask docker
-```
+Please [open an issue](https://github.com/amirsarebani81/core-network/issues)
+in any of these cases:
 
-Verify:
+- You find a technical error, an incorrect citation, or a broken diagram.
+  Include the section number and, where it applies, the TS clause that you
+  believe is correct.
+- Information is missing from a chapter.
+- A procedure that the book doesn't cover yet would be useful. Name the
+  procedure and, if you can, the TS clause that defines it.
 
-```bash
-asciidoctor-pdf -v
-```
+Pull requests are welcome too. For a larger change, such as a new
+procedure, please open an issue first so that we can agree on the scope.
+Follow the writing style in [AGENTS.md](AGENTS.md), cite the TS clause for
+each technical claim, and build the book with `bash build.sh` to confirm
+that there are no warnings. By submitting a pull request, you agree that
+your contribution is licensed under the same terms as the file that it
+changes (see [License](#license)).
 
-## 2. Start the local diagram server
+## Building locally
 
-```bash
-docker compose up -d
-```
-
-This starts Kroki on `http://localhost:8000`. `main.adoc` already points at
-it via the `:kroki-server-url:` attribute.
-
-**Don't want to install Docker right now?** Delete or comment out the
-`:kroki-server-url:` line in `main.adoc` — Kroki's extension then falls back
-to the public `https://kroki.io` service, so you can build immediately and
-switch to local later. Only do this if the diagram content isn't sensitive.
-
-## 3. Build
+The book is written in AsciiDoc and built with Asciidoctor. The diagrams are
+rendered by a local Kroki server.
 
 ```bash
-bash build.sh        # builds both PDF and HTML into output/, using the default theme
-bash build.sh pdf     # PDF only
-bash build.sh html    # HTML only
+docker compose up -d   # start the Kroki diagram server
+bash build.sh          # build the PDF and HTML into output/
 ```
 
-Or run the underlying commands directly:
+Then open `output/core-network.pdf` or `output/html/main.html`. See
+[docs/BUILDING.md](docs/BUILDING.md) for the installation steps, the
+available themes, and the publishing workflow.
 
-```bash
-asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme-zinc.yml -a pdf-themesdir=theme -a allow-uri-read -a cache-uri -a table-frame=topbot -a table-grid=rows -a table-stripes=none main.adoc -o output/core-network.pdf
-asciidoctor -r asciidoctor-kroki -r asciidoctor-multipage -b multipage_html5 -a multipage-level=2 -a data-uri -a allow-uri-read -a docinfodir=theme/zinc -a table-frame=topbot -a table-grid=rows -a table-stripes=none main.adoc -D output/html
-```
+## License
 
-These commands use the default `zinc` theme; see
-[Choosing a theme](#4-choosing-a-theme) for the attributes of the other
-themes.
+Copyright © 2026 Amir Hossein Sarebani.
 
-`allow-uri-read` is required because diagrams are fetched as remote images
-from the Kroki server; without it, `asciidoctor-pdf` silently prints the
-diagram's alt text and URL instead of rendering it. `cache-uri` avoids
-re-fetching unchanged diagrams on every rebuild (needs the optional
-`open-uri-cached` gem — harmless if it isn't installed, just skips the
-cache).
+- **Book content** (the text, figures, and diagrams in `main.adoc`,
+  `chapters/`, `diagrams/`, `drawio/`, and `images/`, and the published
+  HTML and PDF) is licensed under
+  [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
+  You can share the book unchanged, for non-commercial purposes, if you
+  credit the author. You can't distribute modified versions.
+- **Build tooling** (`build.sh`, `docker-compose.yml`, `scripts/`, `theme/`,
+  and `.github/`) is licensed under the [MIT License](LICENSES/MIT.txt).
 
-For the HTML, `data-uri` together with `allow-uri-read` embeds every diagram
-in its page as a data URI. Without `allow-uri-read`, the HTML keeps `<img>`
-links to `http://localhost:8000/...`, which only resolve on a machine that
-runs Kroki — so a published copy would show broken diagrams.
+See [LICENSE](LICENSE) for the details. To use the book outside these
+terms, for example commercially or in a translation, contact the author.
 
-### HTML output is multi-page
+3GPP™ is a trade mark of ETSI, registered for the benefit of its Members and
+of the 3GPP Organizational Partners. The 3GPP specifications are copyright of
+the 3GPP Organizational Partners. This book is an independent work and is
+not affiliated with or endorsed by 3GPP or ETSI.
 
-The HTML build splits at level-2 sections (`===`, one protocol or
-procedure per page — e.g. S1AP, the Attach Procedure, RADIUS on the
-Gi/SGi Interface) instead of producing one long page. `bash build.sh html`
-writes the whole site into `output/html/`; open `output/html/main.html`
-as the entry point, which carries the full table of contents and links
-out to every page. Each page also gets prev/next/up navigation links.
-`main.html` is the required name for the entry page — it comes from
-`main.adoc`'s basename and `asciidoctor-multipage` hard-codes it, so
-renaming the output (e.g. via `-o`) breaks that link.
+## Author
 
-Adjust the split granularity with `-a multipage-level=N` (`1` = one
-page per top-level chapter, larger N = deeper, more numerous pages);
-`build.sh` sets `N=2`. If you change it, keep `:toclevels:` in
-`main.adoc` at or above `N`, or `asciidoctor-multipage` prints a
-warning.
-
-## 4. Choosing a theme
-
-Seven themes are available for both the PDF and HTML output. Pick one by
-passing its name as the second argument to `build.sh`:
-
-```bash
-bash build.sh all corporate    # navy blue, serif body, shaded table headers
-bash build.sh all slate        # blue-grey recolor of corporate
-bash build.sh all forest       # dark green recolor of corporate
-bash build.sh all editorial    # sans-serif, minimalist borderless tables, amber accent
-bash build.sh all manuscript   # classic serif, ivory page, fully-ruled tables, burgundy accent
-bash build.sh all terminal     # dark page, monospace headings, monokai code highlighting
-bash build.sh all zinc         # default: matches amirsarebani81.github.io: zinc greys, blue accent, auto dark mode
-
-bash build.sh pdf slate        # a single target also takes the theme argument
-bash build.sh html forest
-```
-
-`corporate` is the base theme that every other theme extends. `slate` and
-`forest` only change its colors; layout, fonts, and table style stay the
-same as `corporate`. `editorial`, `manuscript`, and
-`terminal` are style themes: each also changes the base font family
-(sans-serif, serif, or monospace headings), the table structure (borderless,
-fully-ruled, or row-ruled — via the `table-frame`/`table-grid`/`table-stripes`
-document attributes, which `build.sh` sets per theme), and, for `terminal`,
-the page background and syntax-highlighting palette (`rouge-style=monokai`).
-`zinc` is a style theme that matches the author's home page
-(amirsarebani81.github.io): system sans-serif (Noto Sans in the PDF), zinc
-greys with a blue accent, row-ruled tables with small uppercase headers, and,
-in the HTML only, an automatic dark palette through `prefers-color-scheme`.
-`zinc` is used when no theme is given, both by `bash build.sh` and by the
-GitHub Pages workflow, and `main.adoc` sets `pdf-theme` and `docinfodir` to
-its files. The `zinc` table style comes from the
-`table-frame`/`table-grid`/`table-stripes` attributes that `build.sh` passes,
-so a direct `asciidoctor` invocation must pass them too.
-
-Note: the architecture and call-flow diagrams are pre-rendered SVGs with a
-white background (`images/*.svg`, `diagrams/*.puml`), so on the `terminal`
-theme's dark page they render inside a white panel. This is expected and not
-a build issue.
-
-To run the underlying commands directly with a non-default theme, override
-`pdf-theme`, `docinfodir`, and (for the style themes) the table/rouge
-attributes:
-
-```bash
-# PDF, "corporate" theme
-asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme.yml -a pdf-themesdir=theme -a allow-uri-read -a cache-uri main.adoc -o output/core-network.pdf
-
-# PDF, "slate" theme
-asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme-slate.yml -a pdf-themesdir=theme -a allow-uri-read -a cache-uri main.adoc -o output/core-network.pdf
-
-# HTML, "forest" theme
-asciidoctor -r asciidoctor-kroki -r asciidoctor-multipage -b multipage_html5 -a multipage-level=2 -a data-uri -a allow-uri-read -a docinfodir=theme/forest main.adoc -D output/html
-
-# PDF, "terminal" theme (style themes also need the table/rouge attributes build.sh sets)
-asciidoctor-pdf -r asciidoctor-kroki -a pdf-theme=core-network-theme-terminal.yml -a pdf-themesdir=theme -a allow-uri-read -a cache-uri -a table-frame=topbot -a table-grid=rows -a table-stripes=even -a rouge-style=monokai main.adoc -o output/core-network.pdf
-```
-
-### Adding a new theme
-
-1. Add `theme/core-network-theme-<name>.yml` with `extends: core-network` and
-   override the colors (and, for a style theme, `base.font-family`,
-   `heading.font-family`, `page.background-color`, etc. — see
-   `theme/core-network-theme-slate.yml` for a color-only example and
-   `theme/core-network-theme-terminal.yml` for a style example). If you
-   introduce a font not already in the catalog (only Noto Serif, Noto Sans,
-   and M+ 1mn are bundled), add a `font.catalog` entry pointing at
-   `GEM_FONTS_DIR/<file>.ttf` — see the top of
-   `theme/core-network-theme-editorial.yml`.
-2. Add `theme/<name>/docinfo.html`, copying `theme/docinfo.html` and
-   replacing its color values (and font-family/background overrides, for a
-   style theme) with the same palette (this file only affects the HTML
-   backend — see `AGENTS.md` for why HTML and PDF colors are kept in two
-   places). Keep the `#header > h1:first-child` and `#header .details`
-   rules in sync too — the document title and byline need their own
-   selector to win over asciidoctor's default stylesheet (see `AGENTS.md`).
-3. Add a case for `<name>` in the `THEME` switch in `build.sh`, including
-   `TABLE_FRAME`/`TABLE_GRID`/`TABLE_STRIPES`/`ROUGE_STYLE` if the theme
-   changes table structure or code highlighting.
-
-## 5. Publishing to GitHub Pages
-
-`.github/workflows/pages.yml` builds the book and publishes it to
-<https://amirsarebani81.github.io/core-network/> on every push to `main`
-(or manually from the **Actions** tab via *Run workflow*). It:
-
-1. starts Kroki as a service container on `localhost:8000`, so
-   `:kroki-server-url:` in `main.adoc` works unchanged;
-2. runs `bash build.sh all "$THEME"` (`THEME` is set at the top of the
-   workflow — change it there to publish a different theme);
-3. publishes the multi-page site from `output/html/`, with a copy of
-   `main.html` as `index.html`, alongside `core-network.pdf` (at
-   `.../core-network/core-network.pdf`).
-
-One-time setup: **Settings → Pages → Source: GitHub Actions**.
+**Amir Hossein Sarebani** · [amirsarebani81.github.io](https://amirsarebani81.github.io/)

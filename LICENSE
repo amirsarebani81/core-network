@@ -1,0 +1,62 @@
+Copyright (c) 2026 Amir Hossein Sarebani
+
+This repository is dual-licensed. Which license applies depends on the file.
+
+1. Book content: CC BY-NC-ND 4.0
+   ------------------------------
+
+   The text, figures, and diagrams of "Core Network: Architecture and
+   Signaling Procedures", in source form and in every rendered form
+   (including the published HTML site and the PDF), are licensed under the
+   Creative Commons Attribution-NonCommercial-NoDerivatives 4.0
+   International License. This covers the following paths:
+
+     main.adoc
+     chapters/
+     diagrams/
+     drawio/
+     images/
+
+   You can copy and redistribute this material in any medium or format,
+   provided that you give appropriate credit, that you don't use it for
+   commercial purposes, and that you don't distribute modified versions.
+   The full legal code is in LICENSES/CC-BY-NC-ND-4.0.txt and at
+   https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode
+
+   Suggested attribution:
+
+     "Core Network: Architecture and Signaling Procedures" by Amir Hossein
+     Sarebani, https://amirsarebani81.github.io/core-network/, licensed
+     under CC BY-NC-ND 4.0.
+
+2. Build tooling: MIT
+   ------------------
+
+   The build scripts, theme files, and site layout files are licensed under
+   the MIT License. This covers the following paths:
+
+     build.sh
+     docker-compose.yml
+     scripts/
+     theme/
+     .github/
+
+   The full text is in LICENSES/MIT.txt.
+
+Any file not listed above is licensed under CC BY-NC-ND 4.0 unless it states
+otherwise.
+
+Permission for uses outside these licenses (for example, commercial use or
+a translation of the book) can be requested from the author at
+amirsarebani1381@gmail.com.
+
+Third-party material
+--------------------
+
+This book describes and cites specifications of the 3rd Generation
+Partnership Project (3GPP). The 3GPP specifications are copyright of the
+3GPP Organizational Partners (ARIB, ATIS, CCSA, ETSI, TSDSI, TTA, TTC), and
+neither license above applies to them. 3GPP(TM) is a trade mark of ETSI,
+registered for the benefit of its Members and of the 3GPP Organizational
+Partners. This book is an independent work and is not affiliated with or
+endorsed by 3GPP, ETSI, or any of the Organizational Partners.
