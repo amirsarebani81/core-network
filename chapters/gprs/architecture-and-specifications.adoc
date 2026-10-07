@@ -5,9 +5,9 @@ The General Packet Radio Service (GPRS) core network, which this book
 calls the GPRS Core, provides packet-switched connectivity to a mobile
 subscriber and is the direct predecessor of the EPC architecture that
 Part II describes. This chapter describes the GPRS Core in Iu mode with
-Gn/Gp interfaces, the configuration that 3GPP TS 23.060 clause 5.4.0
-shows in Figure 2 ("Overview of the GPRS Logical Architecture when based
-on Gn/Gp interfaces").
+Gn/Gp interfaces, based on the configuration that 3GPP TS 23.060 clause
+5.4.0 shows in Figure 2 ("Overview of the GPRS Logical Architecture when
+based on Gn/Gp interfaces"), with the optional PCRF added.
 
 .GPRS Core architecture
 image::images/gprs-architecture.svg[GPRS Core Architecture]
@@ -15,53 +15,60 @@ image::images/gprs-architecture.svg[GPRS Core Architecture]
 The figure above shows the path of packet-switched traffic from the User
 Equipment (UE), through the Universal Mobile Telecommunications System
 (UMTS) Terrestrial Radio Access Network (UTRAN) and the two GPRS Support
-Nodes, to an external packet data network.
+Nodes, to an external packet data network. The figure also shows two
+control-plane nodes: the Home Subscriber Server/Home Location Register
+(HSS/HLR), which holds subscription data for the SGSN and the GGSN, and
+the Policy and Charging Rules Function (PCRF), which provides policy and
+charging control to the GGSN.
 
 [#_gprs_network_elements]
 === Network Elements
 
 UE (User Equipment):: The UE is the subscriber's device, for example a
 mobile phone or a data modem, that connects to the UTRAN over the Uu
-radio interface to use packet-switched services (TS 23.060 clause 5.1).
+radio interface. It is the endpoint for all mobility management, session
+management, and user-plane traffic.
 
 UTRAN (UMTS Terrestrial Radio Access Network):: The UTRAN is the UMTS
-radio access network, made up of one or more Radio Network Subsystems
-(RNSs), each of which contains a Radio Network Controller (RNC) and the
-Node Bs that the RNC controls (TS 25.401 clause 6). The UTRAN provides
-the Uu radio interface towards the UE, and it relays packet-switched
-signaling and user data to the SGSN over the IuPs interface, the
-packet-switched part of the Iu interface (TS 25.410).
+radio access network, made up of Radio Network Subsystems (RNSs), each
+of which contains a Radio Network Controller (RNC) and the Node Bs that
+the RNC controls. It provides the Uu radio interface towards the UE and
+relays packet-switched signaling and user data to the SGSN over IuPs.
 
-SGSN (Serving GPRS Support Node):: The SGSN serves the UE within its
-current routeing area, and it handles mobility management, session
-management, and the forwarding of user data between the UTRAN and the
-GGSN (TS 23.060 clause 5.4.1.3). Unlike the EPC, where the MME handles
-the control plane and the SGW-U forwards user data, the SGSN usually
-carries both control-plane signaling and user-plane traffic. The
-exception is Direct Tunnel, an optional function in which the SGSN
-establishes a user-plane tunnel directly between the RNC and the GGSN
-and keeps only the control plane (TS 23.060 clause 15.6). The SGSN
-connects to a GGSN over Gn when both nodes belong to the same Public
-Land Mobile Network (PLMN), and over Gp when the GGSN belongs to another
-PLMN (TS 23.060 clause 5.4.1.3).
+SGSN (Serving GPRS Support Node):: The SGSN is the node that serves the
+UE, handling mobility management, session management, and the
+forwarding of user data between the UTRAN and the GGSN. Unlike the MME
+in the EPC, the SGSN usually carries both control-plane signaling and
+user-plane traffic, and it reaches the GGSN over Gn within the same
+Public Land Mobile Network (PLMN) or over Gp towards another PLMN.
 
 GGSN (Gateway GPRS Support Node):: The GGSN is the gateway between the
-GPRS Core and the external packet data network, and it supports the Gi
-reference point towards that network (TS 23.060 clause 5.4.1.2). The
-GGSN anchors the Packet Data Protocol (PDP) address that the UE uses for
-the lifetime of a PDP context, and it routes packets between the SGSN
-over Gn/Gp and the PDN over Gi.
+GPRS Core and the external packet data network. It anchors the Packet
+Data Protocol (PDP) address of the UE and routes packets between the
+SGSN over Gn/Gp and the PDN over Gi.
+
+HSS/HLR (Home Subscriber Server/Home Location Register):: The HSS/HLR is
+the subscriber database of the GPRS Core. It stores subscription data,
+authentication data, and the identity of the SGSN currently serving each
+subscriber; the SGSN queries the HSS/HLR over Gr (S6d for an S4-SGSN)
+for authentication vectors and location updates, and the GGSN can query
+it over the optional Gc interface for the address of the serving SGSN.
+
+PCRF (Policy and Charging Rules Function):: The PCRF is an optional
+policy and charging control element. It makes policy control decisions
+and flow-based charging control decisions, and it provides the GGSN
+with the resulting rules over Gx for enforcement.
 
 PDN (Packet Data Network):: The PDN is the external packet data network,
 for example the internet or a corporate intranet, that the UE obtains
-connectivity to. The GGSN reaches the PDN over the Gi reference point,
-which TS 29.061 defines (TS 23.060 clause 5.1).
+connectivity to, reached from the GGSN over Gi.
 
 [#_gprs_technical_specifications]
 === Technical Specifications
 
 * *3GPP TS 23.007* _Restoration procedures_
 * *3GPP TS 23.060* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); General Packet Radio Service (GPRS); Service description; Stage 2_
+* *3GPP TS 23.203* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); LTE; Policy and charging control architecture_
 * *3GPP TS 23.246* _Multimedia Broadcast/Multicast Service (MBMS); Architecture and functional description_
 * *3GPP TS 23.401* _LTE; General Packet Radio Service (GPRS) enhancements for Evolved Universal Terrestrial Radio Access Network (E-UTRAN) access_
 * *3GPP TS 24.008* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); LTE; 5G; Mobile radio interface Layer 3 specification; Core network protocols; Stage 3_
@@ -72,6 +79,7 @@ which TS 29.061 defines (TS 23.060 clause 5.1).
 * *3GPP TS 29.060* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); General Packet Radio Service (GPRS); GPRS Tunnelling Protocol (GTP) across the Gn and Gp interface_
 * *3GPP TS 29.061* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); LTE; 5G; Interworking between the Public Land Mobile Network (PLMN) supporting packet based services and Packet Data Networks (PDN)_
 * *3GPP TS 29.212* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; Policy and Charging Control (PCC); Reference points_
+* *3GPP TS 29.272* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; Evolved Packet System (EPS); Mobility Management Entity (MME) and Serving GPRS Support Node (SGSN) related interfaces based on Diameter protocol_
 * *3GPP TS 29.274* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; 3GPP Evolved Packet System (EPS); Evolved General Packet Radio Service (GPRS) Tunnelling Protocol for Control plane (GTPv2-C); Stage 3_
 * *3GPP TS 29.281* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; General Packet Radio System (GPRS) Tunnelling Protocol User Plane (GTPv1-U)_
 * *3GPP TS 32.295* _Telecommunication management; Charging management; Charging Data Record (CDR) transfer_
