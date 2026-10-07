@@ -61,6 +61,12 @@ Treat the documentation as living, not archival:
   below.
 - If a change makes an existing TODO or open question obsolete, remove it
   instead of leaving it stale.
+- Keep the prose of parent pages — the landing-page abstract and the part
+  introductions in `main.adoc`, and any introduction in a chapter file that
+  only `include::`s other files — general: describe the scope (network
+  elements and interfaces, protocols, procedures) without naming individual
+  protocols or procedures, so that adding one only needs a new
+  `include::` line and no prose change.
 
 ## Repository layout
 

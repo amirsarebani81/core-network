@@ -1,0 +1,419 @@
+[#_gprs_pdp_context_deactivation_procedure]
+=== PDP Context Deactivation Procedure
+
+==== Technical Overview
+
+The Packet Data Protocol (PDP) Context Deactivation procedure is the
+session management procedure that terminates an established PDP context
+between the User Equipment (UE) and the Gateway GPRS Support Node (GGSN)
+in a General Packet Radio Service (GPRS) core network with the Gn/Gp
+architecture (TS 23.060 clause 9.2.4). TS 24.008 calls the UE the Mobile
+Station (MS); this chapter uses the term UE throughout. The UE, the
+Serving GPRS Support Node (SGSN), or the GGSN can start the procedure
+(TS 23.060 clauses 9.2.4.1, 9.2.4.2, and 9.2.4.3). When the Home
+Location Register (HLR) requests the detach of a UE that has PDP
+contexts for emergency services, the SGSN also starts the procedure for
+each PDP context of the UE that is not for emergency services (TS 24.008
+clause 6.1.3.4.2). The procedure releases the control-plane and
+user-plane tunnels of the GPRS Tunnelling Protocol (GTP) over the Gn/Gp
+interface, releases the radio resources of the PDP context, updates or
+terminates the associated Policy and Charging Control (PCC) session over
+the Gx reference point, stops the accounting of the PDP context over the
+Gi reference point, and releases a dynamically allocated PDP address.
+In Iu mode, the SGSN
+releases the Radio Access Bearer (RAB) over the IuPs interface with the
+RAB Assignment procedure, and in A/Gb mode, the SGSN can instead run the
+packet flow context procedures with the Base Station Subsystem (BSS)
+(TS 23.060 clause 9.2.4.1, steps 5 and 6). The procedure has these
+high-level effects:
+
+On the UE:: The Session Management (SM) state of the UE moves from
+`PDP-ACTIVE` to `PDP-INACTIVE-PENDING` when the UE sends the
+deactivation request, and to `PDP-INACTIVE` when the UE receives the
+acceptance (TS 24.008 clause 6.1.3.4.1). The UE erases the parameters of
+the PDP context, releases the radio bearer identifiers of the PDP
+context, and stops the data transfer on the PDP context. After a
+successful deactivation, the UE releases the Network Service Access
+Point Identifier (NSAPI) and the Transaction Identifier (TI) of the PDP
+context, and can assign them to another PDP context (TS 24.008 clause
+6.1.3.4).
+
+On the SGSN:: The SGSN removes the PDP context from its session tables,
+tells the Radio Network Controller (RNC) or the BSS to release the
+associated radio resources, and deletes the GTP tunnels with the GGSN
+over the Gn/Gp interface (TS 23.060 clause 9.2.4.1).
+
+On the GGSN:: The GGSN removes its PDP context record and the bindings
+of the user-plane Tunnel Endpoint Identifiers (TEIDs) of the PDP
+context, and stops the accounting collection over the Remote
+Authentication Dial-In User Service (RADIUS) or Diameter. The GGSN
+notifies the Policy and Charging Rules Function (PCRF) of the
+termination of the PDP context, or of the termination of the IP
+Connectivity Access Network (IP-CAN) session when the PDP context is the
+last PDP context of the IP-CAN session (TS 29.212 Annex A.3.4 and
+A.3.5). If the UE used a dynamic PDP address that the
+GGSN allocated, and the PDP context is the last PDP context associated
+with this PDP address, the GGSN releases the PDP address and makes the
+address available to other UEs (TS 23.060 clause 9.2.4.1, step 3).
+
+==== Call Flow
+
+The call flow shows the UE-initiated variant of the procedure in Iu
+mode, which TS 23.060 clause 9.2.4.1 shows in Figure 75; Figure 74 shows
+the same procedure in A/Gb mode. TS 23.060 shows the SGSN-initiated
+variant in Figure 76 (clause 9.2.4.2) and the GGSN-initiated variant in
+Figure 77 (clause 9.2.4.3). Three parts of the call flow are optional:
+the Diameter exchange over the Gx reference point, which the GGSN runs
+only as the Policy and Charging Enforcement Function (PCEF) of dynamic
+PCC; the RADIUS accounting stop over the Gi
+reference point, which the GGSN runs only if the APN uses RADIUS
+accounting; and the RAB release, which the SGSN runs only if a RAB
+exists for the PDP context (TS 23.060 clause 9.2.4.1, step 5). The
+figure shows the RADIUS `Accounting-Response` message after the `Delete
+PDP Context Response` message because the GGSN does not wait for the
+`Accounting-Response` message before the GGSN replies to the SGSN
+(TS 29.061 clause 16.3.1). The call flow omits
+the Customised Applications for Mobile network Enhanced Logic (CAMEL)
+procedure C1 of TS 23.060 clause 9.2.4.1, and it expands step 5 of
+Figure 75, Radio Access Bearer Release, into the messages of the RAB
+Assignment procedure.
+
+.PDP context deactivation procedure call flow
+plantuml::diagrams/pdp-context-deactivation-call-flow.puml[svg]
+
+==== Step-by-Step Description
+
+. The *UE* starts the deactivation by sending a Non-Access Stratum (NAS)
+SM `Deactivate PDP Context Request` message (TS 24.008 clause 9.5.14) to
+the *SGSN* through the radio access network. When the UE sends this
+message, the UE enters the `PDP-INACTIVE-PENDING` state and starts timer
+T3390 (TS 24.008 clause 6.1.3.4.1), whose value is 8 seconds (TS 24.008
+Table 11.2c). The message identifies the PDP context by its TI and
+carries an SM cause, for example #36 "regular deactivation", #37 "QoS
+not accepted", or #25 "LLC or SNDCP failure (A/Gb mode only)"
+(TS 24.008 clause 6.1.3.4.1). If the UE deactivates all active PDP
+contexts that share the same PDP address and Access Point Name (APN),
+the UE includes the Tear down indicator IE; the UE then deactivates the
+other PDP contexts locally, without peer-to-peer signalling (TS 24.008
+clause 6.1.3.4). The UE also includes the Tear down indicator IE when
+the UE deactivates the PDP context that the PDP Context Activation
+procedure created (TS 23.060 clause 9.2.4.1, step 1), and a UE that
+supports S1 mode always includes the IE when the UE deactivates the
+default PDP context (TS 24.008 clause 6.1.3.4). The message can also
+carry the Protocol Configuration
+Options (PCO) (TS 24.008 clause 9.5.14.2).
+
+. The *SGSN* checks the TI and sends a GTPv1-C `Delete PDP Context
+Request` message (TS 29.060 clause 7.3.5) to the *GGSN* over the Gn/Gp
+interface. The message tells the GGSN to release the control-plane and
+user-plane GTP tunnels of the PDP context that the NSAPI identifies. The
+GTP header carries the GGSN TEID for control-plane messages. The NSAPI
+is the only mandatory IE (TS 29.060 Table 11). The SGSN copies the
+Teardown Ind IE from the `Deactivate PDP Context Request` message if the
+UE included it, and sets the Teardown Ind to "1" when the PDP context is
+the last PDP context of the PDN connection; with the Teardown Ind set to
+"1", the GGSN tears down all PDP contexts that share the PDN connection.
+The SGSN copies the PCO transparently from the `Deactivate PDP Context
+Request` message, includes the User Location Information, which holds
+the Cell Global Identity (CGI) or the Service Area Identity (SAI) of the
+UE, together with the ULI Timestamp, which records when the SGSN
+acquired the User Location Information, and includes the MS Time Zone
+if the MS Time Zone changed since the SGSN last reported it. If the SGSN
+sends the message because of a network problem, the SGSN includes the
+Cause IE, for example "Network Failure"
+(TS 29.060 clause 7.3.5).
+
+. When the *GGSN* receives the request, and the GGSN acts as the PCEF of
+dynamic PCC, the GGSN sends a Diameter `Credit-Control-Request` (CCR)
+message to the *PCRF* over the Gx reference point. The content of the
+message depends on whether other PDP contexts of the IP-CAN session stay
+active, because in GPRS an IP-CAN session ends only when the last PDP
+context of the IP-CAN session ends (TS 29.212 Annex A.3.5). If other PDP
+contexts stay active, the GGSN sends a CCR-U message, that is a CCR
+message with the `CC-Request-Type` Attribute-Value Pair (AVP) set to
+`UPDATE_REQUEST` (2), and reports the PCC rules of the PDP context as
+inactive in the `Charging-Rule-Report` AVP; when the PCRF performs the
+bearer binding, the GGSN also includes the `Bearer-Identifier` AVP and
+the `Bearer-Operation` AVP set to `TERMINATION` (TS 29.212 clause 4.5.6
+and Annex A.3.4). If the PDP context is the last PDP context of the
+IP-CAN session, the GGSN sends a CCR-T message, that is a CCR message
+with the `CC-Request-Type` AVP set to `TERMINATION_REQUEST` (3)
+(TS 29.212 clause 4.5.7 and Annex A.3.5), which can carry the reason for
+the termination in the `Termination-Cause` AVP, for example
+`DIAMETER_LOGOUT` (1) (IETF RFC 6733 section 8.15). Both messages
+identify the Gx session by the `Session-Id` AVP and carry the
+`CC-Request-Number` AVP. If the GGSN and the PCRF support the
+RAN-NAS-Cause feature, the GGSN includes the location of the UE in the
+`3GPP-User-Location-Info` AVP and the time zone of the UE in the
+`3GPP-MS-TimeZone` AVP, if available (TS 29.212 clauses 4.5.6 and
+4.5.7). The GGSN also delivers the User Location Information and the UE
+Time Zone to the PCRF when the PCRF requested them (TS 23.060 clause
+9.2.4.1, step 3).
+
+. The *PCRF* acknowledges the request with a Diameter
+`Credit-Control-Answer` (CCA) message to the *GGSN* over the Gx
+reference point. The message carries the `Result-Code` AVP set to
+`DIAMETER_SUCCESS` (2001) (IETF RFC 6733 section 7.1.2), the
+`CC-Request-Type` AVP with the same value as in the request, and the
+`CC-Request-Number` AVP. In reply to a CCR-U message, the PCRF can make
+a new policy decision and, when the PCRF performs the bearer binding,
+move the PCC rules of the terminated PDP context to a remaining PDP
+context; the GGSN removes the PCC rules that the PCRF does not move
+(TS 29.212 Annex A.3.4). In reply to a CCR-T message, the PCRF removes
+the policy data of the IP-CAN session, and the exchange ends the
+Diameter Credit Control session (TS 29.212 clause 4.5.7).
+
+. If the APN uses RADIUS accounting, the *GGSN* sends a RADIUS
+`Accounting-Request` (STOP) message to the external Authentication,
+Authorization, and Accounting (*AAA*) server over the Gi reference point
+(TS 29.061 clauses 16.2 and 16.4.4). The GGSN can send one
+`Accounting-Request` (STOP) message for each PDP context, primary or
+secondary, and the message carries the final usage counters of the PDP
+context, for example the `Acct-Input-Octets`, `Acct-Output-Octets`, and
+`Acct-Session-Time` attributes. When the PDP context is the last PDP
+context of the IP-CAN session, the GGSN includes the 3GPP Vendor-Specific
+sub-attribute `3GPP-Session-Stop-Indicator`; the AAA server does not
+consider the IP-CAN session terminated until the AAA server receives
+this sub-attribute (TS 29.061 clause 16.2).
+
+. The *GGSN* removes the PDP context from its session tables, releases
+the bindings of the user-plane GTP-U TEIDs, and releases the dynamic PDP
+address if the PDP context is the last PDP context associated with this
+PDP address (TS 23.060 clause 9.2.4.1, step 3). The GGSN then returns a
+GTPv1-C `Delete PDP Context Response` message (TS 29.060 clause 7.3.6)
+to the *SGSN* over the Gn/Gp interface. If the GGSN sent an
+`Accounting-Request` (STOP) message, the GGSN sends the response at
+once, without waiting for the RADIUS `Accounting-Response` message
+(TS 29.061 clause 16.3.1). The GTP header carries the SGSN TEID for
+control-plane messages. The message carries the Cause, set to "Request
+accepted" (128), or to "Non-existent" (192) when the GGSN received the
+request for a PDP context that does not exist; in the second case, the
+GTP header carries the TEID value zero (TS 29.060 clause 7.3.6). The
+message can also carry the PCO (TS 29.060 Table 12). The User Location
+Information, the ULI Timestamp, and the MS Time Zone appear in this
+message only when the SGSN sends the response in the GGSN-initiated
+variant of the procedure (TS 29.060 clause 7.3.6).
+
+. If the GGSN sent an `Accounting-Request` (STOP) message, the external
+*AAA* server acknowledges the message with a RADIUS
+`Accounting-Response` message to the *GGSN* over the Gi reference
+point. If the AAA server assigned the IP address of the UE, the AAA
+server can make the address available for assignment again after the
+AAA server receives an `Accounting-Request` (STOP) message for every PDP
+context of the IP-CAN session (TS 29.061 clause 16.2).
+
+. When the *SGSN* receives the response, the SGSN removes the PDP context
+from its session database and sends a NAS SM `Deactivate PDP Context
+Accept` message (TS 24.008 clause 9.5.15) to the *UE* (TS 23.060 clause
+9.2.4.1, step 4). The message carries the TI, and can carry the PCO,
+which the SGSN copies transparently from the `Delete PDP Context
+Response` message (TS 29.060 clause 7.3.6). When the UE receives this
+message, the UE stops timer T3390 (TS 24.008 clause 6.1.3.4.1), erases
+the parameters of the PDP context that the TI identifies, and enters
+the `PDP-INACTIVE` state.
+
+. In Iu mode, the SGSN releases the access stratum resources of the PDP
+context with the RAB Assignment procedure, if a RAB exists for the PDP
+context (TS 23.060 clause 9.2.4.1, step 5). The *SGSN* sends a Radio
+Access Network Application Part (RANAP) `RAB Assignment Request` message
+to the *RNC* over the IuPs interface, with the RAB to release in the
+RABs To Be Released List IE (TS 25.413 clause 8.2). For each RAB, the
+message carries the RAB ID, which contains the NSAPI of the PDP context
+(TS 25.413 clause 9.2.1.2), and the Cause (TS 25.413 clause 9.2.1.4),
+which is typically "Normal Release" (83) for a regular deactivation.
+
+. The *RNC* releases the radio bearers of the RAB and sends a Radio
+Resource Control (RRC) `Radio Bearer Release` message (TS 25.331 clause
+10.2.30) to the *UE* over the Uu interface. The message tells the UE to
+release the Radio Link Control (RLC) and Packet Data Convergence
+Protocol (PDCP) entities of the radio bearers. The message carries the
+RRC transaction identifier and the RB information to release list, which
+holds the Radio Bearer (RB) identity of each radio bearer to release,
+and can carry the RAB information to reconfigure list.
+
+. The *UE* releases the radio bearers and returns an RRC `Radio Bearer
+Release Complete` message (TS 25.331 clause 10.2.31) to the *RNC* over
+the Uu interface, to confirm that the UE released the radio resources.
+The message carries the RRC transaction identifier.
+
+. The *RNC* releases its local resources and returns a RANAP `RAB
+Assignment Response` message to the *SGSN* over the IuPs interface. The
+message carries the RAB ID of each released RAB in the RABs Released
+List IE, which confirms that the RNC released the transport resources
+of the PDP context (TS 25.413 clause 8.2).
+
+==== Summary of Key Information Elements
+
+The following table summarizes the key IEs of the main messages of the
+procedure, grouped by protocol.
+
+[cols="2,3,5",options="header"]
+|===
+| Protocol | Message | Key IEs
+
+| NAS SM (TS 24.008)
+| `Deactivate PDP Context Request`
+| TI, SM cause, Tear down indicator, PCO
+
+| NAS SM (TS 24.008)
+| `Deactivate PDP Context Accept`
+| TI, PCO
+
+| GTPv1-C (TS 29.060)
+| `Delete PDP Context Request`
+| TEID Control Plane (GTP header), NSAPI, Teardown Ind, PCO, User Location Information (CGI or SAI), ULI Timestamp, MS Time Zone, Cause
+
+| GTPv1-C (TS 29.060)
+| `Delete PDP Context Response`
+| Cause ("Request accepted", 128, or "Non-existent", 192), TEID Control Plane (GTP header), PCO
+
+| Diameter over Gx (TS 29.212)
+| `Credit-Control-Request` (CCR-U or CCR-T)
+| `Session-Id`, `CC-Request-Type` (`UPDATE_REQUEST`, 2, or `TERMINATION_REQUEST`, 3), `CC-Request-Number`, `Charging-Rule-Report` (CCR-U), `Bearer-Identifier` and `Bearer-Operation` (CCR-U), `Termination-Cause` (CCR-T), `3GPP-User-Location-Info`, `3GPP-MS-TimeZone`
+
+| Diameter over Gx (TS 29.212)
+| `Credit-Control-Answer` (CCA-U or CCA-T)
+| `Session-Id`, `Result-Code` (`DIAMETER_SUCCESS`, 2001), `CC-Request-Type`, `CC-Request-Number`
+
+| RADIUS over Gi (TS 29.061)
+| `Accounting-Request` (STOP)
+| `Acct-Status-Type` (Stop), `Acct-Session-Id`, `Acct-Input-Octets`, `Acct-Output-Octets`, `Acct-Session-Time`, `3GPP-Session-Stop-Indicator` (last PDP context of the IP-CAN session)
+
+| RANAP (TS 25.413)
+| `RAB Assignment Request`
+| RABs To Be Released List: RAB ID, Cause
+
+| RANAP (TS 25.413)
+| `RAB Assignment Response`
+| RABs Released List: RAB ID
+
+| RRC (TS 25.331)
+| `Radio Bearer Release`
+| RRC transaction identifier, RB information to release list (RB identity), RAB information to reconfigure list
+|===
+
+==== Possible Failures and Required Actions
+
+The abnormal cases in this section come from TS 24.008 clause
+6.1.3.4.3, the GTPv1-C Cause values come from TS 29.060 clause 7.7.1,
+Table 38, and the mapping from GTPv1-C Cause values to NAS SM Cause
+values comes from TS 29.060 Annex B, Table B.3.
+
+Expiry of timer T3390 or T3395:: The node that starts the deactivation
+starts a supervision timer when the node sends the `Deactivate PDP
+Context Request` message: the UE starts timer T3390, and the network
+starts timer T3395 (TS 24.008 clauses 6.1.3.4.1 and 6.1.3.4.2). Both
+timers have a value of 8 seconds (TS 24.008 Tables 11.2c and 11.2d). If
+the `Deactivate PDP Context Accept` message does not arrive, for example
+because the radio link is lost or a message is dropped, the timer
+expires. The node retransmits the request four times, that is the node
+sends the request five times in total. The nodes then act as follows:
++
+. On each of the first four expiries, the node that started the
+deactivation retransmits the `Deactivate PDP Context Request` message
+and restarts timer T3390 or T3395.
+. On the fifth expiry of timer T3390, the UE releases all resources that
+it allocated for the PDP context, erases the data of the PDP context,
+and enters the `PDP-INACTIVE` state.
+. On the fifth expiry of timer T3395, the network erases the data of the
+PDP context for that UE and releases the core network resources,
+without further peer-to-peer signalling.
+
+Collision of UE-initiated and network-initiated deactivation:: The UE
+can send a `Deactivate PDP Context Request` message for a TI at the same
+time as the network sends a `Deactivate PDP Context Request` message for
+the same TI. TS 24.008 clause 6.1.3.4.3 resolves the collision without an
+error cause. The nodes then act as follows:
++
+. The UE receives the `Deactivate PDP Context Request` message of the
+network while the UE is in the `PDP-INACTIVE-PENDING` state.
+. The UE and the network each reply with a `Deactivate PDP Context
+Accept` message.
+. The UE stops timer T3390, and the network stops timer T3395.
+. Both nodes release the local resources of the session, and the PDP
+context enters the `PDP-INACTIVE` state.
+
+Network-initiated deactivation with reactivation requested:: The GGSN or
+the SGSN can deactivate a PDP context and request that the UE
+re-establish the connectivity to the same APN at once, for example
+before a planned maintenance of the GGSN, or when the SGSN relocates the
+gateway with the Selected IP Traffic Offload (SIPTO) function. When the
+SGSN determines that a gateway relocation is desirable for SIPTO, the
+SGSN deactivates the PDN connection with the "reactivation requested"
+cause, and the UE then re-establishes the PDN connection to the same APN
+(TS 23.060 clause 9.2.4.2). The GGSN requests the reactivation with GTP
+Cause #6, "Reactivation Requested" (TS 29.060 clause 7.7.1, Table 38),
+and tears down all PDP contexts of the same PDN connection at the same
+time (TS 29.060 clause 7.3.5). In the GGSN-initiated variant, the nodes
+act as follows:
++
+. The GGSN sends a `Delete PDP Context Request` message to the SGSN with
+the Cause set to #6, "Reactivation Requested", and the Teardown Ind set
+to "1" (TS 29.060 clause 7.3.5).
+. If the SGSN supports the Cause IE in this message, the SGSN maps GTP
+Cause #6 to SM Cause #39, "Reactivation requested", in the `Deactivate
+PDP Context Request` message that the SGSN sends to the UE (TS 29.060
+clause 7.3.5 and Table B.3).
+. When the UE receives SM Cause #39 for a PDP context that the UE
+activated with an APN, the UE stops timer T3396 if timer T3396 runs for
+that APN, and returns a `Deactivate PDP Context Accept` message. The UE
+then starts a new UE-initiated PDP Context Activation procedure for the
+same APN to restore the data connectivity, and also reactivates the
+other PDP contexts that the UE activated and that the network released
+in the same deactivation (TS 24.008 clause 6.1.3.4.2).
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.060
+a|
+* Clause 9.2.4 — Deactivation Procedures
+* Clause 9.2.4.1 and Figures 74 and 75 — MS Initiated PDP Context Deactivation Procedure for A/Gb mode and Iu mode
+* Clause 9.2.4.2 and Figure 76 — SGSN-initiated PDP Context Deactivation Procedure
+* Clause 9.2.4.3 and Figure 77 — GGSN-initiated PDP Context Deactivation Procedure
+
+| TS 24.008
+a|
+* Clause 6.1.3.4 — PDP context deactivation procedure
+* Clauses 6.1.3.4.1 and 6.1.3.4.2 — PDP context deactivation initiated by the MS and by the network
+* Clause 6.1.3.4.3 — Abnormal cases: expiry of timers T3390 and T3395, and collision of deactivation requests
+* Clauses 9.5.14 and 9.5.15 — `Deactivate PDP Context Request` and `Deactivate PDP Context Accept` message contents
+* Clause 10.5.6.6 and Table 10.5.157 — SM cause IE
+* Clause 11.2.3, Tables 11.2c and 11.2d — SM timers T3390 and T3396 on the MS side, and T3395 on the network side
+
+| TS 29.060
+a|
+* Clauses 7.3.5 and 7.3.6 — `Delete PDP Context Request` and `Delete PDP Context Response` message contents (Tables 11 and 12)
+* Clause 7.7.1 and Table 38 — Cause IE values, including #6, #128, and #192
+* Annex B (normative), Table B.3 — Mapping from Gn/Gp Cause values in a request message from the GGSN to NAS SM Cause values
+
+| TS 29.061
+a|
+* Clause 16.2 — RADIUS accounting, including `Accounting-Request` (STOP) and the Session Stop Indicator
+* Clause 16.3.1 and Figure 22 — RADIUS message flow for PDP type IP, including the deactivation
+* Clause 16.4.4 — Attributes of the `Accounting-Request` (STOP) message
+
+| TS 25.413
+a|
+* Clause 8.2 — RAB Assignment procedure, including the release of RABs
+* Clauses 9.2.1.2 and 9.2.1.4 — RAB ID and Cause IEs
+
+| TS 25.331
+a|
+* Clauses 10.2.30 and 10.2.31 — `Radio Bearer Release` and `Radio Bearer Release Complete` message contents
+
+| TS 29.212
+a|
+* Clause 4.5.6 — Indication of IP-CAN Bearer Termination Implications over the Gx reference point
+* Clause 4.5.7 — Indication of IP-CAN Session Termination over the Gx reference point
+* Annex A.3.4 and A.3.5 — Indication of IP-CAN bearer termination and IP-CAN session termination for the 3GPP-GPRS IP-CAN
+* Clauses 5.6.2 and 5.6.3 — CC-Request and CC-Answer command formats
+
+| IETF RFC 6733
+a|
+* Section 7.1.2 — `DIAMETER_SUCCESS` (2001) result code
+* Section 8.15 — `Termination-Cause` AVP, including `DIAMETER_LOGOUT` (1)
+|===
