@@ -142,7 +142,12 @@ reference point. In the CCA message, the PCRF can provide PCC rules in
 the `Charging-Rule-Install` AVP, event triggers in the `Event-Trigger`
 AVP, and the authorized QoS in the `QoS-Information` AVP (TS 29.212
 clauses 4.5.2, 4.5.3, 4.5.5, and 5.6.3); a successful answer carries the
-`Result-Code` AVP set to `DIAMETER_SUCCESS` (2001) (IETF RFC 6733 section 7.1.2). In
+`Result-Code` AVP set to `DIAMETER_SUCCESS` (2001) (IETF RFC 6733 section
+7.1.2). For the first PDP context of a UE IP address, this exchange is the
+IP-CAN Session Establishment that <<_pcc_ip_can_session_establishment>>
+describes, and for a further PDP context it is a PCEF-initiated IP-CAN
+Session Modification, which <<_pcc_ip_can_session_modification_pcef_initiated>>
+describes (TS 23.203 clauses A.1.4.2 and A.1.4.4.1). In
 the `Access-Accept` message, the AAA server can provide the UE IPv4
 address in the `Framed-IP-Address` attribute, the IPv6 prefix in the
 `Framed-IPv6-Prefix` attribute, and the DNS server addresses in the

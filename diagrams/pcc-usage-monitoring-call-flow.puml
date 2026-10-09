@@ -1,0 +1,27 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "SGW-C" as SGWC
+participant "PGW-U" as PGWU
+participant "PGW-C" as PGWC
+participant "PCRF" as PCRF
+
+== Usage Monitoring Activation ==
+PCRF -> PGWC: Diameter (Gx): Re-Auth-Request (RAR)
+PGWC -> PCRF: Diameter (Gx): Re-Auth-Answer (RAA)
+PGWC -> PGWU: PFCP: Session Modification Request
+PGWU -> PGWC: PFCP: Session Modification Response
+
+== Usage Threshold Reached ==
+PGWU -> PGWC: PFCP: Session Report Request
+PGWC -> PGWU: PFCP: Session Report Response
+PGWC -> PCRF: Diameter (Gx): Credit-Control-Request (CCR-U)
+note over PCRF: Policy decision based on the accumulated usage
+PCRF -> PGWC: Diameter (Gx): Credit-Control-Answer (CCA-U)
+
+== Enforcement of the New Policy ==
+PGWC -> PGWU: PFCP: Session Modification Request
+PGWU -> PGWC: PFCP: Session Modification Response
+PGWC -> SGWC: GTPv2: Update Bearer Request (APN-AMBR)
+SGWC -> PGWC: GTPv2: Update Bearer Response
+@enduml

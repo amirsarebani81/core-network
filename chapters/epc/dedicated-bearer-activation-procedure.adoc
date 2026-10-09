@@ -67,7 +67,9 @@ The message also carries the `Charging-Rule-Install` AVP, which
 encapsulates the `Charging-Rule-Definition` AVP containing the
 `Charging-Rule-Name`, the `Flow-Information` with the IP 5-tuple filters,
 and the `QoS-Information` that defines the target QCI, the ARP, the GBR,
-and the MBR.
+and the MBR. <<_pcc_ip_can_session_modification_pcrf_initiated>>
+describes the complete PCRF-initiated IP-CAN Session Modification, with
+the Rx and Gy interactions.
 
 . The *P-GW* acknowledges the policy provisioning request by returning a
 Diameter `Re-Auth-Answer` (RAA) message to the *PCRF*. This message
@@ -225,8 +227,9 @@ address and the downlink user-plane S5/S8-U TEID that the SGW-U
 allocates, the ULI with the ECGI and the TAI, and, optionally, the
 Secondary RAT (Radio Access Technology) Usage Data Report.
 
-. If a policy provisioning step triggered the procedure, the *P-GW*, in
-its PCEF role, reports the enforcement outcome of the installed PCC
+. If a policy provisioning step triggered the procedure and the PCRF
+requested a confirmation of the resource allocation (TS 29.212 clause
+4.5.2.0), the *P-GW*, in its PCEF role, reports the enforcement outcome of the installed PCC
 rules to the *PCRF* by sending a Diameter `Credit-Control-Request` (CCR)
 message with the CC-Request-Type set to UPDATE_REQUEST. The message
 confirms that the access network activated the requested QoS policy, and

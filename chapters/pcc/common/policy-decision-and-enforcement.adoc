@@ -1,0 +1,233 @@
+[#_pcc_policy_decision_and_enforcement]
+=== Policy Decision and Enforcement
+
+==== Technical Overview
+
+Policy and Charging Control (PCC) comprises two main functions: flow
+based charging, which includes charging control and online credit control
+for service data flows and application traffic, and policy control, which
+includes gating control and Quality of Service (QoS) control (TS 23.203
+clause 1). A service data flow (SDF) is the set of packets that the
+service data flow template of a PCC rule detects, and the PCC architecture
+applies its policy, charging, and event reporting functions at the level
+of these service data flows (TS 23.203 clauses 6.1.0 and 6.3.1).
+
+TS 23.203 specifies PCC once for every type of IP Connectivity Access
+Network (IP-CAN), for example GPRS and the EPC, and describes the
+specifics of each IP-CAN type in its annexes, which are realizations of the
+main body rather than stand-alone specifications (TS 23.203 Introduction).
+The 5G System (5GS) uses a separate policy framework, which TS 23.503
+specifies, but this framework keeps the same split between the function
+that decides on a policy and the function that enforces it.
+
+==== Decision and Enforcement Split
+
+The Policy and Charging Rules Function (PCRF) makes the policy control
+decisions and the flow based charging control decisions, except for credit
+management, which the Online Charging System (OCS) handles. The PCRF
+derives these decisions from the service information that it receives
+from an Application Function (AF), from the subscription information of
+the user, and from operator policy, and it provides them to the Policy and
+Charging Enforcement Function (PCEF) as PCC rules (TS 23.203 clauses
+6.2.1.0 and 6.2.1.1).
+
+The PCEF detects service data flows in the user plane, enforces the
+policy decisions, and performs the measurements and the online and
+offline charging interactions. The PCEF is a function of the gateway
+that provides IP access to the packet data network (PDN), so the GGSN
+contains the PCEF in GPRS and the PDN GW contains the PCEF in the EPC
+(TS 23.203 clauses 5.1, 6.2.2.1, A.1.3.2.2.1, and A.4.2.1). With Control
+and User Plane Separation (CUPS), the PGW-C and the PGW-U jointly provide
+the PCEF functionality, and the PGW-C terminates the Gx, Gy, and Gz
+reference points (TS 23.214 clauses 4.4.1 and 5.3.1).
+
+The PCEF enforces policy control in two ways: gate enforcement, which lets
+the packets of a service data flow pass only while its gate is open, and
+QoS enforcement, which keeps the resources of the service data flows and of
+the IP-CAN bearer within the QoS that the PCRF authorized. For a service
+data flow that is subject to online charging, the PCEF also lets the
+packets pass only while the OCS has granted credit for the charging key
+of that flow (TS 23.203 clause 6.2.2.1).
+
+The PCEF can contact the PCRF for every IP-CAN session, but the operator
+can configure an indicator in the HSS, which the PCEF receives within the
+Charging Characteristics, so that the PCEF does not establish the Gx
+session for an IP-CAN session (TS 23.203 clause 6.2.2.1).
+
+==== Network Elements
+
+PCRF (Policy and Charging Rules Function):: The PCRF is the policy
+decision point. It provides network control over service data flow
+detection, gating, QoS, and flow based charging towards the PCEF and the
+TDF, and it authorizes QoS resources based on the service information
+from the AF and the subscription information from the SPR (TS 23.203
+clause 6.2.1.0).
+
+PCEF (Policy and Charging Enforcement Function):: The PCEF is the policy
+enforcement point. It is located in the gateway that provides IP access to
+the PDN, that is the GGSN in GPRS and the PDN GW in the EPC (TS 23.203
+clause 6.2.2.1).
+
+AF (Application Function):: The AF is an element that offers applications
+which require dynamic policy or charging control over the IP-CAN user
+plane, for example the P-CSCF of the IP Multimedia Subsystem (IMS). The AF
+provides session information to the PCRF and can receive notifications
+about IP-CAN bearer level events (TS 23.203 clause 6.2.3).
+
+SPR (Subscription Profile Repository):: The SPR contains the subscriber
+and subscription information that the PCRF needs for subscription-based
+policies, for example the allowed services, the allowed QoS, and the
+usage monitoring information. When the operator applies the User Data
+Convergence (UDC) architecture, the User Data Repository (UDR) replaces the
+SPR, and the PCRF reaches it over the Ud reference point instead of the Sp
+reference point (TS 23.203 clauses 5.1, 6.2.4, and 6.2.8). TS 23.203
+clause 5.2.3.1 does not specify the details of the Sp reference point.
+
+OCS (Online Charging System):: The OCS performs online credit control, and
+it can trigger the PCEF to terminate an IP-CAN bearer at any time (TS
+23.203 clause 6.2.5).
+
+OFCS (Offline Charging System):: The OFCS collects charging information
+for offline charging. TS 32.240 specifies the OFCS (TS 23.203 clause
+6.2.6).
+
+TDF (Traffic Detection Function):: The TDF detects application traffic
+and reports the detected applications, together with their service data
+flow descriptions where it can deduce them, to the PCRF. A PCEF that is
+enhanced with Application Detection and Control (ADC) can provide the same
+detection instead of a separate TDF (TS 23.203 clauses 4.5 and 6.2.9.1).
+
+The PCC architecture also contains the Bearer Binding and Event Reporting
+Function (BBERF), which applies only when the gateway that contains the
+PCEF is not reached over GTP, for example with PMIP-based S5/S8. The BBERF
+does not apply to GPRS or to the GTP-based EPC (TS 23.203 clauses 6.1.1.4,
+A.1.2.2, and A.4.2.1), so this book does not describe it.
+
+==== Origin of the PCRF
+
+The PCRF combines two functions that Release 6 specified as separate
+logical entities: the policy control decision function of the Policy
+Decision Function (PDF), and the flow based charging control function of
+the Charging Rules Function (CRF) (TS 29.212 clause 4.4.1). The Gx and Rx
+protocols of the current releases are based on the Release 6 Gx protocol
+of TS 29.210 and on the Release 6 Rx and Gq protocols of TS 29.211 and TS
+29.209. Because the current Gx establishes one Diameter session for each
+IP-CAN session, and because the PCRF has to be separable from the Release 6
+PDF and CRF, both Gx and Rx have vendor-specific Diameter applications of
+their own (TS 29.212 clause 5.1 and TS 29.214 clause 5.1). This book
+describes PCC from Release 8 onwards and does not describe the Release 6
+interfaces further.
+
+==== Functions Across Generations
+
+The table below maps the PCC functions to the network elements that
+provide them in GPRS, in the EPC with CUPS, and in the 5GS. The 5GS column
+follows the reference architecture in TS 23.503 clause 5.2.1, in which the
+Policy Control Function (PCF) makes the policy decisions and the Session
+Management Function (SMF) enforces them by instructing the User Plane
+Function (UPF) (TS 23.503 clause 6.2.2.1).
+
+[cols="2,2,2,2",options="header"]
+|===
+| Function | GPRS | EPC with CUPS | 5GS
+
+| Policy decision
+| PCRF
+| PCRF
+| PCF
+
+| Policy enforcement
+| GGSN (PCEF)
+| PGW-C and PGW-U (PCEF)
+| SMF and UPF
+
+| Decision to enforcement interface
+| Gx
+| Gx
+| N7
+
+| Application function
+| AF
+| AF
+| AF, directly or through the Network Exposure Function (NEF)
+
+| Subscription repository
+| SPR or UDR
+| SPR or UDR
+| UDR
+
+| Online charging
+| OCS, over Gy
+| OCS, over Gy
+| Charging Function (CHF), over N40
+
+| Offline charging
+| OFCS, over Gz
+| OFCS, over Gz
+| CHF, over N40
+
+| Spending limits
+| OCS, over Sy
+| OCS, over Sy
+| CHF, over N28
+
+| Application detection
+| TDF, or GGSN (PCEF) enhanced with ADC
+| TDF-C and TDF-U, or PGW-C and PGW-U (PCEF) enhanced with ADC
+| SMF and UPF
+|===
+
+The sources for the table are TS 23.203 clauses 5.1, 5.2, 6.2.2.1,
+A.1.3.2.2.1, and A.1.3.4a for GPRS, TS 23.214 clause 4.4.1 for the EPC with
+CUPS, and TS 23.503 clauses 4.3.5, 5.2.1, 5.3, 6.2.2.1, and 6.2.3 for the
+5GS. In the 5GS, the CHF provides both online and offline charging as
+converged charging (TS 32.240 clauses 4.1.3 and 4.3.3), and an AF that the
+operator does not trust reaches the PCF through the NEF (TS 23.503 clause
+6.2.3).
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.203
+a|
+* Clause 1 — Scope, covering flow based charging and policy control
+* Introduction — Generic PCC aspects in the main body and IP-CAN specifics in the annexes
+* Clause 4.5 — Application detection and control
+* Clause 5.1 — Reference architecture
+* Clause 5.2 — Reference points
+* Clause 6.1.0 — PCC at the service data flow level
+* Clause 6.2 — Functional entities, covering the PCRF, PCEF, AF, SPR, OCS, OFCS, UDR, and TDF
+* Clause 6.3.1 — PCC rule and service data flow
+* Clauses A.1.2.2, A.1.3.2.2.1, and A.1.3.4a — GPRS specifics
+* Clause A.4.2.1 — GTP-based EPC specifics
+
+| TS 23.214
+a|
+* Clause 4.4.1 — PGW-C and PGW-U jointly providing the PCEF functionality
+* Clause 5.3.1 — Termination of Gx, Sd, Gy, Gyn, Gz, and Gzn in the CP function
+
+| TS 23.503
+a|
+* Clause 4.3.5 — Application detection and control in the 5GS
+* Clause 5.2.1 — Non-roaming reference architecture
+* Clause 5.3 — Service-based interfaces and reference points
+* Clause 6.2.2.1 — SMF enforcement of policy decisions
+* Clause 6.2.3 — AF access to the PCF, directly or through the NEF
+
+| TS 29.212
+a|
+* Clause 4.4.1 — PCRF, covering the Release 6 heritage of the PDF and the CRF
+* Clause 5.1 — Gx protocol support
+
+| TS 29.214
+a|
+* Clause 5.1 — Rx protocol support
+
+| TS 32.240
+a|
+* Clause 4.1.3 — Converged charging
+* Clause 4.3.3 — Converged charging functions
+|===

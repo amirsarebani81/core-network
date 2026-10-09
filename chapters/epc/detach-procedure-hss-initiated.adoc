@@ -75,7 +75,8 @@ Subscription-Id, and the Used-Service-Unit.
 . The *PCRF* acknowledges the termination by returning a Diameter
 `Credit-Control-Answer` (CCA) message, carrying a Result-Code, to the
 *P-GW*, letting the P-GW release the session's policy and charging
-resources.
+resources. <<_pcc_ip_can_session_termination>> describes this procedure
+in detail.
 
 . The *P-GW* acknowledges the deletion by returning a GTPv2 `Delete
 Session Response` message to the *S-GW*, carrying a Cause set to

@@ -1,0 +1,31 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "PGW-C" as PGWC
+box "OFCS"
+participant "CDF" as CDF
+participant "CGF" as CGF
+end box
+participant "Billing Domain" as BD
+
+== Charging Session Start ==
+PGWC -> CDF: Diameter (Rf): Accounting-Request (ACR Start)
+CDF -> PGWC: Diameter (Rf): Accounting-Answer (ACA Start)
+
+== Change of Charging Condition ==
+PGWC -> CDF: Diameter (Rf): Accounting-Request (ACR Interim)
+CDF -> PGWC: Diameter (Rf): Accounting-Answer (ACA Interim)
+
+== Partial CDR Transfer ==
+CDF -> CGF: GTP' (Ga): Data Record Transfer Request
+CGF -> CDF: GTP' (Ga): Data Record Transfer Response
+
+== Charging Session Stop ==
+PGWC -> CDF: Diameter (Rf): Accounting-Request (ACR Stop)
+CDF -> PGWC: Diameter (Rf): Accounting-Answer (ACA Stop)
+CDF -> CGF: GTP' (Ga): Data Record Transfer Request
+CGF -> CDF: GTP' (Ga): Data Record Transfer Response
+
+== CDR File Transfer ==
+CGF -> BD: Bx: CDR file transfer
+@enduml

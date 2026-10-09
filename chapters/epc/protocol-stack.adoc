@@ -6,4 +6,6 @@ include::nas.adoc[]
 
 include::gtpv2c.adoc[]
 
+include::diameter.adoc[]
+
 include::pfcp.adoc[]

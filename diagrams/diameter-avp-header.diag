@@ -1,0 +1,12 @@
+packetdiag {
+  colwidth = 32
+
+  0-31: "AVP Code"
+  32: "V"
+  33: "M"
+  34: "P"
+  35-39: "Reserved"
+  40-63: "AVP Length"
+  64-95: "Vendor-ID (present only when V=1)"
+  96-127: "Data ..."
+}

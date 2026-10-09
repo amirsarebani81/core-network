@@ -57,7 +57,8 @@ vendor-specific Gx Application ID `16777238`, the
 `Re-Auth-Request-Type`, set to `AUTHORIZE_ONLY`, and the
 `Charging-Rule-Remove`. The `Charging-Rule-Remove` AVP encapsulates the
 `Charging-Rule-Name` or the `Charging-Rule-Base-Name`, which identify
-the rules to deactivate.
+the rules to deactivate. <<_pcc_ip_can_session_modification_pcrf_initiated>>
+describes the PCRF-initiated IP-CAN Session Modification in detail.
 
 . The *P-GW* acknowledges the policy modification command by returning a
 Diameter `Re-Auth-Answer` (RAA) message to the *PCRF*. This message
@@ -168,8 +169,10 @@ confirms the end-to-end deactivation of the user-plane resources in the
 EPC and carries the Cause, the EPS Bearer ID, which is grouped in the
 Bearer Contexts IE, the ULI, and the Secondary RAT Usage Data Report.
 
-. If dynamic policy rules triggered the bearer deactivation, the PCEF in
-the *P-GW* reports the successful enforcement of the PCC rule removal to
+. If dynamic policy rules triggered the bearer deactivation and the PCRF
+requested a report of the outcome of the resource release, which requires
+the Enh-RAN-NAS-Cause feature (TS 29.212 clause 4.5.2.0), the PCEF in the
+*P-GW* reports the successful enforcement of the PCC rule removal to
 the *PCRF* by sending a Diameter `Credit-Control-Request` (CCR) message
 with the CC-Request-Type set to UPDATE_REQUEST. The message synchronizes
 the session state of the PCRF with the actual state of the core network

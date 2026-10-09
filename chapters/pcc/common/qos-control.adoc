@@ -1,0 +1,236 @@
+[#_pcc_qos_control]
+=== QoS Control and Binding
+
+==== Technical Overview
+
+Quality of Service (QoS) control is the authorization and enforcement of
+the maximum QoS for a service data flow (SDF), for an application that an
+application identifier identifies, or for an IP Connectivity Access Network
+(IP-CAN) bearer (TS 23.203 clause 6.1.5). Policy and Charging Control (PCC)
+applies QoS control at three levels:
+
+Service data flow level:: The PCC rule of a service data flow carries the
+authorized QoS of that flow, and the Policy and Charging Enforcement
+Function (PCEF) enforces it for the flow, for example by policing the
+maximum bitrate (TS 23.203 clauses 4.3.3.1 and 6.2.2.1).
+
+IP-CAN bearer level:: The PCEF keeps the QoS of the combined set of
+service data flows on a bearer within the authorized QoS, which sets an
+upper bound on the resources that the bearer reserves or uses. The PCEF
+maps the authorized QoS to the QoS attributes of the IP-CAN, for example
+of a PDP context in GPRS (TS 23.203 clauses 4.3.3.2 and 6.2.2.1).
+
+APN level:: The Policy and Charging Rules Function (PCRF) can authorize
+the APN Aggregate Maximum Bit Rate (APN-AMBR), which the PCEF enforces for
+the total bandwidth of the non-GBR traffic of all IP-CAN sessions of a UE
+to the same APN (TS 23.203 clauses 4.3.3.4 and 6.4b, and clauses A.1.1.4
+and A.4.1.2 for GPRS and the EPC).
+
+The 5G System (5GS) applies the same three levels, with the QoS Flow in
+place of the IP-CAN bearer and the PDU Session in place of the APN (TS
+23.503 clauses 4.3.3.2.1, 4.3.3.2.2, and 4.3.3.2.3).
+
+==== Binding Mechanism
+
+The binding mechanism associates a service data flow with the IP-CAN bearer
+that carries it, and, for a flow that belongs to an Application Function
+(AF) session, also associates the AF session information with that bearer.
+TS 23.203 clause 6.1.1 divides the mechanism into three steps:
+
+. *Session binding.* The PCRF associates the AF session information with
+exactly one IP-CAN session, based on the UE IPv4 address or IPv6 network
+prefix, on the UE identity if present, and on the information about the
+packet data network (PDN) if present (TS 23.203 clause 6.1.1.2).
+
+. *PCC rule authorization.* The PCRF selects the QoS parameters, that is
+the QoS Class Identifier (QCI), the Allocation and Retention Priority
+(ARP), the Guaranteed Bit Rate (GBR), and the Maximum Bit Rate (MBR), for
+each PCC rule, within the limits of the IP-CAN and of the subscription (TS
+23.203 clause 6.1.1.3).
+
+. *Bearer binding.* The Bearer Binding Function (BBF) associates each PCC
+rule with an IP-CAN bearer of the IP-CAN session. The BBF binds service
+data flows to a bearer that has the same QCI and ARP, and if no existing
+bearer is suitable, the BBF initiates the establishment of a new bearer
+(TS 23.203 clause 6.1.1.4).
+
+The location of the BBF depends on the IP-CAN. In GPRS, the PCRF performs
+the bearer binding when the UE-only bearer control mode applies, and when
+the UE/NW mode applies, the PCRF binds the rules for user-controlled
+services while the PCEF in the GGSN binds the rules for network-controlled
+services (TS 23.203 clause A.1.3.1.1.0). In the GTP-based EPC, the PCEF in
+the PDN GW always performs the bearer binding (TS 23.203 clause
+A.4.3.1.3).
+
+In the 5GS, the Session Management Function (SMF) performs QoS Flow
+binding instead of bearer binding. The SMF binds a PCC rule to a QoS Flow
+whose QoS parameters are identical to the binding parameters of the rule,
+which are the 5G QoS Identifier (5QI) and the ARP and, if the rule contains
+them, the QoS Notification Control, the Priority Level, the Averaging
+Window, and the Maximum Data Burst Volume. If no such QoS Flow exists, the
+SMF establishes a new one (TS 23.503 clause 6.1.3.2.4).
+
+==== Bearer Control Mode
+
+For a 3GPP IP-CAN, the PCRF negotiates the IP-CAN bearer establishment
+mode with the PCEF over Gx (TS 23.203 clause 6.2.1.0). The mode decides
+which side can establish and modify bearers:
+
+UE-only mode:: The UE requests every resource establishment, modification,
+and termination.
+
+UE/NW mode:: Both the UE and the network can request resources, and the
+PCRF decides for each PCC rule whether the UE mode or the network mode
+applies.
+
+The PCEF reports in the `Network-Request-Support` AVP whether the access
+network supports network-requested bearer control, and the PCRF returns
+the selected mode in the `Bearer-Control-Mode` AVP, based on this
+information, on the subscriber information, and on operator policy (TS
+29.212 clause 4.5.10). The `Bearer-Control-Mode` AVP has the value
+`UE_ONLY` (0) or `UE_NW` (2), and the value 1 is reserved (TS 29.212 clause
+5.3.23). The PCEF can request a new selection at IP-CAN session
+modification, for example after an SGSN change (TS 29.212 clause 4.5.10).
+
+==== Enforcement of Bitrates
+
+Only the GBR of a bearer is used for resource reservation, for example for
+admission control in the radio access network, while the MBR, per PCC rule
+or per bearer, is used for rate policing (TS 23.203 clause 6.2.2.4).
+
+When the network initiates the establishment or modification of a GBR
+bearer, the PCEF receives the authorized QoS per PCC rule and usually sets
+the GBR and the MBR of the bearer to the sums of the GBRs and MBRs of all
+active rules bound to that bearer. When the UE initiates the establishment
+or modification, the PCEF receives the authorized QoS for the bearer that
+it identified to the PCRF, and enforcing that QoS can downgrade or upgrade
+the QoS that the UE requested (TS 23.203 clause 6.2.2.4).
+
+In an IP-CAN whose non-GBR bearers have a separate MBR, for example GPRS,
+the PCRF can also provide an authorized MBR per QCI, which caps the MBR
+that the PCEF assigns to each non-GBR bearer with that QCI. This avoids
+frequent bearer modifications as rules are activated and deactivated (TS
+23.203 clause 6.2.2.4).
+
+==== QoS Parameters Across Generations
+
+The table below compares the QoS parameters that each generation uses for
+its bearer or flow. The GPRS column lists the Release 99 attributes of the
+UMTS bearer service, on which the QoS profile of a PDP context is based.
+
+[cols="2,2,2,2",options="header"]
+|===
+| Parameter | GPRS PDP context (Release 99) | EPS bearer | 5GS QoS Flow
+
+| Class identifier
+| Traffic class, together with the traffic handling priority and the signalling indication
+| QCI
+| 5QI
+
+| Priority of allocation and retention
+| Allocation/Retention Priority, or the Evolved Allocation/Retention Priority
+| ARP
+| ARP
+
+| Guaranteed rate
+| Guaranteed bitrate
+| GBR, for a GBR bearer
+| Guaranteed Flow Bit Rate (GFBR), for a GBR QoS Flow
+
+| Maximum rate
+| Maximum bitrate
+| MBR, for a GBR bearer
+| Maximum Flow Bit Rate (MFBR), for a GBR QoS Flow
+
+| Aggregate rate of non-GBR traffic per connection
+| APN-AMBR, authorized by the PCRF and enforced by the GGSN
+| APN-AMBR
+| Session-AMBR
+
+| Aggregate rate of non-GBR traffic per UE
+| Not in the Release 99 attribute list
+| UE-AMBR
+| UE-AMBR
+|===
+
+The sources for the table are TS 23.107 clause 6.4.3.1 for the Release 99
+attributes, TS 23.203 clause A.1.1.4 for the APN-AMBR in GPRS, TS 23.401
+clause 4.7.3 for the EPS bearer, and TS 23.501 clauses 5.7.2.1, 5.7.2.2,
+5.7.2.5, and 5.7.2.6 for the QoS Flow.
+
+A QCI in GPRS is not the same as a QCI in the EPS. The PCEF in the GGSN
+maps each GPRS QCI one-to-one to a set of Release 99 QoS parameters, and TS
+23.203 Table A.3 recommends a mapping in which the QCI values 1 and 2 map
+to the conversational traffic class, 3 and 4 to streaming, 5 to 8 to
+interactive with different traffic handling priorities, and 9 to
+background. The characteristics of the GPRS QCIs are independent of the
+standardized QCI characteristics of the EPS (TS 23.203 clause
+A.1.3.2.2.1). A PDN GW that serves a UE through an SGSN over Gn/Gp maps the
+EPS bearer QoS and the APN-AMBR to and from the Release 99 parameters as TS
+23.401 Annex E specifies (TS 23.203 clause A.4.3.2.2).
+
+The standardized QCI characteristics of the EPS are the resource type (GBR
+or non-GBR), the priority, the packet delay budget, the packet error loss
+rate, and, for some GBR QCIs, the maximum data burst volume and the data
+rate averaging window (TS 23.203 clause 6.1.7.2). The ARP contains a
+priority level from 1 to 15, where 1 is the highest priority, a pre-emption
+capability, and a pre-emption vulnerability (TS 23.203 clause 6.1.7.3).
+
+==== QoS Parameter Mapping
+
+TS 29.213 clause 6 specifies the mapping of QoS parameters between the
+nodes of the PCC architecture. The AF maps its session description, for
+example SDP, to the service information that it sends over Rx. The PCRF
+maps this service information to the authorized IP QoS parameters, for
+example the QCI, the GBR, the MBR, and the ARP, and this mapping is
+independent of the access. The PCEF then maps the authorized IP QoS
+parameters to the QoS parameters of the access. TS 29.213 specifies this
+last mapping only for GPRS, where the GGSN maps the authorized IP QoS
+parameters to the authorized UMTS QoS parameters, and leaves it to the
+implementation in other accesses (TS 29.213 clause 6.1).
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.107
+a|
+* Clause 6.4.3.1 — List of UMTS bearer service attributes
+
+| TS 23.203
+a|
+* Clauses 4.3.3.1, 4.3.3.2, and 4.3.3.4 — QoS control at service data flow, IP-CAN bearer, and APN level
+* Clause 6.1.1 — Binding mechanism, covering session binding, PCC rule authorization, and bearer binding
+* Clause 6.1.5 — Policy control
+* Clauses 6.1.7.2 and 6.1.7.3 — Standardized QCI characteristics and ARP characteristics
+* Clause 6.2.1.0 — Negotiation of the IP-CAN bearer establishment mode
+* Clauses 6.2.2.1 and 6.2.2.4 — PCEF QoS enforcement and QoS control
+* Clause 6.4b — APN related policy information
+* Clauses A.1.1.4, A.1.3.1.1.0, and A.1.3.2.2.1 — GPRS APN-AMBR, binding, and QCI mapping, Table A.3
+* Clauses A.4.1.2, A.4.3.1.3, and A.4.3.2.2 — EPC APN-AMBR, binding, and Gn/Gp QoS mapping
+
+| TS 23.401
+a|
+* Clause 4.7.3 — Bearer level QoS parameters
+* Annex E — Mapping between EPS and Release 99 QoS parameters
+
+| TS 23.501
+a|
+* Clauses 5.7.2.1, 5.7.2.2, 5.7.2.5, and 5.7.2.6 — 5QI, ARP, flow bit rates, and aggregate bit rates
+
+| TS 23.503
+a|
+* Clauses 4.3.3.2.1 to 4.3.3.2.3 — QoS control at service data flow, QoS Flow, and PDU Session level
+* Clause 6.1.3.2.4 — QoS Flow binding
+
+| TS 29.212
+a|
+* Clause 4.5.10 — Bearer control mode selection
+* Clause 5.3.23 — `Bearer-Control-Mode` AVP
+
+| TS 29.213
+a|
+* Clause 6.1 — QoS parameter mapping overview
+|===

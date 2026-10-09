@@ -1,0 +1,270 @@
+[#_pcc_charging_models]
+=== Charging Models
+
+==== Technical Overview
+
+3GPP networks support two charging mechanisms. In offline charging, the
+network collects charging information while the user consumes network
+resources and later transfers this information to the operator's Billing
+Domain (BD), so that the charging information does not affect the service
+in real time. In online charging, the network obtains authorization from
+the Online Charging System (OCS) before the user consumes the resources,
+so that the charging information can affect the service in real time (TS
+32.240 clauses 4.1.0, 4.1.1, and 4.1.2). The 5G System (5GS) combines the
+two mechanisms into converged charging, which the Converged Charging System
+(CCS) provides (TS 32.240 clause 4.1.3). The network can perform offline
+and online charging at the same time, and independently, for the same
+chargeable event (TS 32.240 clause 4.1.0).
+
+Every network element that produces charging information contains a
+Charging Trigger Function (CTF). The CTF observes the use of network
+resources, detects the chargeable events, and sends matching charging
+events to the offline or online charging functions (TS 32.240 clause
+4.3.1.1). In GPRS and the EPC, the Policy and Charging Enforcement Function
+(PCEF) in the GGSN or the PDN GW contains this CTF for flow based charging.
+
+==== Charging Models of PCC
+
+Policy and Charging Control (PCC) supports volume based, time based,
+combined volume and time based, and event based charging, and the "no
+charging" model, for charging by the PCEF and by the Traffic Detection
+Function (TDF) (TS 23.203 clause 4.2.2). The measurement method of each
+PCC rule selects the model that applies to its service data flow (TS
+23.203 clause 6.3.1).
+
+The charging specifications distinguish event based charging, in which one
+user-to-network transaction is one chargeable event, from session based
+charging, in which a user session, for example an IP Connectivity Access
+Network (IP-CAN) bearer, is matched by a charging session with several
+charging events (TS 32.240 clause 5.1). Online charging uses three
+scenarios (TS 32.240 clauses 5.1 and 5.2.2, and TS 32.299 clause 6.3.2.1):
+
+Immediate Event Charging (IEC):: The OCS debits the account directly in
+one transaction, without a reservation.
+
+Event Charging with Unit Reservation (ECUR):: The OCS reserves units for an
+event before the network delivers it, and debits them after the network
+reports the delivery.
+
+Session Charging with Unit Reservation (SCUR):: The OCS reserves units for
+a session, and the network reports the used units and requests further
+units while the session lasts.
+
+Because the PCEF charges IP-CAN bearers and service data flows, which are
+sessions, it uses SCUR (TS 32.251 clause 5.3.1.0).
+
+==== Offline Charging
+
+The offline charging functions form a chain. The CTF sends charging
+events over the Rf reference point to the Charging Data Function (CDF),
+which builds Charging Data Records (CDRs) from them. The CDF transfers the
+CDRs over the Ga reference point to the Charging Gateway Function (CGF),
+which stores and pre-processes them, writes them into CDR files, and
+transfers the files to the BD over the Bx reference point (TS 32.240
+clauses 4.3.1.2, 4.3.1.3, 4.4.1.1, 4.4.1.3, and 4.4.1.4). The Offline
+Charging System (OFCS) is the grouping of these offline charging functions
+(TS 32.240 clause 4.3.1.4). TS 32.251 calls the reference point between the
+CGF of the packet switched domain and the BD the Bp reference point (TS
+32.251 clauses 3.2 and 4.2).
+
+The CDF can be integrated in the network element or be a separate entity.
+A network element with an integrated CDF produces the CDRs itself and
+sends them over Ga, while a network element without one sends the
+charging events over Rf to an external CDF (TS 32.251 clause 4.2). For this
+reason, TS 32.240 treats the Gz reference point of TS 23.203 as functionally
+equivalent to Ga for the legacy packet switched domain, and to Ga or Rf for
+the evolved packet switched domain (TS 32.240 clauses 4.2.2 and 4.4.1.2).
+Ga carries CDRs with the GTP′ protocol, which reuses parts of the GTP
+signaling plane and also lets a CDF redirect CDRs to another CGF and detect
+communication failures with echo messages (TS 32.295 clause 5.1.2). Bx
+transfers CDR files with a standard file transfer protocol (TS 32.240
+clause 4.4.1.4 and TS 32.297).
+
+In session based charging, the CDF opens a CDR at the first charging event
+of the session and adds the information of later events to it. It closes
+the CDR at the end of the session or earlier, for example when a time
+limit, a volume limit, or a limit on the number of charging condition
+changes is reached, and then opens a new CDR for the same session. A long
+session can therefore produce several partial CDRs. The first partial CDR
+is always a fully qualified partial CDR, and later ones can be reduced
+partial CDRs that carry the mandatory fields and only the fields that have
+changed (TS 32.240 clause 5.2.1.2).
+
+==== CDR Types in the Packet Switched Domain
+
+TS 32.251 clause 5.2.1.0 assigns each type of CDR in the packet switched
+domain to the node that produces it. The types that relate to IP-CAN
+bearers and service data flows are:
+
+S-CDR:: The SGSN produces the S-CDR for an IP-CAN bearer, that is a PDP
+context, to record the use of the radio network.
+
+SGW-CDR:: The S-GW produces the SGW-CDR for an IP-CAN bearer.
+
+PGW-CDR:: The P-GW produces the PGW-CDR for an IP-CAN bearer, and with flow
+based charging the PGW-CDR also carries the usage of the service data
+flows, counted per rating group or per combination of rating group and
+service identifier (TS 32.251 clause 5.2.1.3).
+
+TDF-CDR:: The TDF produces the TDF-CDR for a TDF session and for the
+application traffic that it detects.
+
+TS 32.251 defines no separate CDR type for the GGSN. When a P-GW or a
+stand-alone GGSN serves a UE through GERAN or UTRAN, it applies the P-GW
+charging of TS 32.251, so the offline charging of a stand-alone GGSN is
+based on the flow based charging data of the P-GW (TS 32.251 clause 4.1).
+TS 32.298 specifies the fields of each CDR type, which this book does not
+describe.
+
+==== Online Charging and Quota Management
+
+In online charging, the CTF sends charging events over the Ro reference
+point to the Online Charging Function (OCF) of the OCS. The OCF uses the
+Rating Function to determine the value of the usage, and the Account
+Balance Management Function (ABMF) to access the account of the
+subscriber (TS 32.240 clauses 4.3.2.2 and 4.4.2). TS 32.240 treats the Gy
+reference point of TS 23.203 as functionally equivalent to Ro (TS 32.240
+clause 4.4.2.3). In GPRS, an SGSN can perform online charging with CAMEL
+instead, which is outside the scope of TS 32.251 (TS 32.251 clause
+5.3.1.0).
+
+The credit control on Ro is always per rating group, which is the charging
+key of the PCC rule (TS 32.251 clauses 5.1.1 and 5.3.2.2.0). The PCEF
+requests credit for each charging key that occurs in a PCC rule, either
+when the rule is activated or when the first packet of the service is
+detected, depending on operator configuration (TS 23.203 clause 6.1.3).
+The quota management uses these elements of the Diameter Credit-Control
+application:
+
+Multiple-Services-Credit-Control AVP:: Carries the units of one rating
+group, or of one or more services within it, so that one Diameter session
+can manage independent quotas for several services (IETF RFC 8506 section
+8.16, TS 32.299 clause 7.1.9).
+
+Requested, granted, and used units:: The client requests units in the
+`Requested-Service-Unit` AVP, the OCS grants a quota in the
+`Granted-Service-Unit` AVP, and the client reports the consumed units in
+the `Used-Service-Unit` AVP (IETF RFC 8506 sections 8.17 to 8.19, TS
+32.299 clause 6.3.5).
+
+Validity time:: The OCS can limit the validity of a quota with the
+`Validity-Time` AVP. When the validity time expires before the client has
+used the quota, the client sends an update request (IETF RFC 8506 section
+8.33).
+
+Quota thresholds:: The OCS can set a volume or time threshold below which
+the client requests new units while it continues to use the remaining
+quota (TS 32.299 clause 6.5.2).
+
+Quota holding time:: The OCS can set an idle time after which the client
+returns the quota to the OCS when no traffic of that quota occurs (TS
+32.299 clause 6.5.1.1).
+
+Final unit indication:: The OCS marks the last granted units with the
+`Final-Unit-Indication` AVP and states in its `Final-Unit-Action` AVP what
+the client does when these units are used up. TS 32.299 specifies two
+termination actions for Ro: `TERMINATE`, which ends the service, and
+`REDIRECT`, which redirects the traffic of the service to a server, for
+example a top-up server (TS 32.299 clause 6.5.3). IETF RFC 8506 section
+8.35 also defines a third value, `RESTRICT_ACCESS`.
+
+The OCS can group the quotas of several charging keys into one credit pool
+to avoid the fragmentation of credit (TS 23.203 clause 6.1.3). When the PCEF
+cannot send credit-control messages to the OCS, the
+`Credit-Control-Failure-Handling` AVP, received from the OCS or configured
+locally, decides how the PCEF treats the service (TS 32.299 clause
+6.3.9).
+
+==== Charging Correlation
+
+The P-GW assigns a Charging ID to each IP-CAN bearer, and an IP-CAN session
+is identified by the Charging ID of its default bearer (TS 32.251 clause
+5.1.1). The P-GW forwards the Charging ID to the S-GW and the SGSN, so that
+the BD can correlate their CDRs with the CDRs of the P-GW (TS 32.251 clause
+5.2.1.1). In the packet switched domain, the access network charging
+identifier for correlation is the combination of the P-GW address and the
+EPC Charging ID (TS 32.240 clause 5.3.4.0).
+
+The Charging ID of the EPS default bearer also serves as the PDN connection
+charging identifier that all the bearers of the PDN connection share (TS
+32.251 clause 5.1.3). To correlate the charging of the IP-CAN with the
+charging of an application, for example an IMS session, the PCEF reports
+the access network charging identifier to the Policy and Charging Rules
+Function (PCRF), which passes it to the Application Function (AF) (TS 23.203
+clause 6.2.1.0 and TS 32.251 clause 5.1.3).
+
+==== Converged Charging in the 5GS
+
+In the 5GS, the CTF uses the Nchf service-based interface towards the
+Charging Function (CHF) of the CCS. The CHF contains both an OCF, for quota
+management, and a CDF, for the generation of CDRs, so the
+`Nchf_ConvergedCharging` service provides charging with quota management,
+which corresponds to online charging, and without quota management, which
+corresponds to offline charging. A separate `Nchf_OfflineOnlyCharging`
+service provides offline charging only (TS 32.240 clauses 4.3.3.1 and
+4.3.3.2.1). The CCS consists of the CHF, the ABMF, the CGF, and the Rating
+Function, and it transfers CDR files to the BD over Bx (TS 32.240 clause
+4.3.3.2.0). The Session Management Function (SMF) uses the CHF over the N40
+reference point (TS 23.503 clause 5.3.6), TS 32.255 specifies the charging
+of the 5G data connectivity domain, and TS 32.290 specifies the charging
+services of the service-based interface.
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.203
+a|
+* Clause 4.2.2 — Charging models
+* Clause 6.1.3 — Credit management
+* Clause 6.2.1.0 — Access network charging correlation information towards the AF
+* Clause 6.3.1 — Measurement method of a PCC rule
+
+| TS 23.503
+a|
+* Clause 5.3.6 — Interactions between the SMF and the CHF
+
+| TS 32.240
+a|
+* Clauses 4.1.0 to 4.1.3 — Offline, online, and converged charging
+* Clause 4.2.2 — Common architecture, covering the equivalence of Gy and Gz to Ro, Ga, and Rf
+* Clause 4.3.1 — Offline charging functions, covering the CTF, CDF, CGF, and OFCS
+* Clause 4.3.2 — Online charging functions, covering the OCF, Rating Function, and ABMF
+* Clause 4.3.3 — Converged charging functions
+* Clause 4.4 — Reference points, covering Rf, Gz, Ga, Bx, Ro, and Gy
+* Clause 5.1 — Charging data generation and quota supervision
+* Clauses 5.2.1.2 and 5.2.2 — Transfer of CDRs over Ga, partial CDRs, and online charging data transfer
+* Clause 5.3.4.0 — Charging data correlation
+
+| TS 32.251
+a|
+* Clause 3.2 — Symbols, covering the Bp reference point
+* Clause 4.1 — High-level EPS architecture, covering GGSN charging
+* Clause 4.2 — PS domain offline charging architecture
+* Clauses 5.1.1 and 5.1.3 — Charging requirements, identifiers, and correlation
+* Clauses 5.2.1.0, 5.2.1.1, and 5.2.1.3 — Offline charging principles, CDR types, and flow based bearer charging
+* Clauses 5.3.1.0 and 5.3.2.2.0 — Online charging principles and FBC online charging
+
+| TS 32.295
+a|
+* Clause 5.1.2 — CDR transport by GTP′
+
+| TS 32.297
+| CDR file transfer over Bx
+
+| TS 32.299
+a|
+* Clause 6.3.2.1 — IEC, ECUR, and SCUR on the Ro reference point
+* Clause 6.3.5 — Session Charging with Unit Reservation
+* Clause 6.3.9 — Support of failure handling
+* Clauses 6.5.1.1, 6.5.2, and 6.5.3 — Quota holding time, threshold based re-authorization, and termination action
+* Clause 7.1.9 — Multiple-Services-Credit-Control AVP
+
+| IETF RFC 8506
+a|
+* Sections 8.16 to 8.19 — Multiple-Services-Credit-Control, Granted-Service-Unit, Requested-Service-Unit, and Used-Service-Unit AVPs
+* Section 8.33 — Validity-Time AVP
+* Section 8.35 — Final-Unit-Action AVP
+|===

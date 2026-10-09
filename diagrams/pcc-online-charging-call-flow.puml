@@ -1,0 +1,32 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "PGW-U" as PGWU
+participant "PGW-C" as PGWC
+participant "PCRF" as PCRF
+participant "OCS" as OCS
+
+== Quota Grant ==
+PGWC -> OCS: Diameter (Gy): Credit-Control-Request (CCR-U)
+OCS -> PGWC: Diameter (Gy): Credit-Control-Answer (CCA-U)
+PGWC -> PGWU: PFCP: Session Modification Request
+PGWU -> PGWC: PFCP: Session Modification Response
+
+== Quota Threshold Reached ==
+PGWU -> PGWC: PFCP: Session Report Request
+PGWC -> PGWU: PFCP: Session Report Response
+PGWC -> OCS: Diameter (Gy): Credit-Control-Request (CCR-U)
+OCS -> PGWC: Diameter (Gy): Credit-Control-Answer (CCA-U)
+PGWC -> PGWU: PFCP: Session Modification Request
+PGWU -> PGWC: PFCP: Session Modification Response
+
+== Final Units Consumed ==
+PGWU -> PGWC: PFCP: Session Report Request
+PGWC -> PGWU: PFCP: Session Report Response
+PGWC -> OCS: Diameter (Gy): Credit-Control-Request (CCR-U)
+OCS -> PGWC: Diameter (Gy): Credit-Control-Answer (CCA-U)
+opt PCRF armed the Out of credit event trigger
+    PGWC -> PCRF: Diameter (Gx): Credit-Control-Request (CCR-U)
+    PCRF -> PGWC: Diameter (Gx): Credit-Control-Answer (CCA-U)
+end
+@enduml

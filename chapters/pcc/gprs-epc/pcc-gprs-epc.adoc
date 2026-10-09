@@ -1,0 +1,24 @@
+[#_pcc_gprs_epc]
+== PCC for GPRS and EPC
+
+include::architecture-and-specifications.adoc[]
+
+include::gx.adoc[]
+
+include::rx.adoc[]
+
+include::gy-gz.adoc[]
+
+include::ip-can-session-establishment.adoc[]
+
+include::ip-can-session-modification-pcef-initiated.adoc[]
+
+include::ip-can-session-modification-pcrf-initiated.adoc[]
+
+include::ip-can-session-termination.adoc[]
+
+include::online-charging.adoc[]
+
+include::offline-charging.adoc[]
+
+include::usage-monitoring.adoc[]

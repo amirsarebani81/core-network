@@ -1,0 +1,234 @@
+[#_pcc_rules]
+=== PCC Rules and Service Data Flows
+
+==== Technical Overview
+
+A Policy and Charging Control (PCC) rule contains the information that the
+Policy and Charging Enforcement Function (PCEF) needs to detect a service
+data flow (SDF) in the user plane, to apply policy control to it, and to
+charge for it. The packets that the service data flow template of an
+active PCC rule detects form one service data flow (TS 23.203 clause
+6.3.1).
+
+TS 23.203 clause 6.3.1 defines two types of PCC rule:
+
+Dynamic PCC rule:: The Policy and Charging Rules Function (PCRF)
+provisions the complete rule over the Gx reference point, and it can
+modify the rule while the rule is active.
+
+Predefined PCC rule:: The operator configures the rule in the PCEF, and
+the PCRF only refers to the rule by its name to activate or deactivate it.
+The PCRF cannot modify a predefined rule.
+
+The operator can also configure predefined PCC rules that the PCRF does not
+know. The PCEF activates such a rule on its own, on one IP Connectivity
+Access Network (IP-CAN) bearer of the IP-CAN session, and only when the UE
+has provided no traffic mapping information for that bearer (TS 23.203
+clauses 6.3.1 and 6.3.2). Whatever its type, a PCC rule is installed for a
+single IP-CAN bearer only (TS 23.203 clause 6.3.1).
+
+On Gx, the PCRF installs or modifies a dynamic PCC rule with a
+`Charging-Rule-Definition` AVP inside a `Charging-Rule-Install` AVP. It
+activates a predefined PCC rule with a `Charging-Rule-Name` AVP, or a
+predefined group of rules with a `Charging-Rule-Base-Name` AVP, inside a
+`Charging-Rule-Install` AVP, and it removes a rule with the same name
+AVPs inside a `Charging-Rule-Remove` AVP (TS 29.212 clause 4.5.2.0).
+
+==== PCC Rule Information
+
+TS 23.203 Table 6.3 lists the information that a PCC rule can contain and
+states, for each item, whether the PCRF can modify it in an active
+dynamic rule. The table below groups the main items by purpose.
+
+[cols="1,2,4",options="header"]
+|===
+| Purpose | Information | Use
+
+| Identification
+| Rule identifier
+| Identifies the rule uniquely within the IP-CAN session. A dynamic rule with the same identifier as a predefined rule replaces the predefined rule in that IP-CAN session.
+
+.3+| Service data flow detection
+| Service data flow template
+| Contains either a list of service data flow filters or an application identifier that refers to an application detection filter in the PCEF.
+
+| Precedence
+| Sets the order in which the PCEF applies the service data flow templates of the active rules.
+
+| Mute for notification
+| States whether the PCEF reports the start and the stop of the application that the rule detects. It applies only to a rule with an application identifier.
+
+.6+| Charging
+| Charging key
+| Refers to the tariff that the Online Charging System (OCS) or the Offline Charging System (OFCS) applies to the service data flow. Several rules can share one charging key.
+
+| Service identifier
+| Identifies the service or service component, and gives the most detailed identification of a service data flow for flow based charging.
+
+| Charging method
+| States whether the service data flow is subject to online charging, offline charging, or both, or to no charging at all.
+
+| Measurement method
+| States whether the PCEF measures volume, duration, combined volume and duration, or events.
+
+| Service identifier level reporting
+| States whether the PCEF reports usage per combination of charging key and service identifier instead of per charging key only.
+
+| Application Function record information
+| Correlates the measurements of the rule with the charging records of the application level.
+
+.5+| Policy control
+| Gate status
+| States whether the PCEF lets the packets of the service data flow pass (gate open) or discards them (gate closed).
+
+| QoS class identifier (QCI)
+| Refers to the authorized QoS characteristics of the service data flow.
+
+| Uplink and downlink maximum bitrate and guaranteed bitrate
+| Set the authorized bitrates of the service data flow at the IP packet level.
+
+| Allocation and Retention Priority (ARP)
+| Contains the priority level, the pre-emption capability, and the pre-emption vulnerability of the service data flow.
+
+| Redirect and redirect destination
+| Redirect the uplink part of the service data flow to a controlled address. Redirection applies to a rule with an application identifier.
+
+.2+| Usage monitoring control
+| Monitoring key
+| Groups the services that share one allowed usage.
+
+| Indication of exclusion from session level monitoring
+| Excludes the service data flow from the usage monitoring of the whole IP-CAN session.
+|===
+
+The table above is based on TS 23.203 clause 6.3.1 and Table 6.3, which
+also lists further items, for example for sponsored data connectivity,
+traffic steering, and the reporting of access network information.
+
+==== Service Data Flow Template and Filters
+
+A service data flow template contains any number of service data flow
+filters, and each filter applies to the uplink, to the downlink, or to
+both directions. The PCEF applies the filters separately in each
+direction. A filter can be a pattern for the IP 5-tuple, that is the source
+and destination IP address or IPv6 network prefix, the source and
+destination port, and the protocol ID above IP, in which an unspecified
+value matches any value, an address can carry a prefix mask, and a port can
+be a range. The pattern can be extended with the Type of Service or the
+Traffic Class and a mask, and other filter forms use the IPsec Security
+Parameter Index or the IPv6 Flow Label. A filter that inspects the packet
+beyond these fields, for example at the application protocol level, has to
+be predefined in the PCEF (TS 23.203 clause 6.2.2.2).
+
+For the downlink, the PCEF matches each packet against the downlink parts
+of all the service data flow templates of the IP-CAN session for the
+destination address, and it maps the packet to the IP-CAN bearer that the
+matching rule is bound to. For the uplink, the PCEF matches each packet
+against the uplink parts of the templates of the IP-CAN bearer on which the
+packet arrives. The PCEF applies the templates in the order of their
+precedence, and it discards a packet that no template of the same direction
+detects. To let such packets pass and be charged, the operator can define
+an open PCC rule with wildcarded filters (TS 23.203 clauses 4.1 and
+6.2.2.2). For the uplink direction, this discarding is also called uplink
+bearer binding verification (TS 23.203 clause 6.2.2.2).
+
+The PCRF sets the precedence of the dynamic rules so that their overlaps
+are resolved, and the operator does the same for the predefined rules. When
+a dynamic rule and a predefined rule have the same precedence, the dynamic
+rule takes precedence (TS 23.203 clause 6.3.1).
+
+==== Gating and Charging Parameters
+
+The gate status of a rule decides whether a packet that the rule detects
+passes the PCEF. A packet that matches a rule with an open gate can still
+be discarded for credit management reasons (TS 23.203 clause 6.3.1).
+
+The charging key is the reference to the tariff of the service data flow,
+and the charging specifications use the term rating group for the same
+value (TS 32.251 clause 5.2.1.3). The PCEF requests credit and reports
+usage for each charging key, or for each combination of charging key and
+service identifier when the rule requests service identifier level
+reporting (TS 23.203 clauses 6.1.2 and 6.1.3). If a rule omits the charging
+method, the PCEF applies the default charging method that the PCRF or the
+PCEF configuration set for the IP-CAN session, and a rule that is not
+subject to any end user charging carries no charging key (TS 23.203 clauses
+6.3.1 and 6.4). Event based measurement applies only to predefined rules
+and to rules with an application identifier (TS 23.203 clause 6.2.2.3).
+
+==== Rule Operations
+
+The PCRF can activate and deactivate any PCC rule at any time over Gx,
+but it can modify only a dynamic rule. While a rule is active, the PCEF
+uses its template to detect the service data flow and to map downlink
+packets to the bound IP-CAN bearer, records the usage of the service data
+flow, and applies the policies of the rule. When an IP-CAN bearer ends,
+all the rules on that bearer become inactive without an instruction from
+the PCRF (TS 23.203 clause 6.3.2).
+
+A rule can carry a deferred activation time, a deferred deactivation time,
+or both, so that the PCEF activates or deactivates the rule at a given time
+of day without a new PCC interaction. Deferred operations apply only to
+rules of an IP-CAN bearer without traffic mapping information, and they
+never change the QoS or the filters of a rule (TS 23.203 clauses 4.1 and
+6.3.2).
+
+==== Application Detection
+
+Application Detection and Control (ADC) detects the traffic of an
+application, reports the start and the stop of that traffic to the PCRF,
+and applies the enforcement and charging actions that the operator
+specifies. Either a Traffic Detection Function (TDF) or a PCEF enhanced
+with ADC provides it (TS 23.203 clause 4.5):
+
+* For a PCEF enhanced with ADC, the PCRF uses a PCC rule whose service
+  data flow template contains an application identifier instead of
+  filters. The order and the details of the detection are implementation
+  specific (TS 23.203 clauses 6.2.2.2 and 6.3.1). On Gx, the application
+  identifier is the `TDF-Application-Identifier` AVP within the
+  `Charging-Rule-Definition` AVP (TS 29.212 clause 4.5.23).
+* For a TDF, the PCRF uses ADC rules over the Sd reference point (TS
+  23.203 clause 6.8.1). In solicited application reporting, the PCRF
+  activates the ADC rules that tell the TDF which applications to detect;
+  in unsolicited application reporting, which only the TDF supports, the
+  TDF is preconfigured with the applications to detect and report (TS
+  23.203 clause 4.5).
+
+To avoid charging the same traffic twice, the PCEF and the TDF do not both
+perform charging and enforcement for the same IP-CAN session (TS 23.203
+clause 4.5). In the 5GS there is no TDF: the Policy Control Function (PCF)
+instructs the Session Management Function (SMF) which applications to
+detect by activating PCC rules, and the SMF reports the start and the stop
+of the application traffic to the PCF (TS 23.503 clause 4.3.5).
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.203
+a|
+* Clause 4.1 — General requirements, covering the discarding of unmatched packets and time of day rule changes
+* Clause 4.5 — Application detection and control
+* Clause 6.1.2 — Reporting
+* Clause 6.1.3 — Credit management
+* Clause 6.2.2.2 — Service data flow detection
+* Clause 6.2.2.3 — Measurement
+* Clause 6.3.1 — PCC rule information, Table 6.3
+* Clause 6.3.2 — PCC rule operations
+* Clause 6.4 — IP-CAN session related policy information, covering the default charging method
+* Clause 6.8.1 — ADC rule
+
+| TS 23.503
+a|
+* Clause 4.3.5 — Application detection and control in the 5GS
+
+| TS 29.212
+a|
+* Clause 4.5.2 — Provisioning of PCC rules over Gx
+* Clause 4.5.23 — Application detection information
+
+| TS 32.251
+a|
+* Clause 5.2.1.3 — Flow based bearer charging, covering the charging key as the rating group
+|===

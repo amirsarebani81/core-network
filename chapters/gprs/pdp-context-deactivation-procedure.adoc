@@ -161,10 +161,12 @@ reference point. The message carries the `Result-Code` AVP set to
 a new policy decision and, when the PCRF performs the bearer binding,
 move the PCC rules of the terminated PDP context to a remaining PDP
 context; the GGSN removes the PCC rules that the PCRF does not move
-(TS 29.212 Annex A.3.4). In reply to a CCR-T message, the PCRF only
-acknowledges the request, and the CCR-T and CCA-T exchange ends the
-Diameter Credit Control session of the IP-CAN session (TS 29.212 clause
-4.5.7).
+(TS 29.212 Annex A.3.4). In reply to a CCR-T message, the PCRF removes
+the policy data of the IP-CAN session, and the exchange ends the
+Diameter Credit Control session (TS 29.212 clause 4.5.7).
+<<_pcc_ip_can_session_termination>> and
+<<_pcc_ip_can_session_modification_pcef_initiated>> describe the two
+cases in detail.
 
 . If the GGSN sent an `Accounting-Request` (START) message for the PDP
 context, the *GGSN* sends a RADIUS `Accounting-Request` (STOP) message to

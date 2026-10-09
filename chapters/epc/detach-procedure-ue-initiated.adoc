@@ -69,6 +69,7 @@ Termination procedure with the *PCRF*, using Diameter, letting the PCRF
 release the policy and charging rules for the session. The Diameter
 message carries a CC-Request-Type set to TERMINATION_REQUEST and the
 Used-Service-Unit, for usage monitoring reporting.
+<<_pcc_ip_can_session_termination>> describes this procedure in detail.
 
 . The *P-GW* acknowledges the session deletion by returning a GTPv2
 `Delete Session Response` message to the *S-GW*, carrying a Cause and the
