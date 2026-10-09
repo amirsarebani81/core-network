@@ -19,7 +19,8 @@ The book is organized in parts:
 - **Part I: GPRS Core**, the General Packet Radio Service core network.
 - **Part II: Evolved Packet Core (EPC)**, with Control and User Plane
   Separation (CUPS).
-- **Part III: Policy and Charging Control**, the policy and charging
+- **Part III: 5G Core (5GC)**, the core network of the 5G System.
+- **Part IV: Policy and Charging Control**, the policy and charging
   control framework, with its principles and its realization for GPRS and
   the EPC.
 

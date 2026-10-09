@@ -1,0 +1,15 @@
+[#_5gc_architecture_and_specifications]
+== Architecture and Specifications
+
+The 5G Core Network (5GC) is the core network of the 5G System (5GS).
+This chapter shows the 5GC in the non-roaming reference point
+representation that TS 23.501 clause 4.2.3 defines, with the Charging
+Function (CHF) added on the N40 reference point, which the 5G data
+connectivity charging architecture defines (TS 32.255 clause 4.2).
+
+.5GC architecture
+image::images/5gc-architecture.svg[5GC Architecture]
+
+The figure above shows the network functions of the 5GC and the
+reference points between them, and it labels each reference point with
+the 3GPP specification and the protocol that the reference point uses.

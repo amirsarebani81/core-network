@@ -91,8 +91,18 @@ include::chapters/epc/protocol-stack.adoc[]
 
 include::chapters/epc/functional-description-and-information-flows.adoc[]
 
+= Part III: 5G Core (5GC)
+
+[partintro]
+This part describes the 5G Core Network (5GC): its network functions and
+the reference points between them, the protocols that carry signaling
+between the network functions, and the signaling procedures that run
+over those protocols.
+
+include::chapters/5gc/architecture-and-specifications.adoc[]
+
 [#_policy_and_charging_control]
-= Part III: Policy and Charging Control
+= Part IV: Policy and Charging Control
 
 [partintro]
 This part describes the policy and charging control framework of the

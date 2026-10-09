@@ -71,13 +71,15 @@ Treat the documentation as living, not archival:
 ## Repository layout
 
 - `main.adoc` — book entry point; a `= Part` heading per book part (currently
-  Part I: GPRS Core, Part II: EPC, Part III: Policy and Charging Control),
-  each `include::`ing that part's chapters. The generation parts come first,
-  and the Policy and Charging Control part always comes after all of them,
-  so it is renumbered when a generation part (for example 5GC) is added.
-  Refer to a part with an `xref` to its explicit ID (for example
-  `<<_policy_and_charging_control>>`), never with a literal "Part III".
-- `chapters/epc/*.adoc`, `chapters/gprs/*.adoc` — chapter content, one topic
+  Part I: GPRS Core, Part II: EPC, Part III: 5GC, Part IV: Policy and
+  Charging Control), each `include::`ing that part's chapters. The
+  generation parts come first, and the Policy and Charging Control part
+  always comes after all of them, so it is renumbered when a generation
+  part is added. Refer to a part with an `xref` to its explicit ID (for
+  example `<<_policy_and_charging_control>>`), never with a literal
+  "Part IV".
+- `chapters/gprs/*.adoc`, `chapters/epc/*.adoc`, `chapters/5gc/*.adoc` —
+  chapter content, one topic
   per file, grouped by book part.
 - `chapters/pcc/` — the Policy and Charging Control part: `common/` holds
   the Principles chapter that applies to every generation, `gprs-epc/` the

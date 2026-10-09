@@ -2,7 +2,8 @@
 
 The Policy and Charging Control part (`chapters/pcc/`) has a Principles
 chapter and a chapter for GPRS and the EPC. A third chapter, for the 5GS
-(TS 23.503), waits until the book has a 5GC part, because it assumes that
+(TS 23.503), waits until the 5GC part describes the network functions
+(so far it has only the architecture figure), because it assumes that
 the reader already knows the SMF and the AMF. Delete this file when that
 chapter is written.
 
