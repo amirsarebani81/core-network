@@ -132,7 +132,7 @@ charging domain and that the figure does not show.
 | SGi
 | PGW-U, TDF-U, and PDN
 | User plane traffic towards the PDN. The TDF is located on SGi (TS 23.203 clause 7.1).
-| IP
+| IP, TS 29.061
 
 | Ga (not shown)
 | CDF and CGF, inside the OFCS
@@ -223,6 +223,7 @@ and TS 29.212 Annex B specifies them for the 3GPP accesses of the EPS.
 
 * *3GPP TS 23.203* _Policy and charging control architecture_
 * *3GPP TS 23.214* _Architecture enhancements for control and user plane separation of EPC nodes; Stage 2_
+* *3GPP TS 29.061* _Interworking between the Public Land Mobile Network (PLMN) supporting packet based services and Packet Data Networks (PDN)_
 * *3GPP TS 29.212* _Policy and Charging Control (PCC); Reference points_
 * *3GPP TS 29.213* _Policy and Charging Control signalling flows and Quality of Service (QoS) parameter mapping_
 * *3GPP TS 29.214* _Policy and Charging Control over Rx reference point_
