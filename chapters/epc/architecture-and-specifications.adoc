@@ -21,11 +21,11 @@ SGW-U (Serving Gateway - User Plane):: The SGW-U is the user-plane function of t
 
 PGW-C (PDN Gateway - Control Plane):: The PGW-C is the control-plane function of the PDN Gateway, handling session establishment, IP address allocation, and QoS/policy signaling. It then provisions the PGW-U with the corresponding PFCP rules.
 
-PCRF (Policy and Charging Rules Function):: The PCRF is the policy control node of the EPC. It derives QoS, charging, and traffic-detection rules from subscriber and service policies, and it provisions the PGW-C with these rules over Gx for enforcement in the user plane.
+PCRF (Policy and Charging Rules Function):: The PCRF is the policy control node of the EPC. It derives QoS, charging, and traffic-detection rules from subscriber and service policies, and it provisions the PGW-C with these rules over Gx for enforcement in the user plane. <<_pcc_architecture>> describes the complete policy and charging control architecture.
 
-OCS (Online Charging System):: The OCS is the real-time charging system for prepaid and quota-based services. It receives credit-control requests from the PGW-C over Gy and authorizes or denies continued user-plane usage based on the subscriber's available balance.
+OCS (Online Charging System):: The OCS is the real-time charging system for prepaid and quota-based services. It receives credit-control requests from the PGW-C over Gy and authorizes or denies continued user-plane usage based on the subscriber's available balance, as <<_pcc_online_charging>> describes.
 
-OFCS (Offline Charging System):: The OFCS is the offline, postpaid charging system of the EPC. It collects charging data records from the PGW-C over Gz for billing purposes, without affecting the subscriber's session in real time.
+OFCS (Offline Charging System):: The OFCS is the offline, postpaid charging system of the EPC. It collects charging information from the PGW-C over Gz for billing purposes, without affecting the subscriber's session in real time, as <<_pcc_offline_charging>> describes.
 
 PGW-U (PDN Gateway - User Plane):: The PGW-U is the user-plane function of the PDN Gateway. It routes user traffic between the SGW-U and the TDF-U, enforcing the QoS, charging, and packet-filtering rules that the PGW-C provisions over Sxb.
 

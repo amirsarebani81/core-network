@@ -1,0 +1,39 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "SGW-C" as SGWC
+participant "PGW-C" as PGWC
+participant "PGW-U" as PGWU
+participant "PCRF" as PCRF
+participant "SPR" as SPR
+participant "OCS" as OCS
+
+== IP-CAN Session Request ==
+SGWC -> PGWC: GTPv2: Create Session Request
+
+== Gx Session Establishment ==
+PGWC -> PCRF: Diameter (Gx): Credit-Control-Request (CCR-I)
+opt Subscription information is not available at the PCRF
+    PCRF -> SPR: Sp: Profile Request
+    SPR -> PCRF: Sp: Profile Response
+end
+opt Policy decision depends on policy counters
+    PCRF -> OCS: Diameter (Sy): Spending-Limit-Request (SLR)
+    OCS -> PCRF: Diameter (Sy): Spending-Limit-Answer (SLA)
+end
+note over PCRF: PCC rule and policy decision
+PCRF -> PGWC: Diameter (Gx): Credit-Control-Answer (CCA-I)
+
+== Gy Credit Control ==
+opt Online charging applies
+    PGWC -> OCS: Diameter (Gy): Credit-Control-Request (CCR-I)
+    OCS -> PGWC: Diameter (Gy): Credit-Control-Answer (CCA-I)
+end
+
+== User Plane Provisioning ==
+PGWC -> PGWU: PFCP: Session Establishment Request
+PGWU -> PGWC: PFCP: Session Establishment Response
+
+== IP-CAN Session Response ==
+PGWC -> SGWC: GTPv2: Create Session Response
+@enduml

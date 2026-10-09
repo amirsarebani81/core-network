@@ -1,0 +1,42 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "SGW-C" as SGWC
+participant "PGW-C" as PGWC
+participant "PGW-U" as PGWU
+participant "PCRF" as PCRF
+participant "AF\n(P-CSCF)" as AF
+participant "OCS" as OCS
+
+== Rx Service Information ==
+AF -> PCRF: Diameter (Rx): AA-Request (AAR)
+PCRF -> AF: Diameter (Rx): AA-Answer (AAA)
+
+== Gx PCC Rule Provisioning ==
+note over PCRF: Session binding and PCC rule authorization
+PCRF -> PGWC: Diameter (Gx): Re-Auth-Request (RAR)
+PGWC -> PCRF: Diameter (Gx): Re-Auth-Answer (RAA)
+
+== Gy Credit Request ==
+opt Online charging applies to the new charging key
+    PGWC -> OCS: Diameter (Gy): Credit-Control-Request (CCR-U)
+    OCS -> PGWC: Diameter (Gy): Credit-Control-Answer (CCA-U)
+end
+
+== Dedicated Bearer Activation ==
+PGWC -> PGWU: PFCP: Session Modification Request
+PGWU -> PGWC: PFCP: Session Modification Response
+PGWC -> SGWC: GTPv2: Create Bearer Request
+ref over SGWC: Dedicated bearer activation\nbetween the SGW-C, MME, eNodeB, and UE
+SGWC -> PGWC: GTPv2: Create Bearer Response
+PGWC -> PGWU: PFCP: Session Modification Request
+PGWU -> PGWC: PFCP: Session Modification Response
+
+== Resource Allocation Report ==
+PGWC -> PCRF: Diameter (Gx): Credit-Control-Request (CCR-U)
+PCRF -> PGWC: Diameter (Gx): Credit-Control-Answer (CCA-U)
+opt AF subscribed to the successful resource allocation
+    PCRF -> AF: Diameter (Rx): Re-Auth-Request (RAR)
+    AF -> PCRF: Diameter (Rx): Re-Auth-Answer (RAA)
+end
+@enduml

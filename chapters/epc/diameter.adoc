@@ -1,0 +1,753 @@
+=== Diameter
+
+==== Technical Overview
+
+Diameter is an Authentication, Authorization, and Accounting (AAA)
+protocol. The Diameter base protocol provides the facilities that every
+Diameter application uses: the exchange of messages and of
+Attribute-Value Pairs (AVPs), capabilities negotiation, error
+notification, extensibility through new applications, commands, and
+AVPs, and basic services such as the handling of user sessions and
+accounting (IETF RFC 6733 section 1.1). The base protocol on its own
+supports only accounting, so each authentication or authorization
+service is a Diameter application that extends the base protocol with
+its own commands and AVPs, or reuses commands and AVPs that other
+applications define (IETF RFC 6733 section 2).
+
+In the EPC, the MME and the HSS use the S6a application, and the
+PGW-C, the PCRF, the Online Charging System (OCS), and the Offline
+Charging System (OFCS) use the Diameter applications of policy and
+charging control. The Diameter Applications in the EPC section below
+lists each of these applications with its Application-ID and its
+commands.
+
+Diameter was designed to address the limitations that IETF RFC 6733
+section 1 identifies in RADIUS. RADIUS runs over UDP and does not define
+retransmission or failover behavior, whereas Diameter runs over TCP or
+the Stream Control Transmission Protocol (SCTP) and defines
+application-layer acknowledgements, failover algorithms, and a peer
+state machine. Diameter also defines the behavior of relay, proxy, and
+redirect agents explicitly, makes support for server-initiated messages
+mandatory, and adds error messages, capability negotiation, and a flag
+that marks an AVP as mandatory to understand, none of which RADIUS
+supports.
+
+Every Diameter node acts as a client, a server, or an agent for a given
+request. A Diameter client is usually located at the edge of the
+network and requests AAA services for a user, a Diameter server handles
+these requests for a particular realm, and a Diameter agent provides
+relay, proxy, redirect, or translation services between them. Two
+Diameter nodes that share a direct TCP or SCTP transport connection are
+Diameter peers (IETF RFC 6733 section 1.2). Because any node can
+initiate a request, Diameter is a peer-to-peer protocol, and a server
+can send a request to a client, for example to re-authorize or to abort
+a session (IETF RFC 6733 section 1.1). On the Gx reference point, for
+example, the PCEF acts as the Diameter client and the PCRF acts as the
+Diameter server, and the PCRF can still send a `Re-Auth-Request` to the
+PCEF (TS 29.212 clauses 5.1 and 5.6.4).
+
+==== Transport and Peer Connections
+
+Diameter runs over TCP or SCTP on port 3868. A node that protects the
+connection with Transport Layer Security (TLS) over TCP, or with
+Datagram Transport Layer Security (DTLS) over SCTP, from the start of
+the connection uses port 5658 instead (IETF RFC 6733 section 2.1). IETF
+RFC 6733 section 2.2 requires that Diameter is not used without one of
+TLS, DTLS, or IPsec, and section 2.1 requires that a Diameter client
+supports TCP or SCTP and recommends that agents and servers support
+both.
+
+A Diameter node uses at most one transport connection towards a given
+peer, unless the peer runs several Diameter instances, and when no
+connection to a peer exists, the node periodically
+tries to connect, with an interval set by the Tc timer, for which IETF
+RFC 6733 section 2.1 recommends a value of 30 seconds. A node usually
+keeps a connection to at least two peers in each realm, a primary peer
+and a secondary peer. It typically sends all requests for that realm to
+the primary peer, and failover moves the pending requests to the
+secondary peer, although an implementation can also share the load
+between several peers (IETF RFC 6733 section 5.1).
+
+A transport connection and a Diameter session are independent of each
+other. A connection links two peers, whereas a session links a client
+and a server, possibly through one or more agents, and messages for
+many sessions share one connection (IETF RFC 6733 section 2.5). For
+this reason, the messages that set up and maintain a connection carry
+an Application-ID of 0 in the header, while the messages of a session
+carry the Application-ID of the application that the session belongs
+to.
+
+===== Capabilities Exchange
+
+When two Diameter peers establish a transport connection, they exchange
+a `Capabilities-Exchange-Request` (CER) and a
+`Capabilities-Exchange-Answer` (CEA). Each
+peer states its identity in the `Origin-Host` and `Origin-Realm` AVPs,
+its IP addresses in one or more `Host-IP-Address` AVPs, its vendor and
+product in the `Vendor-Id` and `Product-Name` AVPs, and the
+applications that it supports in `Auth-Application-Id`,
+`Acct-Application-Id`, and `Vendor-Specific-Application-Id` AVPs (IETF
+RFC 6733 sections 5.3.1 and 5.3.2).
+
+The receiver of the CER determines the common applications as the
+intersection of its own applications and the applications that the CER
+lists. If the two peers have no application in common, the receiver
+returns a CEA with the `Result-Code` AVP set to
+`DIAMETER_NO_COMMON_APPLICATION` and usually closes the connection
+(IETF RFC 6733 section 5.3). After a successful exchange, a node sends
+a peer only the commands of the applications that the peer advertised.
+A relay or redirect agent advertises the Relay Application-ID
+(0xffffffff) instead of a list of applications, and its peer treats it
+as supporting every current and future application (IETF RFC 6733
+section 2.4). An agent never proxies, relays, or redirects a CER or a
+CEA (IETF RFC 6733 section 5.3).
+
+A 3GPP application is a vendor-specific application. On Gx, for
+example, the PCEF and the PCRF advertise the Gx application by placing
+its Application-ID in the `Auth-Application-Id` AVP and the value 10415
+for 3GPP in the `Vendor-Id` AVP, both inside the
+`Vendor-Specific-Application-Id` AVP of the CER and the CEA (TS 29.212
+clause 5.2). The S6a, Rx, and Sy applications use the same method (TS
+29.272 clause 7.1.7, TS 29.214 clause 5.2, and TS 29.219 clause 5.1.5).
+
+===== Transport Failure Detection and Failover
+
+A peer sends a `Device-Watchdog-Request` (DWR) when no traffic has been
+exchanged with the other peer for a period, and the other peer replies
+with a `Device-Watchdog-Answer` (DWA). The watchdog exchange lets a
+node detect a transport failure early, and the transport failure
+algorithm itself is defined in IETF RFC 3539 (IETF RFC 6733 section
+5.5). A peer that does not answer within the expected time becomes a
+suspect peer, and the node stops sending new requests to it (IETF RFC
+6733 section 5.1).
+
+For failover, a node keeps a queue of pending requests for each peer
+and removes a request from the queue when the matching answer arrives,
+using the Hop-by-Hop Identifier to match them. When the node detects a
+transport failure, it sends the queued requests to an alternate peer
+with the `T` flag set, which marks each request as a possible
+duplicate. Failover can therefore deliver the same request twice, and
+the receiver detects such duplicates from the End-to-End Identifier
+together with the `Origin-Host` AVP. When the connection to the failed
+peer is established again, the node resumes sending messages to it,
+which IETF RFC 6733 section 5.5.4 calls failback.
+
+===== Disconnecting a Peer Connection
+
+A node that intends to close a transport connection sends a
+`Disconnect-Peer-Request` (DPR) with a `Disconnect-Cause` AVP, and the
+peer replies with a `Disconnect-Peer-Answer` (DPA). The node that
+receives the DPA then closes the transport connection (IETF RFC 6733
+section 5.4). The `Disconnect-Cause` AVP tells the peer whether to try
+to reconnect, as IETF RFC 6733 section 5.4.3 defines:
+
+[cols="1,1,3",options="header"]
+|===
+| Value | Name | Meaning
+
+| 0
+| `REBOOTING`
+| A scheduled reboot is about to occur, and the peer can try to reconnect.
+
+| 1
+| `BUSY`
+| The internal resources of the sender are constrained, and the peer does not usually try to reconnect.
+
+| 2
+| `DO_NOT_WANT_TO_TALK_TO_YOU`
+| The sender expects no messages in the near future, and the peer does not usually try to reconnect.
+|===
+
+==== Packet Format
+
+A Diameter message consists of a 20-octet header followed by a sequence
+of AVPs, and all fields are sent in network byte order (IETF RFC 6733
+section 3).
+
+===== Message Header
+
+Every Diameter message, whether a request or an answer, begins with the
+same header. IETF RFC 6733 section 3 defines this header.
+
+.Diameter message header
+[width=500,role=packet-diagram]
+packetdiag::diagrams/diameter-header.diag[svg]
+
+`Version`:: Octet 1. This field states the Diameter version and is set
+to 1.
+
+`Message Length`:: Octets 2 to 4. This field states the length of the
+whole message in octets, including the header and the padded AVPs, so
+its value is always a multiple of 4.
+
+`R`:: Bit 8 of octet 5. This is the Request flag; a value of 1 means
+that the message is a request, and a value of 0 means that it is an
+answer.
+
+`P`:: Bit 7 of octet 5. This is the Proxiable flag; a value of 1 means
+that an agent can proxy, relay, or redirect the message, and a value of
+0 means that the receiving peer processes the message locally.
+
+`E`:: Bit 6 of octet 5. This is the Error flag; a value of 1 means that
+the message is an answer that reports a protocol error, as the Error
+Handling section below describes. A request never sets this flag.
+
+`T`:: Bit 5 of octet 5. This flag marks a request that a node sends
+again after a link failover, before it received an answer to the first
+transmission, so that the receiver can detect a duplicate. An answer
+never sets this flag, and an agent keeps the flag set when it forwards
+such a request.
+
+`Command Code`:: Octets 6 to 8. This field identifies the command. A
+request and its answer share the same command code and differ only in
+the `R` flag (IETF RFC 6733 section 3.1).
+
+`Application-ID`:: Octets 9 to 12. This field identifies the
+application that the message belongs to, and it has the same value as
+any `Auth-Application-Id` or `Acct-Application-Id` AVP in the message.
+Agents use this field, together with the destination realm, to route a
+request.
+
+`Hop-by-Hop Identifier`:: Octets 13 to 16. This field matches an answer
+to its request on a single connection. The sender of a request chooses
+a value that is unique on that connection at that time, the answer
+carries the same value, and a node discards an answer with an unknown
+value. An agent replaces this value with a value of its own when it
+forwards a request, and restores the original value when it forwards
+the answer back (IETF RFC 6733 section 2.8).
+
+`End-to-End Identifier`:: Octets 17 to 20. This field identifies a
+request between its originator and its final destination, and agents
+never change it. The originator keeps each value unique for at least 4
+minutes, even across reboots, and a receiver uses this field together
+with the `Origin-Host` AVP to detect duplicate requests.
+
+===== Command Code Format
+
+Each Diameter specification defines the structure of its commands in
+the Command Code Format (CCF), an Augmented Backus-Naur Form (ABNF)
+notation that IETF RFC 6733 section 3.2 defines. The first line of a
+CCF gives the command code and the flags that are set in the header,
+where `REQ` stands for the `R` flag and `PXY` for the `P` flag, and the
+lines that follow list the AVPs of the command. An AVP in angle
+brackets (`< >`) has a fixed position, an AVP in braces (`{ }`) is
+required, and an AVP in square brackets (`[ ]`) is optional. A
+qualifier such as `*` or `1*` in front of an AVP gives the number of
+instances that the command can carry, and the entry `*[ AVP ]` allows
+any further AVPs.
+
+The 3GPP specifications use this notation for every command. TS 29.212
+clause 5.6.2, for example, defines the Gx `CC-Request` with the header
+line `< Diameter Header: 272, REQ, PXY >`, followed by the
+`Session-Id` AVP in a fixed position and the AVPs of the command.
+
+===== AVP Format
+
+Each AVP starts with an AVP header of 8 octets, or of 12 octets when
+the header carries a `Vendor-ID` field, which IETF RFC 6733 section 4.1
+defines. The data of the AVP follows the header.
+
+.Diameter AVP header
+[width=500,role=packet-diagram]
+packetdiag::diagrams/diameter-avp-header.diag[svg]
+
+`AVP Code`:: Octets 1 to 4. This field identifies the attribute,
+together with the `Vendor-ID` field when that field is present. AVP
+codes 1 to 255 reuse RADIUS attributes without a `Vendor-ID` field, and
+codes from 256 upwards are Diameter AVPs.
+
+`V`:: Bit 8 of octet 5. This is the Vendor-Specific flag; a value of 1
+means that the header carries the `Vendor-ID` field, and that the AVP
+code belongs to the code space of that vendor.
+
+`M`:: Bit 7 of octet 5. This is the Mandatory flag; a value of 1 means
+that the receiver has to understand the AVP. A receiver returns an error
+when it does not support an AVP with this flag set, except when the AVP
+is inside a Grouped AVP that the receiver does not recognize and whose
+own `M` flag is 0 (IETF RFC 6733 section 4.4). A receiver can ignore an
+unsupported AVP with the `M` flag set to 0, and relay and redirect
+agents never reject a message because of an unrecognized AVP. The
+application that defines or reuses an AVP states how the `M` flag is
+set.
+
+`P`:: Bit 6 of octet 5. This flag is reserved for end-to-end security,
+for which no mechanism is specified, so a sender sets it to 0.
+
+`AVP Length`:: Octets 6 to 8. This field states the length of the AVP
+in octets, including the header and the data but excluding any
+padding.
+
+`Vendor-ID`:: Octets 9 to 12, present only when the `V` flag is set.
+This field carries the private enterprise number that the Internet
+Assigned Numbers Authority (IANA) assigned to the vendor. The value
+for 3GPP is 10415, and TS 29.212 clause 5.3.0, for example, sets this
+value in every AVP that it defines for Gx.
+
+The data of an AVP has one of the basic data formats `OctetString`,
+`Integer32`, `Integer64`, `Unsigned32`, `Unsigned64`, `Float32`,
+`Float64`, or `Grouped` (IETF RFC 6733 section 4.2), or a derived data
+format such as `Address`, `Time`, `UTF8String`, `DiameterIdentity`,
+`DiameterURI`, `Enumerated`, or `IPFilterRule` (IETF RFC 6733 section
+4.3.1). When the data of an AVP is not a multiple of 4 octets long, the
+sender adds zero-valued padding octets after the data so that the next
+AVP starts on a 32-bit boundary (IETF RFC 6733 section 4).
+
+The data of a Grouped AVP is a sequence of complete AVPs, each with its
+own header and padding, and a Grouped AVP can contain further Grouped
+AVPs. The definition of a Grouped AVP uses the same notation as a CCF,
+with a header line that gives the AVP code (IETF RFC 6733 section 4.4).
+The `Experimental-Result` AVP of IETF RFC 6733 section 7.6, for
+example, is a Grouped AVP with the AVP code 297 that contains a
+`Vendor-Id` AVP and an `Experimental-Result-Code` AVP.
+
+==== Sessions and Routing
+
+===== Sessions
+
+A Diameter session is the sequence of messages that relate to one
+activity of one user, and every message of a session carries the same
+value in the `Session-Id` AVP, which IETF RFC 6733 section 8.8 defines.
+The node that starts the session, which is usually the client, creates
+the value, and the value has to be globally and eternally unique. The
+value begins with the `DiameterIdentity` of the sender, followed by
+further parts separated by semicolons, and IETF RFC 6733 section 8.8
+recommends the format
+`<DiameterIdentity>;<high 32 bits>;<low 32 bits>[;<optional value>]`.
+The `Session-Id` AVP usually follows the header directly, which the
+CCF of a command shows as the fixed position `< Session-Id >`.
+
+The 3GPP applications map each Diameter session to a session of their
+own. On Gx, for example, the PCEF establishes one Diameter session for
+each IP Connectivity Access Network (IP-CAN) session, and for an IP-CAN
+type with several IP-CAN bearers it does so when the first IP-CAN
+bearer of the IP-CAN session is established (TS 29.212 clause 5.6.1).
+
+===== Request Routing
+
+Every Diameter message carries the `Origin-Host` and `Origin-Realm` AVPs,
+which identify the node and the realm that originated the message (IETF
+RFC 6733 sections 6.3 and 6.4). A request can also carry the
+`Destination-Realm` and `Destination-Host` AVPs, and an answer carries
+neither of them (IETF RFC 6733 sections 6.5 and 6.6). The originator of
+a request uses these two AVPs in one of three ways, as IETF RFC 6733
+section 6.1 defines:
+
+* A request that is never forwarded, for example a CER, carries
+  neither AVP.
+* A request for any server of a realm, for example the first request
+  of a session, carries only the `Destination-Realm` AVP.
+* A request for one specific server of a realm carries both AVPs. This
+  applies, for example, to an authentication that spans several round
+  trips, and to a server-initiated request, such as an
+  `Abort-Session-Request`, that has to reach one specific client.
+
+A node that receives a request first checks whether it can process the
+request locally, which is the case when the `Destination-Host` AVP
+contains its own identity, or when there is no `Destination-Host` AVP
+and the node serves the realm and the application of the request. If
+the node cannot process the request locally and the host in the
+`Destination-Host` AVP is one of its peers, the node forwards the
+request directly to that peer. Otherwise, the node looks up the routing
+table, which uses the realm as the primary key and the Application-ID as
+the secondary key, and which states for each entry whether the node
+processes the request locally, relays it, proxies it, or redirects it.
+If none of these steps succeeds, the node returns an answer with the
+`E` flag set and the `Result-Code` AVP set to
+`DIAMETER_UNABLE_TO_DELIVER` (IETF RFC 6733 sections 2.7 and 6.1).
+
+A relay or proxy agent adds a `Route-Record` AVP with the identity of
+the previous peer to each request that it forwards, and an agent that
+finds its own identity in a `Route-Record` AVP has detected a
+forwarding loop and returns the `Result-Code` value
+`DIAMETER_LOOP_DETECTED` (IETF RFC 6733 sections 6.1.3 and 6.1.9). An
+agent returns each answer to the peer from which it received the
+request, using the transaction state that it saved when it forwarded
+the request (IETF RFC 6733 sections 2.8 and 6.1.9).
+
+===== Diameter Agents
+
+IETF RFC 6733 section 2.8 defines four types of Diameter agent:
+
+Relay agent:: A relay agent routes requests based on routing
+information such as the `Destination-Realm` AVP, and changes only the
+routing information of a message. A relay agent keeps transaction state
+but not session state, and it advertises the Relay Application-ID,
+because it does not process any application.
+
+Proxy agent:: A proxy agent routes requests in the same way as a relay
+agent, but it can also change messages to enforce a local policy, so it
+has to understand the applications that it proxies and advertises only
+those applications.
+
+Redirect agent:: A redirect agent does not forward a request. Instead,
+it returns an answer with the identity of the server that can handle
+the request, and the sender then contacts that server directly. A
+redirect agent advertises the Relay Application-ID.
+
+Translation agent:: A translation agent converts messages between
+Diameter and another AAA protocol, for example RADIUS, and keeps session
+state.
+
+The policy and charging control architecture adds the Diameter Routing
+Agent (DRA), which TS 29.213 clause 7 defines. When an operator deploys
+more than one separately addressable PCRF in a Diameter realm, the DRA
+ensures that all the Diameter sessions of one IP-CAN session, for
+example on Gx and on Rx, reach the same PCRF. For this purpose, the DRA
+stores, for each IP-CAN session or for each UE, the user identity, the
+UE IPv4 address or IPv6 prefix, the APN, the PCEF identity, and the
+identity of the selected PCRF (TS 29.213 clause 7.3.2). The DRA
+supports the functionality of both a proxy agent and a redirect agent,
+and the operator chooses the mode. A network with a single PCRF in each
+Diameter realm does not need a DRA (TS 29.213 clauses 7.1 and 7.2).
+
+==== Error Handling
+
+Every answer of an IETF application carries a `Result-Code` AVP, and
+the thousands digit of the value states the class of the result, as
+IETF RFC 6733 section 7.1 defines:
+
+[cols="1,2,4",options="header"]
+|===
+| Class | Category | Meaning
+
+| 1xxx
+| Informational
+| The request needs additional action from the requester before the server grants access, for example another round trip of a multi-round authentication.
+
+| 2xxx
+| Success
+| The request was completed, for example with `DIAMETER_SUCCESS` (2001).
+
+| 3xxx
+| Protocol errors
+| The request caused a protocol error. The answer sets the `E` flag, and an agent on the path can handle the error hop by hop.
+
+| 4xxx
+| Transient failures
+| The server could not satisfy the request at the time, but can possibly satisfy it later. The answer does not set the `E` flag.
+
+| 5xxx
+| Permanent failures
+| The request failed and is not to be sent again. The answer usually does not set the `E` flag.
+|===
+
+An answer with the `E` flag set does not follow the CCF of its command,
+but a generic format that carries the `Session-Id`, if any, the
+`Origin-Host`, `Origin-Realm`, and `Result-Code` AVPs, and optional
+AVPs such as `Error-Message` and `Failed-AVP` (IETF RFC 6733 section
+7.2). A receiver treats a `Result-Code` value of an unknown class as a
+permanent failure (IETF RFC 6733 section 7.1).
+
+A vendor-specific application, such as a 3GPP application, can report
+a result that the IETF does not define in the `Experimental-Result` AVP
+instead of the `Result-Code` AVP. The `Experimental-Result` AVP carries
+the `Vendor-Id` of the vendor that assigned the result code, and the
+`Experimental-Result-Code` AVP with the value (IETF RFC 6733 sections
+7.6 and 7.7). TS 29.212 clause 5.5, for example, defines the
+experimental result codes of Gx and sets the `Vendor-Id` AVP to 10415.
+
+==== Message Categories
+
+IETF RFC 6733 section 3.1 defines the commands of the base protocol,
+and the Diameter applications either reuse these commands or define
+commands of their own. The tables below group the base protocol
+commands by function. Each row describes both the request and the
+answer, which share one command code.
+
+===== Peer Connection Messages
+
+These commands apply to a transport connection between two peers, not
+to a session, so they carry an Application-ID of 0 and an agent never
+forwards them (IETF RFC 6733 section 2.5).
+
+[cols="2,1,4",options="header"]
+|===
+| Message | Code | Functionality
+
+| `Capabilities-Exchange-Request` / `Answer` (CER/CEA)
+| 257
+| Exchanges the identity, the IP addresses, and the supported applications of the two peers after the transport connection is established.
+
+| `Device-Watchdog-Request` / `Answer` (DWR/DWA)
+| 280
+| Checks that the peer is reachable when no other traffic has been exchanged.
+
+| `Disconnect-Peer-Request` / `Answer` (DPR/DPA)
+| 282
+| Announces that the sender closes the transport connection, and states with the `Disconnect-Cause` AVP whether the peer can reconnect.
+|===
+
+===== Session Messages
+
+These commands apply to a session, so they carry the Application-ID of
+the application that the session belongs to (IETF RFC 6733 section
+2.5). Gx and Rx, for example, reuse `Re-Auth-Request`, and Rx and Sy
+reuse `Session-Termination-Request` (TS 29.212 clause 5.6, TS 29.214
+clause 5.6, and TS 29.219 clause 5.6.1).
+
+[cols="2,1,4",options="header"]
+|===
+| Message | Code | Functionality
+
+| `Re-Auth-Request` / `Answer` (RAR/RAA)
+| 258
+| Lets a server request the client to re-authenticate or re-authorize the user of an active session (IETF RFC 6733 section 8.3).
+
+| `Session-Termination-Request` / `Answer` (STR/STA)
+| 275
+| Informs the server that authorized a session that the session has ended, for any reason (IETF RFC 6733 section 8.4).
+
+| `Abort-Session-Request` / `Answer` (ASR/ASA)
+| 274
+| Lets a server or a proxy request the client to stop the service of a session. The client decides whether to stop the session and states its action in the answer (IETF RFC 6733 section 8.5).
+|===
+
+===== Accounting Messages
+
+A Diameter client sends accounting information to an accounting server
+in an `Accounting-Request` (ACR), and the server confirms it with an
+`Accounting-Answer` (ACA), both with the command code 271 and the
+Application-ID 3 for base accounting (IETF RFC 6733 sections 2.4 and
+9.7). The `Accounting-Record-Type` AVP states the type of each record,
+as IETF RFC 6733 section 9.8.1 defines:
+
+[cols="1,2,4",options="header"]
+|===
+| Value | Name | Meaning
+
+| 1
+| `EVENT_RECORD`
+| Reports a one-time event, and is the only record of the service.
+
+| 2
+| `START_RECORD`
+| Starts an accounting session for a service of measurable length.
+
+| 3
+| `INTERIM_RECORD`
+| Reports cumulative accounting information for an existing accounting session.
+
+| 4
+| `STOP_RECORD`
+| Ends an accounting session, and reports its cumulative accounting information.
+|===
+
+==== Diameter Credit-Control Application
+
+The Diameter Credit-Control (DCC) application provides real-time credit
+control, which determines whether the account of a user covers a
+service before and while the network delivers the service. The DCC
+application has the Application-ID 4 and adds one command, the
+`Credit-Control-Request` (CCR) and the `Credit-Control-Answer` (CCA),
+with the command code 272 (IETF RFC 8506 sections 1, 1.3, and 3). IETF
+RFC 8506 obsoletes IETF RFC 4006, which some 3GPP specifications, for
+example TS 32.299, still reference.
+
+The DCC application supports two models of credit authorization. In
+session-based credit control, the credit-control server reserves credit,
+usually as units such as data volume or time, the client meters the use
+of these units and reports the used amount, and the server then deducts
+the used amount and can reserve further credit. In event-based credit
+control, the server deducts the amount directly in a single transaction
+and keeps no session state (IETF RFC 8506 section 4).
+
+Session-based credit control uses a series of CCR/CCA exchanges in one
+Diameter session: one initial exchange, zero or more update exchanges,
+and one final exchange (IETF RFC 8506 section 5.1 and TS 32.299 clause
+6.4.1.1). The
+`CC-Request-Type` AVP in each CCR states the position of the exchange
+in this series, as IETF RFC 8506 section 8.3 defines:
+
+[cols="1,2,4",options="header"]
+|===
+| Value | Name | Use
+
+| 1
+| `INITIAL_REQUEST`
+| Starts a credit-control session.
+
+| 2
+| `UPDATE_REQUEST`
+| Carries credit-control information for an existing session, for example when the granted units are used up or their validity time expires.
+
+| 3
+| `TERMINATION_REQUEST`
+| Ends a credit-control session.
+
+| 4
+| `EVENT_REQUEST`
+| Requests a one-time event, for which the server keeps no session state.
+|===
+
+The `CC-Request-Number` AVP numbers the requests of one session, and
+the combination of the `Session-Id` and `CC-Request-Number` AVPs is
+globally unique, so the client can match each CCA to its CCR. IETF RFC
+8506 section 8.2 recommends the value 0 for the `INITIAL_REQUEST`, the
+values 1, 2, and so on for the `UPDATE_REQUEST` messages, and the next
+value for the `TERMINATION_REQUEST`, and the value 0 for an
+`EVENT_REQUEST`.
+
+The 3GPP specifications use the CCR/CCA commands in two ways. Gy uses
+the DCC application itself, with the Application-ID 4, for online
+charging (TS 32.299 clauses 6.4.1.1 and 6.4.2). Gx reuses the command
+code 272 and the `CC-Request-Type` and `CC-Request-Number` AVPs to
+request PCC rules instead of credit, within a vendor-specific
+application of its own (TS 29.212 clauses 5.1 and 5.6.1). The PCEF
+therefore sends a CCR with the `CC-Request-Type` AVP set to
+`INITIAL_REQUEST` when it establishes an IP-CAN session, with
+`UPDATE_REQUEST` when it requests PCC rules for a modification, and
+with `TERMINATION_REQUEST` when the IP-CAN session ends (TS 29.212
+clause 4.5).
+
+==== Diameter Applications in the EPC
+
+The table below lists the Diameter applications that the EPC network
+elements use, with the Application-ID and the commands of each
+application. The S6a application also serves the S6d reference point
+between the SGSN and the HSS (TS 29.272 clause 7.1.8).
+
+[cols="1,2,1,3,2",options="header"]
+|===
+| Reference point | Network elements | Application-ID | Commands | Specification
+
+| S6a
+| MME and HSS
+| 16777251
+| ULR/ULA, CLR/CLA, AIR/AIA, IDR/IDA, DSR/DSA, PUR/PUA, RSR/RSA, NOR/NOA
+| TS 29.272 clauses 7.1.8 and 7.2.2
+
+| Gx
+| PGW-C (PCEF) and PCRF
+| 16777238
+| CCR/CCA, RAR/RAA
+| TS 29.212 clauses 5.1 and 5.6
+
+| Rx
+| AF and PCRF
+| 16777236
+| AAR/AAA, RAR/RAA, STR/STA, ASR/ASA
+| TS 29.214 clauses 5.1 and 5.6
+
+| Sd
+| TDF-C and PCRF
+| 16777303
+| TSR/TSA, CCR/CCA, RAR/RAA
+| TS 29.212 clauses 5b.1 and 5b.6
+
+| Sy
+| PCRF and OCS
+| 16777302
+| SLR/SLA, SNR/SNA, STR/STA
+| TS 29.219 clauses 5.1.5 and 5.6.1
+
+| Gy (Ro)
+| PGW-C (PCEF) and OCS
+| 4 (DCC)
+| CCR/CCA
+| TS 32.299 clauses 6.4.1.1 and 6.4.2
+
+| Gz (Rf)
+| PGW-C (PCEF) and OFCS
+| 3 (base accounting)
+| ACR/ACA
+| TS 32.299 clauses 6.2.1.1 and 6.2.2
+|===
+
+The charging specifications describe Gy and Gz through the Ro and Rf
+interfaces. The Ro interface includes the functionality of Gy (TS
+32.251 clause 4.3), and the Rf, Ga, and Bp interfaces together include
+the functionality of Gz. Of these three interfaces, only Rf uses
+Diameter, and the PGW-C uses Rf when the Charging Data Function (CDF)
+is external to it (TS 32.251 clause 4.2). On Ro and Rf, the PGW-C also
+uses the base protocol commands that TS 32.299 clauses 6.2.1.1 and
+6.4.1.1 list, for example RAR/RAA and ASR/ASA on Ro.
+
+The Rx application takes the `AA-Request` (AAR) and the `AA-Answer`
+(AAA), with the command code 265, from the Network Access Server
+Requirements (NASREQ) application, and uses them only as protocol
+commands, without the functional meaning of a network access server
+(TS 29.214 clause 5.6.0).
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| IETF RFC 6733
+a|
+* Section 1 — Introduction, covering the requirements that RADIUS does not meet
+* Section 1.1 — Diameter protocol facilities, clients, servers, and agents
+* Section 1.2 — Terminology
+* Section 2 — Protocol overview, covering:
+** 2.1 transport and port numbers
+** 2.2 securing Diameter messages
+** 2.4 Application Identifiers
+** 2.5 connections and sessions
+** 2.7 the routing table
+** 2.8 the role of Diameter agents
+* Section 3 — Diameter header, covering:
+** 3.1 the command codes of the base protocol
+** 3.2 the Command Code Format specification
+* Section 4 — Diameter AVPs, covering:
+** 4.1 the AVP header
+** 4.2 and 4.3 the AVP data formats
+** 4.4 Grouped AVPs
+* Section 5 — Diameter peers, covering:
+** 5.1 peer connections
+** 5.3 capabilities exchange
+** 5.4 disconnecting peer connections
+** 5.5 transport failure detection, failover, and failback
+* Section 6 — Diameter message processing and routing AVPs
+* Section 7 — Error handling, covering the `Result-Code`, the `E` flag, and the `Experimental-Result` AVP
+* Sections 8.3 to 8.5 — Re-authorization, session termination, and session abort
+* Section 8.8 — `Session-Id` AVP
+* Sections 9.7 and 9.8.1 — Accounting commands and the `Accounting-Record-Type` AVP
+
+| IETF RFC 8506
+a|
+* Sections 1 and 1.3 — Introduction and the Application-ID of the DCC application
+* Section 3 — Credit-Control commands
+* Section 4 — Credit-control application overview
+* Section 5.1 — Session-based credit control
+* Sections 8.2 and 8.3 — `CC-Request-Number` and `CC-Request-Type` AVPs
+
+| TS 29.212
+a|
+* Clause 4.5 — Gx reference point procedures, covering the use of the `CC-Request-Type` values
+* Clause 5.1 — Gx protocol support and Application-ID
+* Clause 5.2 — Initialization, maintenance, and termination of connection and session
+* Clause 5.3.0 — Gx specific AVPs and the 3GPP `Vendor-Id`
+* Clause 5.5 — Gx specific experimental result codes
+* Clause 5.6 — Gx messages
+* Clauses 5b.1 and 5b.6 — Sd protocol support and messages
+
+| TS 29.213
+a|
+* Clause 7 — PCRF addressing, covering the DRA definition and the DRA information storage
+
+| TS 29.214
+a|
+* Clauses 5.1 and 5.2 — Rx protocol support and Application-ID
+* Clause 5.6 — Rx messages
+
+| TS 29.219
+a|
+* Clause 5.1.5 — Advertising Sy application support
+* Clause 5.6.1 — Sy command codes
+
+| TS 29.272
+a|
+* Clauses 7.1.7 and 7.1.8 — Advertising application support and the S6a/S6d Application-ID
+* Clause 7.2.2 — S6a/S6d command codes
+
+| TS 32.251
+a|
+* Clause 4.2 — PS domain offline charging architecture
+* Clause 4.3 — PS domain online charging architecture
+
+| TS 32.299
+a|
+* Clauses 6.2.1.1 and 6.2.2 — Offline charging messages over Rf
+* Clauses 6.4.1.1 and 6.4.2 — Online charging messages over Ro
+|===

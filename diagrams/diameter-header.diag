@@ -1,0 +1,15 @@
+packetdiag {
+  colwidth = 32
+
+  0-7: "Version"
+  8-31: "Message Length"
+  32: "R"
+  33: "P"
+  34: "E"
+  35: "T"
+  36-39: "Reserved"
+  40-63: "Command Code"
+  64-95: "Application-ID"
+  96-127: "Hop-by-Hop Identifier"
+  128-159: "End-to-End Identifier"
+}

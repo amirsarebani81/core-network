@@ -1,0 +1,197 @@
+[#_pcc_ip_can_session_termination]
+=== IP-CAN Session Termination
+
+==== Technical Overview
+
+The IP-CAN Session Termination procedure removes an IP Connectivity Access
+Network (IP-CAN) session from the PCC architecture. The PCEF terminates
+the Gx session and, if online charging applies, the credit-control
+session with the Online Charging System (OCS). The PCRF then informs each
+Application Function (AF) whose AF session is bound to the IP-CAN session,
+and stops the policy counter status reporting that no other IP-CAN session
+of the subscriber needs (TS 23.203 clauses 7.3.1 and 7.3.2, and TS 29.213
+clause 4.2).
+
+The procedure starts in one of three ways. The UE can request the removal,
+for example with a detach or a PDN disconnection (TS 23.203 clause 7.3.1);
+the PCEF can detect that the IP-CAN session has to end (TS 23.203 clause
+7.3.2); or the PCRF can request the PCEF to end the IP-CAN session with a
+Gx `Re-Auth-Request` (RAR) that carries the `Session-Release-Cause` AVP
+(TS 29.213 clause 4.2.3.1). The PCRF terminates a Gx session only in rare
+situations, for example the removal of the subscription of the UE (TS
+23.203 clause 5.2.2).
+
+The figure below shows the UE-initiated case for the EPC with Control and
+User Plane Separation (CUPS) in the non-roaming case, in which the SGW-C
+requests the removal of the PDN connection with a `Delete Session Request`,
+for example during the <<_ue_initiated_detach_procedure>>.
+
+==== Call Flow
+
+The call flow has five phases: IP-CAN Session Removal, Gx Session
+Termination, Gy Session Termination, Rx Session Termination, and Sy
+Session Termination.
+
+.IP-CAN session termination call flow
+plantuml::diagrams/pcc-ip-can-session-termination-call-flow.puml[svg]
+
+==== Step-by-Step Description
+
+. The *SGW-C* sends a GTPv2-C `Delete Session Request` to the *PGW-C*,
+which is the request to remove the IP-CAN session (TS 23.203 clause 7.3.1,
+step 1, and TS 23.203 clause A.4.4.1).
+
+. The *PGW-C* sends a PFCP `Session Deletion Request` to the *PGW-U* to
+terminate the Sx session of the PDN connection (TS 23.214 clause 6.3.1.6,
+step 5).
+
+. The *PGW-U* returns a PFCP `Session Deletion Response`. If the PGW-C
+provisioned Usage Reporting Rules for charging or usage monitoring, the
+response carries the final usage reports of the PDN connection (TS 23.214
+clause 6.3.1.6, step 6, and TS 29.244 clause 7.5.7).
+
+. The *PGW-C* returns a GTPv2-C `Delete Session Response` to the *SGW-C*.
+The PCEF can continue the removal of the IP-CAN session in parallel with
+the indication of the termination to the PCRF (TS 23.203 clause 7.3.1, step
+3, NOTE 2, and TS 29.213 clause 4.2.1.1, step 6).
+
+. The *PGW-C* removes all the PCC rules of the IP-CAN session and sends a
+Diameter `Credit-Control-Request` with the `CC-Request-Type` set to
+`TERMINATION_REQUEST` to the *PCRF*. If usage monitoring is enabled, the
+CCR reports, in `Usage-Monitoring-Information` AVPs, the resources that the
+user consumed since the last report for every monitoring key (TS 29.212
+clauses 4.5.7 and 4.5.17.4). If a PCC rule requested access network
+information, the CCR also carries that information (TS 29.213 clause
+4.2.1.1, step 3).
+
+. The *PCRF* identifies the AF sessions that are bound to the IP-CAN
+session, removes the information of the IP-CAN session, and acknowledges
+the termination of the Gx session with a `Credit-Control-Answer` to the
+*PGW-C* (TS 29.213 clause 4.2.1.1, steps 4 and 5).
+
+. If online charging applies, the *PGW-C* sends a `Credit-Control-Request`
+with the `CC-Request-Type` set to `TERMINATION_REQUEST` to the *OCS* over
+Gy. The CCR carries the final counts of the used units for each rating
+group and returns the remaining credit (TS 23.203 clause 7.3.1, step 16,
+and TS 32.251 clauses 5.3.1.2 and 5.3.2.2.1).
+
+. The *OCS* acknowledges the credit report with a `Credit-Control-Answer`
+and terminates the credit-control session (TS 23.203 clause 7.3.1, step
+17).
+
+. For each AF session that is bound to the IP-CAN session, the *PCRF*
+sends a Diameter `Abort-Session-Request` (ASR) over Rx to the *AF* (TS
+29.213 clause 4.2.1.1, step 9, and TS 29.214 clause 4.4.6.1).
+
+. The *AF* acknowledges the ASR with a Diameter `Abort-Session-Answer`
+(ASA) (TS 29.213 clause 4.2.1.1, step 10).
+
+. The *AF* terminates the AF session with a Diameter
+`Session-Termination-Request` (STR) to the *PCRF* (TS 29.213 clause
+4.2.1.1, step 11).
+
+. The *PCRF* acknowledges the termination with a Diameter
+`Session-Termination-Answer` (STA). If the AF requested access network
+information or usage reports for sponsored data connectivity, the STA
+carries that information (TS 29.213 clause 4.2.1.1, step 12).
+
+. If this is the last IP-CAN session of the subscriber that needs policy
+counter status reporting, the *PCRF* sends the Final Spending Limit Report
+Request to the *OCS*, which is a Sy `Session-Termination-Request` (TS
+29.213 clause 4.2.1.1, step 13, and TS 29.219 clause 4.5.3).
+
+. The *OCS* stops the reporting for the subscriber and acknowledges the
+request with a Sy `Session-Termination-Answer` (TS 29.219 clause 4.5.3).
+
+If the PCRF subscribed to notifications from the SPR, it also cancels that
+subscription, and it stores the remaining usage allowance in the SPR when
+all IP-CAN sessions of the user to the same APN have ended (TS 29.213
+clause 4.2.1.1, step 15).
+
+==== PCEF-Initiated and PCRF-Initiated Termination
+
+When the PCEF itself decides to end the IP-CAN session, it first sends the
+request to remove the IP-CAN session and indicates the termination to the
+PCRF after it receives the response. The remaining steps are the same as in
+the UE-initiated case (TS 29.213 clause 4.2.2.1). In the EPC, the PDN GW
+can remove the IP-CAN session with a `Delete Bearer Request` for the
+default bearer, which deactivates all the bearers of the PDN connection
+(TS 23.401 clause 5.4.4.1). The PCEF also starts this procedure when no PCC
+rule remains active for the IP-CAN session, or when the PCRF terminates the
+Gx session (TS 23.203 clause 6.2.2.1).
+
+When the PCRF decides to end the IP-CAN session, it sends a Gx RAR with the
+`Session-Release-Cause` AVP to the PCEF. The PCEF removes all the PCC rules
+of the IP-CAN session, acknowledges the RAR with a `Re-Auth-Answer`, applies
+the IP-CAN specific procedures to terminate the IP-CAN session, and then
+continues as in the PCEF-initiated case (TS 29.213 clause 4.2.3.1). The
+PCRF can also request the termination in a CCA, in answer to a CCR with the
+`CC-Request-Type` set to `UPDATE_REQUEST`, for example when the usage quota
+is reached (TS 29.212 clause 4.5.9).
+
+==== Differences for GPRS
+
+In GPRS, the GGSN starts the UE-initiated termination when it receives a
+`Delete PDP Context Request` for the last PDP context of the UE IP address,
+or one with a Teardown Indicator that requests the deactivation of all the
+PDP contexts that share the IP address. The GGSN deletes all the PDP
+contexts of the IP-CAN session, releases the UE IP address, and returns a
+`Delete PDP Context Response` (TS 23.203 clause A.1.4.3.1). In the
+GGSN-initiated case, the GGSN sends the `Delete PDP Context Request` to the
+SGSN, with the Teardown Indicator set if other PDP contexts share the IP
+address (TS 23.203 clause A.1.4.3.2). Because the GGSN has one
+credit-control session per PDP context, it terminates each of them with the
+OCS (TS 23.203 clause A.1.3.1.3). The
+<<_gprs_pdp_context_deactivation_procedure>> describes the complete PDP
+context deactivation.
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.203
+a|
+* Clause 5.2.2 — Gx reference point, covering the termination of the Gx session by the PCRF
+* Clause 6.2.2.1 — PCEF behavior when no PCC rule remains active
+* Clauses 7.3.1 and 7.3.2 — UE-initiated and GW (PCEF) initiated IP-CAN session termination
+* Clauses A.1.3.1.3, A.1.4.3.1, and A.1.4.3.2 — GPRS credit management and IP-CAN session termination
+* Clause A.4.4.1 — EPC IP-CAN session termination
+
+| TS 23.214
+a|
+* Clause 6.3.1.6 — Interaction between CP and UP function during release of PDN connection
+
+| TS 23.401
+a|
+* Clause 5.4.4.1 — PDN GW initiated bearer deactivation
+
+| TS 29.212
+a|
+* Clause 4.5.7 — Indication of IP-CAN session termination
+* Clause 4.5.9 — Request of IP-CAN session termination
+* Clause 4.5.17.4 — Usage report at IP-CAN session termination
+
+| TS 29.213
+a|
+* Clause 4.2.1.1 — UE-initiated IP-CAN session termination, AF located in the HPLMN
+* Clause 4.2.2.1 — PCEF-initiated IP-CAN session termination
+* Clause 4.2.3.1 — PCRF-initiated IP-CAN session termination
+
+| TS 29.214
+a|
+* Clause 4.4.6.1 — IP-CAN session termination
+
+| TS 29.219
+a|
+* Clause 4.5.3 — Final spending limit report request
+
+| TS 29.244
+a|
+* Clause 7.5.7 — PFCP Session Deletion Response
+
+| TS 32.251
+a|
+* Clauses 5.3.1.2 and 5.3.2.2.1 — Flow based bearer charging and triggers for stopping an FBC credit-control session
+|===

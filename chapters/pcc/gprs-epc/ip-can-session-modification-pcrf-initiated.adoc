@@ -1,0 +1,198 @@
+[#_pcc_ip_can_session_modification_pcrf_initiated]
+=== IP-CAN Session Modification, PCRF-Initiated
+
+==== Technical Overview
+
+The PCRF starts an IP Connectivity Access Network (IP-CAN) Session
+Modification when its own inputs change. These inputs include new or
+modified service information from an Application Function (AF), a change
+of the status of a policy counter that the Online Charging System (OCS)
+reports, a change of the subscription information, and an internal
+trigger such as a change of the configured policy (TS 23.203 clause 7.4.2
+and TS 29.213 clause 4.3.1.1). The PCRF provisions the new decision to the
+PCEF without a request, which is the PUSH procedure of Gx (TS 29.212 clause
+4.5.2.0).
+
+The figure below shows the procedure for the EPC with Control and User
+Plane Separation (CUPS) in the non-roaming case, with the example of a
+Voice over LTE (VoLTE) call. The P-CSCF, acting as the AF, provides the
+service information of the voice media over Rx, and the PCRF installs a PCC
+rule with the QoS Class Identifier (QCI) 1, which TS 23.203 Table 6.1.7-A
+standardizes as a GBR QCI for conversational voice. Because no existing
+bearer has this QCI and ARP, the PGW-C establishes a dedicated bearer (TS
+23.203 clause 6.1.1.4).
+
+==== Call Flow
+
+The call flow has five phases: Rx Service Information, Gx PCC Rule
+Provisioning, Gy Credit Request, Dedicated Bearer Activation, and Resource
+Allocation Report.
+
+.PCRF-initiated IP-CAN session modification call flow
+plantuml::diagrams/pcc-ip-can-session-modification-pcrf-initiated-call-flow.puml[svg]
+
+==== Step-by-Step Description
+
+. The *AF* sends a Diameter `AA-Request` (AAR) over Rx to the *PCRF* to open
+a new Rx session for the AF session. The AAR carries the UE IP address in
+the `Framed-IP-Address` or `Framed-IPv6-Prefix` AVP and the service
+information in `Media-Component-Description` AVPs, which for a voice call
+contain the `Media-Type` `AUDIO`, the IP flows of the media and of RTCP in
+`Media-Sub-Component` AVPs, and the requested bandwidth (TS 29.214 clauses
+4.4.1 and 5.3.16, and TS 29.213 clause 4.3.1.2.1.1, step 2). The AAR can
+also carry the `AF-Charging-Identifier` AVP for charging correlation and
+`Specific-Action` AVPs that subscribe the AF to bearer events, for example
+`INDICATION_OF_SUCCESSFUL_RESOURCES_ALLOCATION` and
+`INDICATION_OF_LOSS_OF_BEARER` (TS 29.214 clauses 4.4.1 and 5.3.13).
+
+. The *PCRF* stores the service information, identifies the affected
+IP-CAN session, and confirms the request with a Diameter `AA-Answer` (AAA)
+to the *AF* (TS 29.213 clause 4.3.1.2.1.1, steps 3, 6, and 7). If the PCRF
+does not have the subscription information of the user, it first retrieves
+it from the SPR (TS 29.213 clause 4.3.1.2.1.1, steps 4 and 5).
+
+. The *PCRF* binds the AF session to the IP-CAN session, derives the
+authorized QoS of the media from the service information, and sends a
+Diameter `Re-Auth-Request` (RAR) over Gx to the *PGW-C* (TS 23.203 clauses
+6.1.1.2 and 6.1.1.3, and TS 29.213 clause 4.3.1.1, step 6). The RAR carries
+a `Charging-Rule-Install` AVP with a `Charging-Rule-Definition` for each
+media flow, which contains the `Flow-Information` filters, the
+`Flow-Status`, the `QoS-Information` with the QCI, the ARP, and the
+guaranteed and maximum bitrates, and the charging parameters (TS 29.212
+clause 5.3.4). To receive a confirmation of the bearer establishment, the
+PCRF sets the `Event-Trigger` `SUCCESSFUL_RESOURCE_ALLOCATION` (22) and
+includes the `Resource-Allocation-Notification` AVP with the value
+`ENABLE_NOTIFICATION` (0) in the `Charging-Rule-Install` AVP (TS 29.212
+clause 4.5.2.0).
+
+. The *PGW-C* installs the PCC rules and acknowledges the RAR with a
+Diameter `Re-Auth-Answer` (RAA) to the *PCRF* (TS 29.213 clause 4.3.1.1,
+steps 7 and 8). A successful RAA means that the PCC rules are installed,
+but not that the bearer binding or the resource reservation is complete
+(TS 29.212 clause 4.5.2.0, NOTE 4).
+
+. If online charging applies and no valid quota exists for the charging
+key of the new PCC rules, the *PGW-C* requests credit for that charging key
+from the *OCS* with a `Credit-Control-Request` with the `CC-Request-Type`
+set to `UPDATE_REQUEST` over Gy (TS 23.203 clause 7.4.2, step 14, and TS
+32.251 clause 5.3.2.2.2).
+
+. The *OCS* returns a `Credit-Control-Answer` with a quota for the new
+rating group (TS 23.203 clause 7.4.2, step 15).
+
+. The bearer binding finds no existing bearer with the QCI and the ARP of
+the new PCC rules, so the *PGW-C* initiates a dedicated bearer. It sends a
+PFCP `Session Modification Request` to the *PGW-U*, which asks the PGW-U to
+allocate an F-TEID for the new bearer (TS 23.203 clause 6.1.1.4 and TS
+23.214 clause 6.3.1.7, step 2).
+
+. The *PGW-U* returns a PFCP `Session Modification Response` with the
+allocated F-TEID (TS 23.214 clause 6.3.1.7, step 3).
+
+. The *PGW-C* sends a GTPv2-C `Create Bearer Request` to the *SGW-C*, with
+the Bearer TFT that it derives from the filters of the PCC rules and the
+Bearer Level QoS of the new bearer (TS 23.401 clause 5.4.1, step 2). The
+SGW-C, the MME, the eNodeB, and the UE then establish the bearer, as
+<<_dedicated_bearer_activation_procedure>> describes.
+
+. The *SGW-C* returns a GTPv2-C `Create Bearer Response` to the *PGW-C*,
+which confirms the activation of the bearer (TS 23.401 clause 5.4.1, step
+11).
+
+. The *PGW-C* sends a PFCP `Session Modification Request` to the *PGW-U*
+with the F-TEID of the activated bearer that it received from the SGW-C
+(TS 23.214 clause 6.3.1.7, step 11).
+
+. The *PGW-U* confirms the update with a PFCP `Session Modification
+Response` (TS 23.214 clause 6.3.1.7, step 12).
+
+. Because the PCRF requested a confirmation of the resource allocation,
+the *PGW-C* starts a PCEF-initiated IP-CAN Session Modification and sends a
+`Credit-Control-Request` with the `CC-Request-Type` set to `UPDATE_REQUEST`
+to the *PCRF*. The CCR carries the `Event-Trigger`
+`SUCCESSFUL_RESOURCE_ALLOCATION` and a `Charging-Rule-Report` with the
+`PCC-Rule-Status` set to `ACTIVE` for the installed rules (TS 29.213 clause
+4.3.2.1, step 18, and TS 29.212 clauses 4.5.2.0 and 5.3.19).
+
+. The *PCRF* acknowledges the report with a `Credit-Control-Answer` to the
+*PGW-C* (TS 29.213 clause 4.3.2.1, step 13).
+
+. If the AF subscribed to the event, the *PCRF* sends a Diameter `RAR` over
+Rx to the *AF* with the `Specific-Action` AVP set to
+`INDICATION_OF_SUCCESSFUL_RESOURCES_ALLOCATION` (8) and the affected flows
+in the `Flows` AVP (TS 29.214 clause 5.3.13).
+
+. The *AF* acknowledges the notification with a Diameter `RAA`.
+
+==== Differences for GPRS
+
+In GPRS, the PCRF-initiated modification can lead to a GGSN-initiated PDP
+context modification or deactivation, or to a network-requested secondary
+PDP context activation when the bearer binding in the GGSN requires a new
+PDP context (TS 23.203 clause A.1.4.4.2). When the selected bearer control
+mode is UE-only, or when the UE mode applies to the affected PCC rules in
+UE/NW mode, the PCRF can instead wait for the UE to request the bearer
+resources, and then provides the PCC rules in the answer to the resulting
+PCEF-initiated request (TS 29.213 clause 4.3.1.1, step 4). When the PCRF
+performs the bearer binding, it also includes the bearer identifier in the
+`Charging-Rule-Install` AVP (TS 29.212 clause 5.3.2).
+
+==== Possible Failures and Required Actions
+
+Service information rejected:: The PCRF can reject service information that
+is not consistent with the subscription information or the operator
+policy, and it can indicate in the AAA the service information that it
+would accept (TS 23.203 clause 6.2.1.0 and TS 29.214 clause 5.3.16).
+
+Bearer establishment fails:: If the PCEF cannot establish the dedicated
+bearer, it removes the affected PCC rules and reports them to the PCRF in a
+CCR with the `CC-Request-Type` set to `UPDATE_REQUEST`, a
+`Charging-Rule-Report` with the `PCC-Rule-Status` set to `INACTIVE`, and the
+`Rule-Failure-Code` set to `RESOURCE_ALLOCATION_FAILURE` (10) (TS 29.212
+clause 4.5.6). The PCRF then informs the AF if the AF subscribed to such
+events (TS 29.214 clause 4.4.6.2).
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.203
+a|
+* Clauses 6.1.1.2 to 6.1.1.4 — Session binding, PCC rule authorization, and bearer binding
+* Clause 6.2.1.0 — PCRF handling of service information
+* Clause 7.4.2 — IP-CAN session modification, PCRF initiated, Figure 7.5
+* Clause A.1.4.4.2 — GPRS PCRF-initiated modification
+* Table 6.1.7-A — Standardized QCI characteristics
+
+| TS 23.214
+a|
+* Clause 6.3.1.7 — Interaction between CP and UP function during modification of bearer
+
+| TS 23.401
+a|
+* Clause 5.4.1 — Dedicated bearer activation
+
+| TS 29.212
+a|
+* Clause 4.5.2.0 — Provisioning of PCC rules, covering the request for resource allocation confirmation
+* Clause 4.5.6 — Indication of IP-CAN bearer termination implications
+* Clauses 5.3.2, 5.3.4, and 5.3.19 — Charging-Rule-Install, Charging-Rule-Definition, and PCC-Rule-Status AVPs
+
+| TS 29.213
+a|
+* Clause 4.3.1.1 — PCC rule provisioning in PUSH mode
+* Clause 4.3.1.2.1.1 — AF session establishment, AF located in the HPLMN
+* Clause 4.3.2.1 — PCEF-initiated IP-CAN session modification
+
+| TS 29.214
+a|
+* Clause 4.4.1 — Initial provisioning of session information
+* Clause 4.4.6.2 — Service data flow deactivation and resource allocation failure
+* Clauses 5.3.13 and 5.3.16 — Specific-Action and Media-Component-Description AVPs
+
+| TS 32.251
+a|
+* Clause 5.3.2.2.2 — Triggers for providing interim information for an FBC credit-control session
+|===

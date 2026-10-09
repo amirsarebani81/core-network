@@ -34,7 +34,8 @@ plantuml::diagrams/bearer-modification-pgw-initiated-call-flow.puml[svg]
 sending a Diameter `Re-Auth-Request` (RAR) message to the *P-GW* over
 the Gx interface, to provision new PCC rules, and the *P-GW* returns a
 Diameter `Re-Auth-Answer` (RAA) message to acknowledge the new policy
-decision.
+decision. <<_pcc_ip_can_session_modification_pcrf_initiated>> describes
+the PCRF-initiated IP-CAN Session Modification in detail.
 
 . The *P-GW* derives the new EPS Bearer QoS from the PCC rules and
 sends a GTPv2 `Update Bearer Request` message to the *S-GW*, carrying
@@ -83,8 +84,9 @@ Information (ULI), that is the ECGI, and the PSCell ID.
 . The *S-GW* forwards the GTPv2 `Update Bearer Response` message to the
 *P-GW* over the S5/S8 interface, carrying the EBI and the ULI.
 
-. If the network deploys dynamic PCC, the *P-GW* confirms the
-enforcement of the PCC rules to the *PCRF* by sending a Diameter
+. If the network deploys dynamic PCC and the PCRF requested a
+confirmation of the resource allocation (TS 29.212 clause 4.5.2.0), the
+*P-GW* confirms the enforcement of the PCC rules to the *PCRF* by sending a Diameter
 `Credit-Control-Request` (CCR) message to provide the provisioning
 acknowledgement, and the PCRF returns a Diameter `Credit-Control-Answer`
 (CCA) message, concluding the IP-CAN Session Modification procedure.

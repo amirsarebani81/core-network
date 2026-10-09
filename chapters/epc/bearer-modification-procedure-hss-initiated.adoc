@@ -53,6 +53,8 @@ the APN-Aggregate-Max-Bitrate.
 based on local policy if needed, and returns a Diameter
 `Credit-Control-Answer` (CCA) message to the *P-GW*, carrying a
 Result-Code, the QoS-Information, and the APN-Aggregate-Max-Bitrate.
+<<_pcc_ip_can_session_modification_pcef_initiated>> describes the
+PCEF-initiated IP-CAN Session Modification in detail.
 
 . To update the bearer context, the *P-GW* sends a GTPv2 `Update Bearer
 Request` message to the *S-GW*, carrying the EBI, the Bearer Level QoS,
@@ -90,8 +92,10 @@ carrying the EBI, a Cause set to "Request Accepted", and the ULI.
 . The *S-GW* forwards the GTPv2 `Update Bearer Response` message to the
 *P-GW*, carrying the EBI, the Cause, and the ULI.
 
-. If the network deploys dynamic PCC, the *P-GW* confirms the
-enforcement of the authorized QoS to the *PCRF* by sending a Diameter
+. If the network deploys dynamic PCC and the PCRF requested a
+confirmation of the resource allocation (TS 29.212 clause 4.5.2.0), the
+*P-GW* confirms the enforcement of the authorized QoS to the *PCRF* by
+sending a Diameter
 `Credit-Control-Request` (CCR) message, with the Event-Trigger set to
 SUCCESSFUL_RESOURCE_ALLOCATION, and the PCRF returns a Diameter
 `Credit-Control-Answer` (CCA) message to acknowledge the final status.

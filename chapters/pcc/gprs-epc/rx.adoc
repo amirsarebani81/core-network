@@ -1,0 +1,171 @@
+[#_pcc_rx]
+=== Rx Application
+
+==== Technical Overview
+
+The Rx reference point connects an Application Function (AF) and the
+Policy and Charging Rules Function (PCRF). The AF uses Rx to provide the
+session information of its application, for example the IP filters and
+the bandwidth requirements of the media, and to subscribe to notifications
+of IP Connectivity Access Network (IP-CAN) bearer level events. The PCRF
+uses this information as an input for its PCC decisions (TS 23.203 clause
+5.2.1 and TS 29.214 clause 4.1). The P-CSCF of the IP Multimedia Subsystem
+(IMS) is an example of an AF (TS 23.203 clause 6.2.3).
+
+Rx is a vendor-specific Diameter application with the Application-ID
+16777236 and the 3GPP Vendor-ID 10415 (TS 29.214 clause 5.1). Rx reuses
+commands of the Diameter base protocol and of the Network Access Server
+Requirements (NASREQ) application, and uses the NASREQ commands only for
+their protocol format (TS 29.214 clause 5.6.0). The
+<<_diameter,Diameter>> chapter describes the base protocol.
+
+The AF opens a new Rx Diameter session for each AF session with an
+`AA-Request` (TS 29.214 clause 4.4.1). The PCRF binds the AF session to
+one IP-CAN session based on the UE IP address and, if present, the UE
+identity and the PDN information, and then derives the PCC rules that the
+AF session needs (TS 23.203 clause 6.1.1.2).
+
+==== Rx Commands
+
+[cols="2,1,1,4",options="header"]
+|===
+| Command | Code | Sender | Use
+
+| `AA-Request` (AAR)
+| 265
+| AF
+| Provides the service information of a new AF session or modifies it, and subscribes to specific actions (TS 29.214 clauses 4.4.1, 4.4.2, and 5.6.1).
+
+| `AA-Answer` (AAA)
+| 265
+| PCRF
+| Accepts or rejects the service information, and can indicate the service information that the PCRF would accept (TS 29.214 clause 5.6.2).
+
+| `Re-Auth-Request` (RAR)
+| 258
+| PCRF
+| Reports a subscribed event of the IP-CAN to the AF, for example the loss of a bearer or the access network charging identifier (TS 29.214 clauses 4.4.6 and 5.6.3).
+
+| `Re-Auth-Answer` (RAA)
+| 258
+| AF
+| Acknowledges the RAR, and can provide updated service information (TS 29.214 clause 5.6.4).
+
+| `Session-Termination-Request` (STR)
+| 275
+| AF
+| Terminates the AF session, so that the PCRF removes the related PCC rules (TS 29.214 clauses 4.4.4 and 5.6.5).
+
+| `Session-Termination-Answer` (STA)
+| 275
+| PCRF
+| Acknowledges the STR (TS 29.214 clause 5.6.6).
+
+| `Abort-Session-Request` (ASR)
+| 274
+| PCRF
+| Informs the AF that the IP-CAN session ended, or that all the service data flows of the AF session were deactivated, so that the AF terminates the AF session (TS 29.214 clauses 4.4.6.1, 4.4.6.2, and 5.6.7).
+
+| `Abort-Session-Answer` (ASA)
+| 274
+| AF
+| Acknowledges the ASR (TS 29.214 clause 5.6.8).
+|===
+
+When an IP-CAN session ends, the PCRF sends an ASR on each active Rx
+session. The AF acknowledges it with an ASA and then terminates the AF
+session with an STR, which the PCRF acknowledges with an STA (TS 29.214
+clause 4.4.6.1). An AF that ends an AF session sends the STR only after it
+has received a successful answer to its initial AAR (TS 29.214 clause
+4.4.4).
+
+==== Media-Component-Description
+
+The AF describes each media component of the AF session in a
+`Media-Component-Description` AVP (code 517), and a single IP flow appears
+in at most one such AVP of a message (TS 29.214 clause 5.3.16). The main
+contents of the AVP are:
+
+* the `Media-Component-Number`, which numbers the media component within
+  the AF session;
+* the `Media-Sub-Component` AVPs, each of which describes a set of IP flows
+  with a `Flow-Number`, up to two `Flow-Description` filters for the uplink
+  and the downlink, and optionally its own `Flow-Status`, bandwidth, and
+  `Flow-Usage`, for example to mark RTCP flows (TS 29.214 clauses 5.3.12
+  and 5.3.18);
+* the `Media-Type`, for example `AUDIO` (0) or `VIDEO` (1), which follows
+  the SDP media types (TS 29.214 clause 5.3.19);
+* the maximum requested bandwidth in the uplink and the downlink, and the
+  RTCP bandwidths in the `RR-Bandwidth` and `RS-Bandwidth` AVPs;
+* the `Flow-Status`, which enables the flows in the uplink, the downlink,
+  or both, disables them, or removes them (TS 29.214 clause 5.3.11);
+* up to two `Codec-Data` AVPs, which carry the codec information of the
+  SDP offer and the SDP answer.
+
+Bandwidth and flow status information in a `Media-Sub-Component` takes
+precedence over the information of the enclosing
+`Media-Component-Description`, and information that a later message omits
+keeps its previous value (TS 29.214 clauses 5.3.16 and 5.3.18). The PCRF
+derives the authorized QoS of the PCC rules from this service information
+with the mapping that TS 29.213 clause 6.3 specifies, as
+<<_pcc_qos_control>> describes.
+
+==== Specific-Action
+
+In the initial AAR, the AF uses the `Specific-Action` AVP (code 513) to
+request notifications of bearer events, and without it the PCRF sends no
+notifications. In an RAR, the PCRF uses the same AVP to state which event
+it reports (TS 29.214 clause 5.3.13). Examples of its values are:
+
+[cols="2,4",options="header"]
+|===
+| Value | Event that the PCRF reports in an RAR
+
+| `CHARGING_CORRELATION_EXCHANGE` (1)
+| The access network charging identifier, for charging correlation.
+
+| `INDICATION_OF_LOSS_OF_BEARER` (2)
+| The loss of a bearer, for example a GPRS PDP context whose GBR bandwidth is modified to 0 kbit/s, with the affected flows.
+
+| `INDICATION_OF_RECOVERY_OF_BEARER` (3)
+| The recovery of such a bearer, with the flows that are active again.
+
+| `INDICATION_OF_RELEASE_OF_BEARER` (4)
+| The release of a bearer, for example the removal of a PDP context or of an EPS bearer, with the affected flows.
+
+| `IP-CAN_CHANGE` (6)
+| A change of the IP-CAN type or of the RAT type.
+
+| `INDICATION_OF_OUT_OF_CREDIT` (7)
+| Service data flows that have run out of credit, to which the termination action of the OCS applies.
+
+| `INDICATION_OF_SUCCESSFUL_RESOURCES_ALLOCATION` (8)
+| The successful allocation of the resources for the service information.
+|===
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.203
+a|
+* Clause 5.2.1 — Rx reference point
+* Clause 6.1.1.2 — Session binding
+* Clause 6.2.3 — Application Function
+
+| TS 29.213
+a|
+* Clause 6.3 — QoS parameter mapping functions at the PCRF
+
+| TS 29.214
+a|
+* Clause 4.1 — Overview
+* Clauses 4.4.1 and 4.4.2 — Initial provisioning and modification of session information
+* Clause 4.4.4 — AF session termination
+* Clause 4.4.6 — Traffic plane events, covering IP-CAN session termination
+* Clause 5.1 — Rx protocol support and Application-ID
+* Clause 5.3 — Rx specific AVPs, covering Flow-Status, Flow-Usage, Specific-Action, Media-Component-Description, Media-Sub-Component, and Media-Type
+* Clause 5.6 — Rx messages
+|===

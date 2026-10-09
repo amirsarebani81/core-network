@@ -90,6 +90,8 @@ P-GW then starts a Diameter `Credit-Control-Request`/
 interface, carrying the CC-Request-Type set to UPDATE_REQUEST, the
 3GPP-User-Location-Info, and the RAT-Type, before returning a GTPv2
 `Modify Bearer Response` message to the S-GW.
+<<_pcc_ip_can_session_modification_pcef_initiated>> describes this
+PCEF-initiated IP-CAN Session Modification in detail.
 
 . Whether or not the network deployed dynamic PCC, the *S-GW* updates
 its bearer contexts and returns a GTPv2 `Modify Bearer Response` message

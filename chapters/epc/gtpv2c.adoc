@@ -129,7 +129,7 @@ MME/SGSN, the SGW-C, and the PGW-C.
 | S11, S4, S5, S8, S2a, S2b.
 
 | `Create Bearer Request`
-| Creates one or more dedicated EPS bearers for an existing PDN connection.
+| Creates one or more dedicated EPS bearers for an existing PDN connection, for example after a PCRF-initiated IP-CAN Session Modification (<<_pcc_ip_can_session_modification_pcrf_initiated>>).
 | S11, S4, S5, S8, S2a, S2b.
 
 | `Create Bearer Response`
@@ -197,7 +197,7 @@ MME/SGSN, the SGW-C, and the PGW-C.
 | S11, S4, S5, S8, S2a, S2b.
 
 | `Update Bearer Request`
-| Changes the QoS or the traffic flow template (TFT) of an existing EPS bearer, at the request of the PGW-C or the Policy and Charging Rules Function (PCRF).
+| Changes the QoS or the traffic flow template (TFT) of an existing EPS bearer, at the request of the PGW-C or the Policy and Charging Rules Function (PCRF) (<<_pcc_ip_can_session_modification_pcrf_initiated>>).
 | S11, S4, S5, S8, S2a, S2b.
 
 | `Update Bearer Response`

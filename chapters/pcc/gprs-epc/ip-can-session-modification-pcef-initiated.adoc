@@ -1,0 +1,167 @@
+[#_pcc_ip_can_session_modification_pcef_initiated]
+=== IP-CAN Session Modification, PCEF-Initiated
+
+==== Technical Overview
+
+The PCEF starts an IP Connectivity Access Network (IP-CAN) Session
+Modification when an event that matches an event trigger occurs, for
+example a change of the RAT type or of the user location, a UE request for
+bearer resources, or the detection of the start or the stop of application
+traffic. The PCEF requests PCC rules from the PCRF, which is the PULL
+procedure of Gx, and the PCRF answers with new or modified PCC rules and
+policy decisions (TS 23.203 clause 7.4.1, TS 29.212 clause 4.5.2.0, and TS
+29.213 clause 4.3.2.1). An IP-CAN bearer modification that matches no event
+trigger causes no interaction with the PCRF (TS 23.203 clause 6.1.4).
+
+The figure below shows the procedure for the EPC with Control and User
+Plane Separation (CUPS) in the non-roaming case, using one example: after a
+Routing Area Update with S-GW change from E-UTRAN to UTRAN, the new SGW-C
+sends a `Modify Bearer Request` with the new RAT type to the PGW-C, and the
+PGW-C reports the RAT change to the PCRF (TS 23.401 clause 5.3.3.6, steps 8
+to 10). The PCRF has subscribed to this event with the `RAT_CHANGE`
+event trigger.
+
+==== Call Flow
+
+The call flow has five phases: Event Detection, Gx PCC Rule Request, Gy
+Credit Re-authorization, User Plane Update, and IP-CAN Session Response.
+
+.PCEF-initiated IP-CAN session modification call flow
+plantuml::diagrams/pcc-ip-can-session-modification-pcef-initiated-call-flow.puml[svg]
+
+==== Step-by-Step Description
+
+. The *SGW-C* sends a GTPv2-C `Modify Bearer Request` to the *PGW-C*. In
+this example, the message carries the new RAT type, the Serving Network,
+and the address and the TEID of the new Serving GW, and can carry the User
+Location Information and the UE Time Zone (TS 23.401 clause 5.3.3.6, step
+8). The PGW-C determines that the change matches an event trigger that the
+PCRF armed, and that PCC interaction is therefore required (TS 23.203
+clause 7.4.1, steps 3 to 5).
+
+. The *PGW-C* sends a Diameter `Credit-Control-Request` with the
+`CC-Request-Type` set to `UPDATE_REQUEST` to the *PCRF*. The CCR carries
+the event that caused the request in the `Event-Trigger` AVP, here
+`RAT_CHANGE` (2), together with the new value in the `RAT-Type` AVP (TS
+29.212 clauses 4.5.1 and 5.3.7). For a modification of an existing bearer,
+the CCR also reports the affected PCC rules and their status in
+`Charging-Rule-Report` AVPs. For a resource modification that the UE
+requested, it carries the requested packet filters and QoS in the
+`Packet-Filter-Information`, `Packet-Filter-Operation`, and
+`QoS-Information` AVPs instead (TS 29.213 clause 4.3.2.1, step 3).
+
+. If the Application Function (AF) has subscribed to the event, the *PCRF*
+sends a Diameter `Re-Auth-Request` over Rx to the *AF*, with the
+`Specific-Action` AVP set to the event, here `IP-CAN_CHANGE` (6) (TS 29.213
+clause 4.3.2.1, step 6, and TS 29.214 clause 5.3.13).
+
+. The *AF* acknowledges the notification with a Diameter `Re-Auth-Answer`,
+and can provide updated service information in it (TS 29.213 clause
+4.3.2.1, step 7).
+
+. The *PCRF* correlates the request with the IP-CAN session, makes the
+policy decision, and returns a `Credit-Control-Answer` with the
+`CC-Request-Type` set to `UPDATE_REQUEST` to the *PGW-C*. The CCA carries
+the PCC rules to install, modify, or remove, and can carry new event
+triggers, the authorized APN-AMBR, and the authorized QoS of the default
+bearer (TS 29.213 clause 4.3.2.1, steps 12 and 13, and TS 23.203 clause
+A.4.4.4.1). The PGW-C installs, modifies, or removes the PCC rules and
+enforces the authorized QoS (TS 29.213 clause 4.3.2.1, step 15).
+
+. If online charging applies and the OCS armed a credit re-authorization
+trigger for this change of charging condition, here the RAT type change,
+the *PGW-C* sends a `Credit-Control-Request` with the `CC-Request-Type` set
+to `UPDATE_REQUEST` to the *OCS* over Gy. The CCR reports the current usage
+of all its `Multiple-Services-Credit-Control` instances, with the
+`Reporting-Reason` AVP set to `RATING_CONDITION_CHANGE` and the
+`Trigger-Type` AVP set to the reason for the change (TS 32.251 clauses
+5.3.1.2 and 5.3.2.2.0, and TS 23.203 Table A.4.3-1). The PGW-C also
+requests credit for any new charging key of the changed PCC rules (TS
+23.203 clause 7.4.1, step 18).
+
+. The *OCS* returns a `Credit-Control-Answer` with new quotas for the
+rating groups, and acknowledges the reported usage (TS 23.203 clause 7.4.1,
+step 19).
+
+. If the PCC rules or the authorized QoS changed, the *PGW-C* sends a PFCP
+`Session Modification Request` to the *PGW-U* to update the rules of the
+Sx session (TS 23.214 clause 6.3.2.3, step 5).
+
+. The *PGW-U* confirms the update with a PFCP `Session Modification
+Response` (TS 23.214 clause 6.3.2.3, step 6).
+
+. The *PGW-C* returns a GTPv2-C `Modify Bearer Response` to the *SGW-C*.
+In this example, the PGW-C does not need to wait for the answer of the
+PCRF before it sends this response (TS 23.401 clause 5.3.3.6, step 9, NOTE
+4). If the decision of the PCRF requires a change of the EPS bearers, the
+PGW-C starts a separate bearer procedure, for example the
+<<_p_gw_initiated_bearer_modification_procedure>> (TS 23.401 clause
+5.3.3.6, NOTE 4, and TS 23.203 clause 7.4.1, step 20).
+
+==== Differences for GPRS
+
+In GPRS, the GGSN starts the procedure when it receives a `Create PDP
+Context Request` for an additional PDP context, an `Update PDP Context
+Request`, a `Delete PDP Context Request`, or a `Change Notification`
+message with a new CGI, SAI, or RAI (TS 23.203 clause A.1.4.4.1). When the
+PCRF performs the bearer binding, the GGSN includes the bearer identifier
+in the CCR, and the PCRF arms the GPRS specific `PDP Context Activity`
+event trigger so that it learns about every PDP context activation,
+modification, and deactivation (TS 23.203 clause A.1.3.1.1.2). The GGSN
+answers the GTP request with a response that can contain the QoS changes
+that follow from the bearer binding and the policy enforcement (TS 23.203
+clause A.1.4.4.1).
+
+==== Possible Failures and Required Actions
+
+Incoherent event report:: If the information in a CCR that an event
+trigger caused is not coherent with the previous information, for example
+a RAT change to the same RAT, the PCRF returns the `Experimental-Result-Code`
+`DIAMETER_ERROR_TRIGGER_EVENT` (5141) (TS 29.212 clause 5.5.3).
+
+PCC rule cannot be enforced:: If the PCEF cannot install or enforce a PCC
+rule, it reports the rule in a `Charging-Rule-Report` AVP with the
+`PCC-Rule-Status` set to `INACTIVE` and a `Rule-Failure-Code` (TS 29.212
+clauses 5.3.18 and 5.3.38).
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.203
+a|
+* Clause 6.1.4 — Event triggers
+* Clause 7.4.1 — IP-CAN session modification, GW (PCEF) initiated, Figure 7.4
+* Clauses A.1.3.1.1.2 and A.1.4.4.1 — GPRS bearer binding in the PCRF and PCEF-initiated modification
+* Clause A.4.4.4.1 — EPC PCEF-initiated modification
+* Table A.4.3-1 — EPS specific credit re-authorization triggers
+
+| TS 23.214
+a|
+* Clause 6.3.2.3 — Interaction between CP and UP function with IP-CAN session modification
+
+| TS 23.401
+a|
+* Clause 5.3.3.6 — Routing Area Update with MME interaction and with S-GW change, steps 8 to 10
+
+| TS 29.212
+a|
+* Clause 4.5.1 — Request for PCC rules
+* Clause 5.3.7 — Event-Trigger AVP
+* Clauses 5.3.18 and 5.3.38 — Charging-Rule-Report and Rule-Failure-Code AVPs
+* Clause 5.5.3 — Permanent failures
+
+| TS 29.213
+a|
+* Clause 4.3.2.1 — PCEF-initiated IP-CAN session modification, AF located in the HPLMN
+
+| TS 29.214
+a|
+* Clause 5.3.13 — Specific-Action AVP
+
+| TS 32.251
+a|
+* Clauses 5.3.1.2 and 5.3.2.2.0 — Flow based bearer charging and triggers for FBC online charging
+|===

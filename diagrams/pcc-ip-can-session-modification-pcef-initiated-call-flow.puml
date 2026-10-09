@@ -1,0 +1,37 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "SGW-C" as SGWC
+participant "PGW-C" as PGWC
+participant "PGW-U" as PGWU
+participant "PCRF" as PCRF
+participant "AF" as AF
+participant "OCS" as OCS
+
+== Event Detection ==
+SGWC -> PGWC: GTPv2: Modify Bearer Request (new RAT type)
+
+== Gx PCC Rule Request ==
+PGWC -> PCRF: Diameter (Gx): Credit-Control-Request (CCR-U)
+opt AF subscribed to the event
+    PCRF -> AF: Diameter (Rx): Re-Auth-Request (RAR)
+    AF -> PCRF: Diameter (Rx): Re-Auth-Answer (RAA)
+end
+note over PCRF: PCC rule and policy decision
+PCRF -> PGWC: Diameter (Gx): Credit-Control-Answer (CCA-U)
+
+== Gy Credit Re-authorization ==
+opt Online charging applies and a re-authorization trigger is armed
+    PGWC -> OCS: Diameter (Gy): Credit-Control-Request (CCR-U)
+    OCS -> PGWC: Diameter (Gy): Credit-Control-Answer (CCA-U)
+end
+
+== User Plane Update ==
+opt PCC rules or authorized QoS changed
+    PGWC -> PGWU: PFCP: Session Modification Request
+    PGWU -> PGWC: PFCP: Session Modification Response
+end
+
+== IP-CAN Session Response ==
+PGWC -> SGWC: GTPv2: Modify Bearer Response
+@enduml

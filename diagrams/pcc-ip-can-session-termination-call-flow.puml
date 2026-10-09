@@ -1,0 +1,40 @@
+@startuml
+autonumber
+skinparam sequenceMessageAlign center
+participant "SGW-C" as SGWC
+participant "PGW-C" as PGWC
+participant "PGW-U" as PGWU
+participant "PCRF" as PCRF
+participant "AF" as AF
+participant "OCS" as OCS
+
+== IP-CAN Session Removal ==
+SGWC -> PGWC: GTPv2: Delete Session Request
+PGWC -> PGWU: PFCP: Session Deletion Request
+PGWU -> PGWC: PFCP: Session Deletion Response
+PGWC -> SGWC: GTPv2: Delete Session Response
+
+== Gx Session Termination ==
+PGWC -> PCRF: Diameter (Gx): Credit-Control-Request (CCR-T)
+PCRF -> PGWC: Diameter (Gx): Credit-Control-Answer (CCA-T)
+
+== Gy Session Termination ==
+opt Online charging applies
+    PGWC -> OCS: Diameter (Gy): Credit-Control-Request (CCR-T)
+    OCS -> PGWC: Diameter (Gy): Credit-Control-Answer (CCA-T)
+end
+
+== Rx Session Termination ==
+opt For each AF session bound to the IP-CAN session
+    PCRF -> AF: Diameter (Rx): Abort-Session-Request (ASR)
+    AF -> PCRF: Diameter (Rx): Abort-Session-Answer (ASA)
+    AF -> PCRF: Diameter (Rx): Session-Termination-Request (STR)
+    PCRF -> AF: Diameter (Rx): Session-Termination-Answer (STA)
+end
+
+== Sy Session Termination ==
+opt Last IP-CAN session that needs policy counter status reporting
+    PCRF -> OCS: Diameter (Sy): Session-Termination-Request (STR)
+    OCS -> PCRF: Diameter (Sy): Session-Termination-Answer (STA)
+end
+@enduml

@@ -1,0 +1,189 @@
+[#_pcc_gx]
+=== Gx Application
+
+==== Technical Overview
+
+The Gx reference point connects the Policy and Charging Enforcement
+Function (PCEF) and the Policy and Charging Rules Function (PCRF), and
+lets the PCRF control the PCC behavior of the PCEF dynamically (TS 23.203
+clause 5.2.2). In GPRS the PCEF is the GGSN, and in the EPC with Control
+and User Plane Separation (CUPS) it is the PGW-C.
+
+Gx is a vendor-specific Diameter application with the Application-ID
+16777238 and the 3GPP Vendor-ID 10415. The PCRF acts as the Diameter
+server, because it handles the requests for PCC rules within a realm, and
+the PCEF acts as the Diameter client (TS 29.212 clause 5.1). Gx reuses
+commands of the Diameter base protocol and of the Diameter Credit-Control
+application, and adds its own AVPs to them (TS 29.212 clause 5.6.1). The
+<<_diameter,Diameter>> chapter describes the base protocol and the
+Credit-Control application.
+
+The PCEF establishes one Diameter session, the Gx session, for each IP
+Connectivity Access Network (IP-CAN) session. For an IP-CAN type with
+several bearers, such as GPRS, the PCEF establishes the Gx session with the
+first IP-CAN bearer of the IP-CAN session (TS 29.212 clause 5.6.1). The
+PCEF can also skip the Gx session for an IP-CAN session when the Charging
+Characteristics from the HSS ask it to (TS 29.212 clause 4.5.1).
+
+==== Provisioning Modes
+
+The PCRF provides PCC rules to the PCEF in one of two ways (TS 29.212
+clause 4.5.2.0):
+
+PULL procedure:: The PCEF requests PCC rules in a `CC-Request` (CCR), and
+the PCRF provides them in the `CC-Answer` (CCA). The PCEF requests rules
+at IP-CAN session establishment, at IP-CAN session modification, and when
+an event trigger is met (TS 29.212 clause 4.5.1).
+
+PUSH procedure:: The PCRF provides PCC rules without a request, in a
+`Re-Auth-Request` (RAR), for example after it receives service information
+from an Application Function (AF) over Rx. The RAR triggers no CCR/CCA
+exchange, and the PCRF does not usually send another RAR for the same
+IP-CAN session until the PCEF acknowledges the previous one.
+
+==== Gx Commands
+
+[cols="2,1,1,4",options="header"]
+|===
+| Command | Code | Sender | Use
+
+| `CC-Request` (CCR)
+| 272
+| PCEF
+| Requests PCC rules, reports events, the status of PCC rules, and accumulated usage, and indicates the termination of the IP-CAN session (TS 29.212 clause 5.6.2).
+
+| `CC-Answer` (CCA)
+| 272
+| PCRF
+| Provides PCC rules, event triggers, the authorized QoS, the bearer control mode, and the usage monitoring thresholds in response to a CCR (TS 29.212 clause 5.6.3).
+
+| `Re-Auth-Request` (RAR)
+| 258
+| PCRF
+| Provisions PCC rules, event triggers, and event report indications unsolicited, or requests the termination of the IP-CAN session (TS 29.212 clause 5.6.4).
+
+| `Re-Auth-Answer` (RAA)
+| 258
+| PCEF
+| Acknowledges an RAR, and can report the status of the PCC rules and access network information (TS 29.212 clause 5.6.5).
+|===
+
+The `CC-Request-Type` AVP of each CCR marks its role in the Gx session:
+
+[cols="1,4",options="header"]
+|===
+| `CC-Request-Type` | Use on Gx
+
+| `INITIAL_REQUEST` (1)
+| The PCEF establishes the Gx session at IP-CAN session establishment, and supplies the UE identity, the IP-CAN type, the RAT type, the PDN information, the UE IP address, and further session information (TS 29.212 clause 4.5.1).
+
+| `UPDATE_REQUEST` (2)
+| The PCEF requests PCC rules at IP-CAN session modification, for example when an event trigger is met, and reports the status of PCC rules or accumulated usage (TS 29.212 clauses 4.5.1 and 4.5.17.1).
+
+| `TERMINATION_REQUEST` (3)
+| The PCEF indicates that the IP-CAN session is being terminated, and reports the final accumulated usage (TS 29.212 clauses 4.5.7 and 4.5.17.4).
+|===
+
+==== Key AVPs
+
+The table below describes the Gx AVPs that the procedures of this chapter
+use most. TS 29.212 Table 5.3.0.1 lists all the Gx specific AVPs.
+
+[cols="2,1,4",options="header"]
+|===
+| AVP | Code | Purpose
+
+| `Charging-Rule-Install`
+| 1001
+| Activates, installs, or modifies PCC rules. It carries `Charging-Rule-Definition` AVPs for dynamic rules, and `Charging-Rule-Name` or `Charging-Rule-Base-Name` AVPs for predefined rules or groups of predefined rules (TS 29.212 clause 5.3.2).
+
+| `Charging-Rule-Remove`
+| 1002
+| Removes dynamic PCC rules, or deactivates predefined PCC rules or groups of rules, by name (TS 29.212 clause 5.3.3).
+
+| `Charging-Rule-Definition`
+| 1003
+| Defines a dynamic PCC rule. It carries the `Charging-Rule-Name`, which identifies the rule within the IP-CAN session, and for example the `Flow-Information` filters or a `TDF-Application-Identifier`, the `Flow-Status` gate, the `QoS-Information`, the `Rating-Group`, the `Service-Identifier`, the `Online`, `Offline`, `Metering-Method`, and `Reporting-Level` charging parameters, the `Precedence`, and the `Monitoring-Key` (TS 29.212 clause 5.3.4).
+
+| `Charging-Rule-Report`
+| 1018
+| Reports the status of PCC rules in the `PCC-Rule-Status` AVP, which is `ACTIVE` (0), `INACTIVE` (1), or `TEMPORARILY INACTIVE` (2), together with a `Rule-Failure-Code` when a rule cannot be installed or enforced (TS 29.212 clauses 5.3.18, 5.3.19, and 5.3.38).
+
+| `QoS-Information`
+| 1016
+| Carries the QoS of an IP-CAN bearer, a PCC rule, a QCI, or an APN: the `QoS-Class-Identifier`, the maximum and guaranteed bitrates, the `Allocation-Retention-Priority`, and the APN-AMBR. From the PCEF it carries the requested QoS, and from the PCRF the authorized QoS (TS 29.212 clause 5.3.16).
+
+| `Default-EPS-Bearer-QoS`
+| 1049
+| Carries the QCI and the ARP of the default EPS bearer, which the PCEF reports and the PCRF authorizes (TS 29.212 clause 5.3.48).
+
+| `Event-Trigger`
+| 1006
+| From the PCRF, subscribes to events. From the PCEF, reports the event that caused the request (TS 29.212 clause 5.3.7).
+
+| `Usage-Monitoring-Information`
+| 1067
+| Carries the `Monitoring-Key` and the thresholds or the accumulated usage of one usage monitoring instance (TS 29.212 clause 5.3.60).
+
+| `Bearer-Control-Mode`
+| 1023
+| Carries the bearer control mode that the PCRF selected, `UE_ONLY` (0) or `UE_NW` (2) (TS 29.212 clause 5.3.23).
+
+| `IP-CAN-Type`
+| 1027
+| Identifies the type of the IP-CAN, for example `3GPP-GPRS` (0) for an access through a GGSN over Gn/Gp, or `3GPP-EPS` (5) (TS 29.212 clause 5.3.27).
+
+| `RAT-Type`
+| 1032
+| Identifies the radio access technology that serves the UE, for example `UTRAN` (1000), `GERAN` (1001), or `EUTRAN` (1004) (TS 29.212 clause 5.3.31).
+|===
+
+When the PCRF modifies a dynamic PCC rule, the optional AVPs that it
+omits from the `Charging-Rule-Definition` keep their previous values, but
+new `Flow-Information` AVPs replace all the previous ones (TS 29.212 clause
+5.3.4). In the same way, a `QoS-Information` AVP that the PCRF provided
+earlier stays valid when a later message omits it (TS 29.212 clause
+5.3.16).
+
+==== Result Codes
+
+Gx uses the `Result-Code` values of the Diameter base protocol, for example
+`DIAMETER_SUCCESS` (2001), and reports Gx specific results in the
+`Experimental-Result` AVP with the Vendor-ID 10415 (TS 29.212 clauses 5.5.1
+and 5.5.2). Examples of Gx specific permanent failures are:
+
+`DIAMETER_ERROR_INITIAL_PARAMETERS` (5140):: The information that the PCRF
+needs to select rules, for example the QoS, the RAT type, or the
+subscriber information, is incomplete, erroneous, or not available.
+
+`DIAMETER_ERROR_TRIGGER_EVENT` (5141):: The information in a CCR that an
+event trigger caused is not coherent with the previous information, for
+example a RAT change to the same RAT.
+
+`DIAMETER_PCC_RULE_EVENT` (5142):: The PCEF cannot install or activate the
+PCC rules, and it identifies the affected rules in the
+`Charging-Rule-Report` AVP.
+
+These definitions come from TS 29.212 clause 5.5.3.
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.203
+a|
+* Clause 5.2.2 — Gx reference point
+
+| TS 29.212
+a|
+* Clause 4.5.1 — Request for PCC rules
+* Clause 4.5.2 — Provisioning of PCC rules, covering the PULL and PUSH procedures
+* Clause 4.5.7 — Indication of IP-CAN session termination
+* Clause 4.5.17 — Reporting accumulated usage
+* Clauses 5.1 and 5.2 — Gx protocol support and Application-ID
+* Clause 5.3 — Gx specific AVPs, Table 5.3.0.1
+* Clause 5.5 — Gx specific experimental result codes
+* Clause 5.6 — Gx messages, covering CCR, CCA, RAR, and RAA
+|===

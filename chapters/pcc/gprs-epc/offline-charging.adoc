@@ -1,0 +1,154 @@
+[#_pcc_offline_charging]
+=== Offline Charging
+
+==== Technical Overview
+
+In offline charging, the network records the usage of the user while it
+happens and transfers the records to the Billing Domain (BD) afterwards,
+without any effect on the service in real time (TS 32.240 clause 4.1.1).
+For the PCEF in the P-GW, offline charging is flow based charging: the
+P-GW counts the volume, the time, or the events of the service data flows
+per rating group, or per combination of rating group and service
+identifier, within each IP-CAN bearer (TS 32.251 clause 5.2.1.3).
+
+The P-GW produces its charging information in one of two ways. If the
+Charging Data Function (CDF) is a separate entity, the P-GW reports
+charging events to it over the Rf reference point, and the CDF builds the
+PGW-CDRs. If the CDF is integrated in the P-GW, the P-GW builds the
+PGW-CDRs itself and sends them to the Charging Gateway Function (CGF) over
+the Ga reference point (TS 32.251 clauses 4.2 and 5.2.2.0). Both ways
+realize the Gz reference point, as <<_pcc_gy_gz>> describes.
+
+The figure below shows the case with a separate CDF for the PGW-C of the
+EPC with Control and User Plane Separation (CUPS), and follows one IP-CAN
+bearer from its activation to its end. The PGW-C obtains the counts from
+the Usage Reporting Rules that it provisions in the PGW-U (TS 23.214
+clause 5.3.2). TS 32.251 describes the Rf operations as Charging Data
+Request and Charging Data Response, which TS 32.299 maps to the Diameter
+`Accounting-Request` (ACR) and `Accounting-Answer` (ACA) (TS 32.251
+clause 6.1A.1 and TS 32.299 clause 6.2.1.1).
+
+==== Call Flow
+
+The call flow has five phases: Charging Session Start, Change of Charging
+Condition, Partial CDR Transfer, Charging Session Stop, and CDR File
+Transfer.
+
+.Offline charging call flow
+plantuml::diagrams/pcc-offline-charging-call-flow.puml[svg]
+
+==== Step-by-Step Description
+
+. At the activation of the IP-CAN bearer, the *PGW-C* sends an `ACR` with
+the `Accounting-Record-Type` set to `START_RECORD` to the *CDF* (TS 32.251
+clause 5.2.2.2 and TS 32.299 clause 6.1.2, step 2). The charging event
+contains, for example, the subscription identity, the Charging Id of the
+bearer, and the address of the S-GW (TS 32.251 clause 5.2.2.2).
+
+. The *CDF* opens a CDR for the session and returns an `ACA` with the
+`Accounting-Record-Type` set to `START_RECORD`. The ACA can carry the
+`Acct-Interim-Interval` AVP with the interval at which the PGW-C sends
+interim records (TS 32.299 clause 6.1.2, steps 3 and 4).
+
+. When the interim interval elapses, or when a change of charging
+condition occurs, for example a QoS change, a user location change, or a
+tariff time change, the *PGW-C* sends an `ACR` with the
+`Accounting-Record-Type` set to `INTERIM_RECORD` to the *CDF*. The ACR
+carries the closed containers per rating group, or per combination of
+rating group and service identifier, with their volume counts, elapsed
+time, or number of events, and the charging condition that closed them
+(TS 32.251 clauses 5.2.2.2 and 5.2.3.4.1, and TS 32.299 clause 6.1.2, step
+5).
+
+. The *CDF* adds the information to the CDR and returns an `ACA` with the
+`Accounting-Record-Type` set to `INTERIM_RECORD` (TS 32.299 clause 6.1.2,
+steps 6 and 7).
+
+. When the CDR reaches a limit that the operator configured, for example a
+volume limit, a time limit, or a maximum number of charging condition
+changes, the CDF closes the CDR as a partial CDR and opens a new one for the
+same bearer (TS 32.240 clause 5.2.1.2 and TS 32.251 clause 5.2.3.4.2). The
+*CDF* transfers the closed PGW-CDR to the *CGF* in a GTP′ `Data Record
+Transfer Request` over Ga (TS 32.240 clause 5.2.1.2 and TS 32.295 clause
+6.2.1).
+
+. The *CGF* acknowledges the CDR with a GTP′ `Data Record Transfer Response`
+and stores the CDR persistently (TS 32.240 clause 4.3.1.3 and TS 32.295
+clause 6.2.1).
+
+. At the end of the IP-CAN bearer, the *PGW-C* sends an `ACR` with the
+`Accounting-Record-Type` set to `STOP_RECORD` to the *CDF*, with the final
+containers (TS 32.299 clause 6.1.2, step 9).
+
+. The *CDF* adds the information to the CDR, closes it, and returns an
+`ACA` with the `Accounting-Record-Type` set to `STOP_RECORD` (TS 32.299
+clause 6.1.2, steps 10 and 11).
+
+. The *CDF* transfers the last PGW-CDR of the bearer to the *CGF* in a GTP′
+`Data Record Transfer Request` (TS 32.240 clause 5.2.1.2).
+
+. The *CGF* acknowledges the CDR with a GTP′ `Data Record Transfer
+Response`.
+
+. The *CGF* writes the CDRs into CDR files, closes a file when an operator
+condition is reached, for example a file size limit, a time limit, or a
+maximum number of CDRs, and transfers the closed files to the *Billing
+Domain* over Bx. The figure shows the push mode, in which the CGF starts
+the transfer; in the pull mode, the BD requests the files instead (TS
+32.240 clause 5.2.1.3). TS 32.297 specifies the file format and the
+transfer of the CDR files.
+
+==== CDR Correlation
+
+The Charging Id that the P-GW assigns to each IP-CAN bearer correlates the
+CDRs of the same bearer from different nodes: the P-GW forwards the
+Charging Id to the S-GW and the SGSN, so that the BD can match their
+SGW-CDRs and S-CDRs with the PGW-CDRs (TS 32.251 clause 5.2.1.1). The
+PGW-CDR records every S-GW, SGSN, ePDG, or TWAG that served the bearer in
+its list of serving node addresses (TS 32.251 clause 5.2.3.4.1).
+
+==== Differences for GPRS
+
+In GPRS, the GGSN applies the P-GW charging of TS 32.251, so its offline
+charging produces flow based charging data in the same way as the P-GW
+(TS 32.251 clause 4.1). The SGSN produces the S-CDR for each PDP context
+itself, because TS 32.251 requires the SGSN to produce CDRs and defines no
+Rf charging events for it (TS 32.251 clauses 5.2.1.0 and 5.2.2.0).
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.214
+a|
+* Clause 5.3.2 — Activation of usage reporting in the UP function
+
+| TS 32.240
+a|
+* Clause 4.1.1 — Offline charging
+* Clause 4.3.1.3 — Charging Gateway Function
+* Clauses 5.2.1.2 and 5.2.1.3 — Transfer of CDRs via Ga and of CDR files via Bx
+
+| TS 32.251
+a|
+* Clause 4.1 — Charging of a stand-alone GGSN
+* Clause 4.2 — PS domain offline charging architecture
+* Clauses 5.2.1.0, 5.2.1.1, and 5.2.1.3 — Offline charging principles, IP-CAN bearer charging, and flow based bearer charging
+* Clauses 5.2.2.0 and 5.2.2.2 — Rf message flows and triggers for charging events from the P-GW
+* Clauses 5.2.3.4.1 and 5.2.3.4.2 — Triggers for PGW-CDR charging information addition and closure
+* Clause 6.1A.1 — Offline charging message formats
+
+| TS 32.295
+a|
+* Clause 6.2.1 — GTP′ message types
+
+| TS 32.297
+| CDR file format and transfer over Bx
+
+| TS 32.299
+a|
+* Clause 6.1.2 — Session based offline charging, Figure 6.1.2.1
+* Clause 6.2.1.1 — Offline charging messages
+|===

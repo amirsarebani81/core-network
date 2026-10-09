@@ -92,7 +92,7 @@ resources by sending a GTPv2 `Delete Session Request` message to the *S-GW
 LBI, to the *P-GW (PDN Gateway)* to complete the session release, and, if the
 network deploys a Policy and Charging Rules Function (PCRF), the P-GW also
 starts an IP Connectivity Access Network (IP-CAN) Session Termination
-procedure.
+procedure, which <<_pcc_ip_can_session_termination>> describes.
 
 . The *P-GW* acknowledges the deletion by returning a GTPv2 `Delete Session
 Response` message that carries a Cause to the *S-GW*.
@@ -147,7 +147,8 @@ the IP-CAN-Type, the RAT-Type, the Default-EPS-Bearer-QoS, and the APN-AMBR.
 . The *PCRF* determines the policy and returns a Diameter
 `Credit-Control-Answer` (CCA) message to the *P-GW*, carrying the PCC rules,
 the authorized QoS information, and the Event-Trigger, for the P-GW to
-enforce.
+enforce. <<_pcc_ip_can_session_establishment>> describes this IP-CAN
+session establishment, including the Gy and Sxb interactions, in detail.
 
 . The *P-GW* creates an EPS bearer context and returns a GTPv2 `Create
 Session Response` message to the *S-GW*, carrying its own Address and TEID

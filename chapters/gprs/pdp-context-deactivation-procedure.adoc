@@ -162,6 +162,9 @@ context; the GGSN removes the PCC rules that the PCRF does not move
 (TS 29.212 Annex A.3.4). In reply to a CCR-T message, the PCRF removes
 the policy data of the IP-CAN session, and the exchange ends the
 Diameter Credit Control session (TS 29.212 clause 4.5.7).
+<<_pcc_ip_can_session_termination>> and
+<<_pcc_ip_can_session_modification_pcef_initiated>> describe the two
+cases in detail.
 
 . If the APN uses RADIUS accounting, the *GGSN* sends a RADIUS
 `Accounting-Request` (STOP) message to the external Authentication,

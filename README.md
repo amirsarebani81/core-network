@@ -14,11 +14,14 @@ defines each procedure.
 
 ## About
 
-The book covers two generations of the packet core:
+The book is organized in parts:
 
 - **Part I: GPRS Core**, the General Packet Radio Service core network.
 - **Part II: Evolved Packet Core (EPC)**, with Control and User Plane
   Separation (CUPS).
+- **Part III: Policy and Charging Control**, the policy and charging
+  control framework, with its principles and its realization for GPRS and
+  the EPC.
 
 For each generation, the book describes the network elements and the
 interfaces between them, the protocols that carry signaling between the

@@ -1,0 +1,203 @@
+[#_pcc_ip_can_session_establishment]
+=== IP-CAN Session Establishment
+
+==== Technical Overview
+
+The PCEF starts the IP-CAN Session Establishment procedure when it
+receives a request to establish an IP Connectivity Access Network
+(IP-CAN) session, that is a PDN connection in the EPC or the first PDP
+context of a new UE IP address in GPRS. The procedure establishes the Gx
+session for the IP-CAN session, provides the initial PCC rules and policy
+decisions to the PCEF, and, if online charging applies, starts the
+credit-control session with the Online Charging System (OCS). No
+Application Function (AF) takes part in the procedure (TS 23.203 clause
+7.2 and TS 29.213 clause 4.1).
+
+In the EPC, the procedure is part of the E-UTRAN Initial Attach and of the
+UE-requested PDN connectivity procedure: when dynamic PCC is deployed, the
+PDN GW performs the IP-CAN Session Establishment after it receives the
+`Create Session Request` and before it returns the `Create Session
+Response` (TS 23.401 clause 5.3.2.1, steps 14 and 15). The
+<<_attach_procedure>> describes the complete attach.
+
+The figure below shows the procedure for the EPC with Control and User
+Plane Separation (CUPS) in the non-roaming case, where the PGW-C contains
+the control part of the Policy and Charging Enforcement Function (PCEF).
+The Differences for GPRS section describes the GGSN case.
+
+==== Call Flow
+
+The call flow has five phases: IP-CAN Session Request, Gx Session
+Establishment, Gy Credit Control, User Plane Provisioning, and IP-CAN
+Session Response.
+
+.IP-CAN session establishment call flow
+plantuml::diagrams/pcc-ip-can-session-establishment-call-flow.puml[svg]
+
+==== Step-by-Step Description
+
+. The *SGW-C* sends a GTPv2-C `Create Session Request` message to the
+*PGW-C*, which the PGW-C treats as a request for IP-CAN bearer
+establishment. The message carries, for example, the IMSI, the APN, the
+RAT type, the Default EPS Bearer QoS, the subscribed APN-AMBR, and the User
+Location Information. The PGW-C accepts the request and allocates the UE IP
+address (TS 23.203 clause 7.2, step 2, and TS 23.401 clause 5.3.2.1, step
+13).
+
+. The *PGW-C* starts the Gx session by sending a Diameter
+`Credit-Control-Request` (CCR) with the `CC-Request-Type` set to
+`INITIAL_REQUEST` to the *PCRF*. The CCR carries the user identity in the
+`Subscription-Id` AVP, the type of the IP-CAN in the `IP-CAN-Type` AVP, set
+to `3GPP-EPS`, the radio access technology in the `RAT-Type` AVP, the APN in
+the `Called-Station-Id` AVP, the UE IPv4 address in the `Framed-IP-Address`
+AVP or the IPv6 prefix in the `Framed-IPv6-Prefix` AVP, and the user
+location in the `3GPP-User-Location-Info` AVP. It also carries the APN-AMBR
+in the `QoS-Information` AVP and the QoS of the default bearer in the
+`Default-EPS-Bearer-QoS` AVP (TS 29.212 clause 4.5.1 and TS 29.213 clause
+4.1, step 3).
+
+. If the *PCRF* does not have the subscription information of the user, it
+requests that information from the *SPR*, with the subscriber ID and the
+PDN identifier (TS 23.203 clause 7.2, step 4). TS 23.203 does not specify
+the protocol of the Sp reference point.
+
+. The *SPR* returns the subscription information, for example the allowed
+services, the QoS information, and the PCC rule information (TS 29.213
+clause 4.1, step 6).
+
+. If the policy decision depends on the status of policy counters and the
+PCRF has no Sy session for the subscriber yet, the *PCRF* sends a
+`Spending-Limit-Request` (SLR) to the *OCS* to request the status of the
+policy counters, which is the Initial Spending Limit Report Request (TS
+29.213 clauses 4.1, step 7, and 4.7.1).
+
+. The *OCS* returns the current status of the requested policy counters in
+a `Spending-Limit-Answer` (SLA) (TS 29.219 clause 4.5.1).
+
+. The *PCRF* selects the PCC rules for the IP-CAN session, makes the policy
+decision, and returns them to the *PGW-C* in a `Credit-Control-Answer` (CCA)
+with the `CC-Request-Type` set to `INITIAL_REQUEST`. The CCA installs the
+PCC rules in `Charging-Rule-Install` AVPs, subscribes to events in
+`Event-Trigger` AVPs, and can carry the authorized APN-AMBR in the
+`QoS-Information` AVP and the authorized QCI and ARP of the default bearer
+in the `Default-EPS-Bearer-QoS` AVP. If usage monitoring applies, the CCA
+also carries the thresholds in `Usage-Monitoring-Information` AVPs (TS
+29.213 clause 4.1, steps 8, 9, and 13). The PCRF includes PCC rules with the QCI and
+the ARP of the authorized default bearer QoS (TS 23.203 clause A.4.4.2). The PGW-C installs the PCC rules and enforces the
+authorized QoS (TS 29.213 clause 4.1, step 15).
+
+. If online charging applies and at least one active PCC rule has charging
+parameters, the *PGW-C* sends a `Credit-Control-Request` with the
+`CC-Request-Type` set to `INITIAL_REQUEST` to the *OCS* over Gy. Depending
+on operator configuration, the PGW-C requests credit for each charging key
+of the active PCC rules at this point, with a
+`Multiple-Services-Credit-Control` AVP for each rating group (TS 23.203
+clause 7.2, step 15, and TS 32.251 clause 5.3.2.2.0).
+
+. The *OCS* authorizes the IP-CAN bearer and returns a
+`Credit-Control-Answer` to the *PGW-C*, in which it can grant quotas for
+the rating groups in `Granted-Service-Unit` AVPs and provide credit
+re-authorization triggers (TS 23.203 clause 7.2, step 16, and TS 32.251
+clause 5.3.2.2.0).
+
+. The *PGW-C* selects a PGW-U and sends a PFCP `Session Establishment
+Request` to the *PGW-U* to create the Sx session for the UE. The PGW-C
+translates the PCC rules into Packet Detection Rules, and provides, for
+example, the bitrates and the gate status in QoS Enforcement Rules and the
+usage reporting for charging and usage monitoring in Usage Reporting Rules
+(TS 23.214 clauses 5.3.2, 5.10, 5.11.2, and 6.3.1.1, step 10a).
+
+. The *PGW-U* allocates the F-TEIDs for the bearer and returns a PFCP
+`Session Establishment Response` to the *PGW-C* (TS 23.214 clause 6.3.1.1,
+step 10b).
+
+. The *PGW-C* generates a Charging Id for the default bearer and returns a
+GTPv2-C `Create Session Response` to the *SGW-C*. The response carries, for
+example, the PDN address, the EPS Bearer QoS, the APN-AMBR, and the
+Charging Id, and it reflects the QoS that the PCRF authorized (TS 23.401
+clause 5.3.2.1, step 15). The PGW-C acknowledges the IP-CAN bearer
+establishment only if at least one PCC rule is active and, for online
+charging, the OCS has not denied the credit (TS 23.203 clause 7.2, step
+17).
+
+==== Differences for GPRS
+
+In GPRS, the GGSN contains the PCEF, and the IP-CAN session starts when the
+GGSN receives a `Create PDP Context Request` for the first PDP context of a
+new UE IP address. The GGSN answers with a `Create PDP Context Response`,
+which can contain QoS changes according to the bearer binding and the
+policy enforcement (TS 23.203 clause A.1.4.2). In the CCR, the `IP-CAN-Type`
+AVP is set to `3GPP-GPRS` (TS 29.212 clause 5.3.27).
+
+Because the PCRF can control the IP-CAN bearers in GPRS, the GGSN also
+provides a bearer identifier and the requested QoS of the bearer in the
+CCR, and the PCRF returns the selected bearer control mode in the
+`Bearer-Control-Mode` AVP of the CCA (TS 29.213 clause 4.1, steps 3, 9,
+and 13). When the PCRF performs the bearer binding, it indicates in the
+CCA the bearer to which each PCC rule belongs (TS 29.212 clause 5.3.2).
+The GGSN starts one credit-control session with the OCS for each PDP
+context instead of one for each IP-CAN session (TS 23.203 clause
+A.1.3.1.3). GPRS has no PFCP step, because the GGSN is a single node. The
+<<_gprs_pdp_context_activation_procedure>> describes the complete PDP
+context activation.
+
+==== Possible Failures and Required Actions
+
+PCRF rejects the IP-CAN session:: The PCRF can reject the IP-CAN session
+establishment, for example when it cannot obtain the subscription
+information from the SPR and therefore cannot make the PCC rule decisions
+(TS 29.213 clause 4.1, NOTE 4). If the user is unknown to the PCRF, the
+PCRF returns the `Experimental-Result-Code` `DIAMETER_USER_UNKNOWN` (5030),
+and if the information for the rule selection is incomplete or erroneous,
+it returns `DIAMETER_ERROR_INITIAL_PARAMETERS` (5140) (TS 29.212 clause
+5.5.3).
+
+No active PCC rule:: If no PCC rule is active for the IP-CAN session, the
+PCEF rejects the IP-CAN session establishment (TS 23.203 clause 6.2.2.1).
+
+Credit denied:: If online charging applies and the OCS denies the credit,
+the PCEF does not acknowledge the IP-CAN bearer establishment (TS 23.203
+clause 7.2, step 17).
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.203
+a|
+* Clause 6.2.2.1 — PCEF behavior at IP-CAN session establishment
+* Clause 7.2 — IP-CAN session establishment, Figure 7.2-1
+* Clauses A.1.3.1.3 and A.1.4.2 — GPRS credit management and IP-CAN session establishment
+* Clause A.4.4.2 — EPC IP-CAN session establishment
+
+| TS 23.214
+a|
+* Clauses 5.3.2, 5.10, and 5.11.2 — Usage reporting, policing, and enforcement of dynamic PCC rules in the UP function
+* Clause 6.3.1.1 — Interaction between CP and UP function during PDN connection establishment
+
+| TS 23.401
+a|
+* Clause 5.3.2.1 — E-UTRAN Initial Attach, steps 13 to 15
+
+| TS 29.212
+a|
+* Clause 4.5.1 — Request for PCC rules
+* Clause 5.3.2 — Charging-Rule-Install AVP
+* Clause 5.3.27 — IP-CAN-Type AVP
+* Clause 5.5.3 — Permanent failures
+
+| TS 29.213
+a|
+* Clause 4.1 — IP-CAN session establishment, Figure 4.1.1
+* Clause 4.7.1 — Initial Spending Limit Report Request
+
+| TS 29.219
+a|
+* Clause 4.5.1 — Initial and intermediate spending limit report request
+
+| TS 32.251
+a|
+* Clause 5.3.2.2.0 — Triggers for FBC online charging
+|===

@@ -1,0 +1,236 @@
+[#_pcc_policy_triggers_and_usage_monitoring]
+=== Event Triggers, Usage Monitoring, and Spending Limits
+
+==== Technical Overview
+
+After the establishment of an IP Connectivity Access Network (IP-CAN)
+session, the Policy and Charging Rules Function (PCRF) needs to learn about
+changes in the session so that it can revise its decisions. Policy and
+Charging Control (PCC) provides three mechanisms for this purpose: event
+triggers, which report changes of the IP-CAN session and its bearers;
+usage monitoring, which reports the volume or time that the user consumes;
+and spending limits, which report the status of policy counters that the
+Online Charging System (OCS) maintains. All three mechanisms feed the
+policy decision of the PCRF and are independent of the charging of the
+user (TS 23.203 clauses 4.3.4, 4.4, and 6.1.4).
+
+==== Event Triggers
+
+The Event Reporting Function (ERF) detects the events and reports them to
+the PCRF. In GPRS and in the GTP-based EPC, the ERF is located in the
+Policy and Charging Enforcement Function (PCEF), and for solicited
+application reporting it is also located in the Traffic Detection Function
+(TDF) (TS 23.203 clause 6.1.4). An event trigger defines a condition under
+which the ERF contacts the PCRF again after the IP-CAN session
+establishment. The ERF always reports some event triggers because the
+procedures require them, and it reports the remaining event triggers only
+when the PCRF subscribes to them. The PCRF can subscribe to event triggers
+or remove them at any time, either on its own or when an AF requests it,
+and it does so with the procedure that provisions PCC rules (TS 23.203
+clause 6.1.4). An IP-CAN bearer modification that matches no event trigger
+causes no interaction with the PCRF (TS 23.203 clause 6.1.4).
+
+The table below lists a selection of the event triggers that TS 23.203
+Table 6.2 defines for every IP-CAN type, together with the value of the
+Gx `Event-Trigger` AVP that reports each of them (TS 29.212 clause 5.3.7).
+
+[cols="2,3,2,2",options="header"]
+|===
+| Event trigger | Condition | Gx `Event-Trigger` value | Reported
+
+| PLMN change
+| The UE has moved to the domain of another operator.
+| `PLMN_CHANGE` (4)
+| When the PCRF subscribes
+
+| QoS change
+| The QoS of an IP-CAN bearer has changed. This trigger is available only when the PCRF performs the bearer binding.
+| `QOS_CHANGE` (1)
+| When the PCRF subscribes
+
+| Traffic mapping information change
+| The traffic mapping information of an IP-CAN bearer, which is the TFT in GPRS, has changed. This trigger is available only when the PCRF performs the bearer binding.
+| `TFT_CHANGE` (3)
+| Always
+
+| Resource modification request
+| The PCEF has received a request for resource modification that is not tied to a specific IP-CAN bearer.
+| `RESOURCE_MODIFICATION_REQUEST` (23)
+| Always
+
+| Loss or recovery of transmission resources
+| The transmission resources of an IP-CAN bearer are no longer usable, or usable again.
+| `LOSS_OF_BEARER` (5), `RECOVERY_OF_BEARER` (6)
+| When the PCRF subscribes
+
+| UE IP address change
+| A UE IPv4 address has been allocated or released.
+| `UE_IP_ADDRESS_ALLOCATE` (18), `UE_IP_ADDRESS_RELEASE` (19)
+| Always
+
+| Out of credit
+| Credit is no longer available for one or more PCC rules.
+| `OUT_OF_CREDIT` (15)
+| When the PCRF subscribes
+
+| Enforced PCC rule request
+| The PCEF requests PCC rules within the revalidation time limit that the PCRF has set.
+| `REVALIDATION_TIMEOUT` (17)
+| When the PCRF subscribes
+
+| Usage report
+| The usage of the IP-CAN session or of a monitoring key has reached its threshold, or needs to be reported for another reason.
+| `USAGE_REPORT` (33)
+| When the PCRF subscribes
+
+| Start or stop of application traffic detection
+| The PCEF enhanced with Application Detection and Control (ADC) has detected the start or the stop of application traffic.
+| `APPLICATION_START` (39), `APPLICATION_STOP` (40)
+| When the PCRF subscribes
+|===
+
+Each IP-CAN type adds its own event triggers. For GPRS, TS 23.203 Table
+A.2 adds, for example, the SGSN change, the RAT type change, the routeing
+area and CGI/SAI location changes, and the PDP Context Activity trigger,
+which is available only when the PCRF performs the bearer binding. For the
+EPS, TS 23.203 Table A.4.3-2 adds, for example, the SGSN change, the Serving
+GW change, the tracking area, ECGI, and eNodeB ID location changes, and the
+subscribed APN-AMBR change and EPS subscribed QoS change, which the PCEF
+always reports. TS 23.203 Table 6.2 recommends that the PCRF subscribes to
+location change triggers only for a limited number of subscribers, because
+of the potential increase in signaling load.
+
+The PCEF also receives credit re-authorization triggers from the OCS, for
+example the expiry of the credit authorization lifetime or a change of the
+QoS, which make it request credit again from the OCS rather than PCC rules
+from the PCRF. When the PCEF cannot monitor an event that the OCS
+requires, it provides the required event triggers to the PCRF (TS 23.203
+clause 6.1.3). <<_pcc_charging_models>> describes credit management in
+detail.
+
+In the 5G System (5GS), the equivalent concept is the Policy Control
+Request Trigger, which defines when the Session Management Function (SMF)
+or the Access and Mobility Management Function (AMF) contacts the Policy
+Control Function (PCF) again. TS 23.503 lists the triggers for the SMF
+together with their differences from TS 23.203 Tables 6.2 and A.4.3-2, and
+removes, for example, the QoS change trigger, because it applied only when
+the PCRF performed the bearer binding (TS 23.503 clauses 6.1.2.5 and
+6.1.3.5).
+
+==== Usage Monitoring
+
+Usage monitoring lets the PCRF make dynamic policy decisions, for example a
+downgrade of the bandwidth, based on the total network usage of a user in
+real time. The PCRF sets volume thresholds, time thresholds, or both, and
+the PCEF or the TDF reports the accumulated usage when a threshold is
+reached (TS 23.203 clause 4.4).
+
+The monitoring key groups the services that share a common allowed usage,
+and any number of PCC rules can share one monitoring key. The PCRF can
+also use a monitoring key to monitor all the traffic of the IP-CAN session,
+and it can exclude individual service data flows from this session level
+monitoring (TS 23.203 clauses 4.4 and 6.6.1). TS 23.203 Table 6.6 lists the
+usage monitoring information:
+
+[cols="1,3",options="header"]
+|===
+| Information | Use
+
+| Monitoring key
+| Identifies the group of services, or the IP-CAN session, that the thresholds apply to.
+
+| Volume threshold and time threshold
+| Set the usage after which the PCEF or the TDF reports to the PCRF.
+
+| Monitoring time
+| Sets a time at which the PCEF or the TDF records the accumulated usage, so that one report can distinguish the usage before and after that time.
+
+| Subsequent volume threshold and subsequent time threshold
+| Set the thresholds that apply after the monitoring time.
+
+| Inactivity detection time
+| Stops the time measurement after a period without packets, until the next packet arrives.
+|===
+
+The PCEF reports the accumulated usage for a monitoring key when a
+threshold is reached, when the PCRF removes the last PCC rule of that
+monitoring key, when the PCRF disables the monitoring or explicitly
+requests a report, and at the termination of the IP-CAN session (TS 23.203
+clauses 6.2.2.3 and 6.6.2). If the PCRF does not provide new thresholds
+when it acknowledges a usage report, the PCEF stops monitoring that key
+(TS 23.203 clause 6.2.2.3).
+
+On Gx, the PCRF sets the `USAGE_REPORT` event trigger and provides one
+`Usage-Monitoring-Information` AVP per monitoring key, with the
+thresholds in its `Granted-Service-Unit` AVP and the scope in the
+`Usage-Monitoring-Level` AVP, set to `SESSION_LEVEL` or `PCC_RULE_LEVEL`
+(TS 29.212 clause 4.5.16). The PCEF reports the usage in a CCR with the
+`CC-Request-Type` set to `UPDATE_REQUEST` and the `Event-Trigger` set to
+`USAGE_REPORT` (TS 29.212 clause 4.5.17.1).
+
+==== Spending Limits
+
+Spending limits let the PCRF base its decisions on the spending of a
+subscriber, for example on a daily spending limit. The OCS maintains
+policy counters that track this spending, and a policy counter can
+represent the spending for one or more services, devices, or subscribers.
+There is no explicit relationship between a charging key and a policy
+counter (TS 23.203 clauses 4.3.4 and 6.9).
+
+The PCRF requests the status of policy counters, and subscribes to changes
+of that status, with the Initial or the Intermediate Spending Limit Report
+Request procedure. The OCS then notifies the PCRF of each change with the
+Spending Limit Report procedure, and can also provide pending statuses that
+become current at a given time. The PCRF cancels all reporting for a
+subscriber with the Final Spending Limit Report Request procedure (TS
+23.203 clauses 6.9 and 7.9). The PCRF applies operator-defined actions to
+the status of the policy counters, for example a downgrade of the
+APN-AMBR, the gating of services, or a change of the charging conditions
+(TS 23.203 clause 6.9).
+
+These procedures run over the Sy reference point. The Initial and
+Intermediate Spending Limit Report Request map to the
+`Spending-Limit-Request` and `Spending-Limit-Answer` (SLR/SLA) commands,
+the Spending Limit Report maps to the
+`Spending-Status-Notification-Request` and
+`Spending-Status-Notification-Answer` (SNR/SNA) commands, and the Final
+Spending Limit Report Request maps to the `Session-Termination-Request`
+and `Session-Termination-Answer` (STR/STA) commands (TS 29.219 clauses
+4.5.1, 4.5.2, and 4.5.3). In the 5GS, the PCF obtains the same information
+from the Charging Function (CHF) over the N28 reference point (TS 23.503
+clause 5.3.8).
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.203
+a|
+* Clause 4.3.4 — Subscriber spending limits
+* Clause 4.4 — Usage monitoring control
+* Clause 6.1.3 — Credit management and credit re-authorization triggers
+* Clause 6.1.4 — Event triggers, Table 6.2
+* Clause 6.2.2.3 — Measurement for usage monitoring
+* Clause 6.6 — Usage monitoring control information, Table 6.6
+* Clause 6.9 — Policy decisions based on spending limits
+* Clause 7.9 — Procedures over the Sy reference point
+* Clause A.1.3.1.4 — GPRS specific event triggers, Table A.2
+* Clause A.4.3.1.2 — EPS specific event triggers, Table A.4.3-2
+
+| TS 23.503
+a|
+* Clauses 6.1.2.5 and 6.1.3.5 — Policy Control Request Triggers for the AMF and the SMF
+* Clause 5.3.8 — Interactions between the PCF and the CHF
+
+| TS 29.212
+a|
+* Clause 4.5.16 — Requesting usage monitoring control
+* Clause 4.5.17.1 — Usage threshold reached
+* Clause 5.3.7 — `Event-Trigger` AVP
+
+| TS 29.219
+a|
+* Clause 4.5 — Spending limits procedures over the Sy reference point
+|===

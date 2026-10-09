@@ -71,9 +71,21 @@ Treat the documentation as living, not archival:
 ## Repository layout
 
 - `main.adoc` — book entry point; a `= Part` heading per book part (currently
-  Part I: GPRS Core, Part II: EPC), each `include::`ing that part's chapters.
+  Part I: GPRS Core, Part II: EPC, Part III: Policy and Charging Control),
+  each `include::`ing that part's chapters. The generation parts come first,
+  and the Policy and Charging Control part always comes after all of them,
+  so it is renumbered when a generation part (for example 5GC) is added.
+  Refer to a part with an `xref` to its explicit ID (for example
+  `<<_policy_and_charging_control>>`), never with a literal "Part III".
 - `chapters/epc/*.adoc`, `chapters/gprs/*.adoc` — chapter content, one topic
   per file, grouped by book part.
+- `chapters/pcc/` — the Policy and Charging Control part: `common/` holds
+  the Principles chapter that applies to every generation, `gprs-epc/` the
+  TS 23.203 (Diameter-based) chapter for GPRS and the EPC, and a future
+  `5gs/` directory the TS 23.503 chapter. A protocol that a PCC chapter
+  uses lives in the protocol stack chapter of its generation part, not in
+  the PCC part: Diameter is in `chapters/epc/diameter.adoc`, and the HTTP/2
+  service-based interfaces belong in a future 5GC protocol chapter.
 - `images/*.svg` — rendered diagram exports referenced by `image::` macros
   (paths in `.adoc` files are resolved relative to the repo root, i.e.
   `main.adoc`'s directory — not relative to the including chapter file).
@@ -165,6 +177,9 @@ Treat the documentation as living, not archival:
   keep these consistent. Don't copy text, tables, or figures verbatim from
   3GPP specifications: describe them in your own words and cite the clause,
   because the 3GPP material is not covered by this repository's license.
+- `docs/pcc-5gs-todo.md` — outline and decisions for the future 5GS
+  chapter of the Policy and Charging Control part; delete it when that
+  chapter exists.
 - `docs/BUILDING.md` — maintainer documentation: toolchain, build, themes,
   and the Pages workflow. Update it together with `build.sh` and
   `.github/workflows/pages.yml`.

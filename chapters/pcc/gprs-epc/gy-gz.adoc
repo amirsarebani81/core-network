@@ -1,0 +1,191 @@
+[#_pcc_gy_gz]
+=== Gy and Gz Charging Reference Points
+
+==== Technical Overview
+
+The Gy and Gz reference points connect the Policy and Charging Enforcement
+Function (PCEF) to the charging systems. Gy connects the PCEF to the Online
+Charging System (OCS) for online credit control, and Gz connects the PCEF
+to the Offline Charging System (OFCS) for the transport of offline charging
+information (TS 23.203 clauses 5.2.4 and 5.2.5). In the EPC with Control
+and User Plane Separation (CUPS), the PGW-C terminates both reference
+points (TS 23.214 clause 5.3.1).
+
+The charging specifications do not use the names Gy and Gz in their
+architecture. TS 32.240 treats Gy as functionally equivalent to the Ro
+reference point, and Gz as functionally equivalent to the Ga reference
+point for the legacy packet switched domain and to the Ga or the Rf
+reference point for the evolved packet switched domain (TS 32.240 clauses
+4.2.2, 4.4.1.2, and 4.4.2.3). The <<_pcc_charging_models>> page describes
+the charging functions that these reference points connect.
+
+==== Gy (Ro)
+
+Gy uses the Diameter Credit-Control application itself, with the
+Application-ID 4 in the `Auth-Application-Id` AVP, and the
+`Credit-Control-Request` (CCR) and `Credit-Control-Answer` (CCA) commands
+with the command code 272 (TS 32.299 clauses 6.4.1.1 and 6.4.2). TS 32.251
+describes the PS domain operations of Gy as Debit / Reserve Units Request
+and Response, which map to these commands (TS 32.251 clauses 5.3.2.0 and
+6.2.1). The OCS also uses the `Re-Auth-Request` (RAR) and the
+`Abort-Session-Request` (ASR) of the Diameter base protocol, for example to
+request a re-authorization or to terminate the credit-control session (TS
+32.299 clauses 6.4.1.1, 6.3.8, and 6.5.5).
+
+In the CCR, the `Service-Context-Id` AVP identifies the charging
+specification that applies, and its value for PS domain charging contains
+`32251@3gpp.org`, preceded by the 3GPP release and optionally by operator
+specific parts (TS 32.299 clause 7.1.12). The PS specific charging
+information travels in the `PS-Information` AVP within the
+`Service-Information` AVP (TS 32.299 clause 7.2.158).
+
+The PCEF uses Session Charging with Unit Reservation (SCUR) on Gy, because
+it charges IP-CAN bearers and service data flows, which are sessions. The
+credit control is always per rating group, and the PCEF reports usage per
+rating group or per combination of rating group and service identifier,
+as each PCC rule specifies (TS 32.251 clause 5.3.1.0). Each rating group
+has its own `Multiple-Services-Credit-Control` AVP in the CCR and the CCA,
+so that one Diameter session manages independent quotas for the services
+of the PCEF (TS 32.299 clause 7.1.9).
+
+The PCEF uses the `CC-Request-Type` values as follows (TS 32.251 clause
+5.3.2.2):
+
+[cols="1,4",options="header"]
+|===
+| `CC-Request-Type` | Triggers on Gy
+
+| `INITIAL_REQUEST` (1)
+| The activation of an IP-CAN bearer, or the start of a service data flow when no credit-control session exists. For a network-requested dedicated bearer, the PCEF sends the request before any signaling towards the UE.
+
+| `UPDATE_REQUEST` (2)
+| For example, the start of a service data flow without a valid quota, the exhaustion of a granted quota, the expiry of the validity time, a re-authorization that the OCS requested, a change of charging conditions for which the OCS armed a trigger, or the expiry of the quota holding time.
+
+| `TERMINATION_REQUEST` (3)
+| The deactivation of the IP-CAN bearer, the expiry of the unused quota timer, a session termination that the OCS indicates, or an ASR from the OCS.
+|===
+
+TS 23.203 specifies that the PCEF usually starts one credit management
+session for each IP-CAN session, and that an IP-CAN specific annex can
+specify one session for each IP-CAN bearer instead (TS 23.203 clause
+6.1.3). For GPRS, the GGSN starts one credit management session, and
+therefore one Gy session, for each PDP context (TS 23.203 clause
+A.1.3.1.3). The <<_pcc_online_charging>> page shows the quota management
+on Gy step by step.
+
+==== Gz (Rf or Ga)
+
+Gz has two realizations, which depend on where the Charging Data Function
+(CDF) is located. If the CDF is external to the PCEF, the PCEF sends
+charging events to it over Rf. If the CDF is integrated in the PCEF, the
+PCEF produces the Charging Data Records (CDRs) itself and sends them to the
+Charging Gateway Function (CGF) over Ga (TS 32.251 clause 4.2). A PCEF
+supports at least one of the Rf, Ga, and Bp interfaces (TS 32.251 clause
+4.2).
+
+Rf uses the Diameter base accounting application, with the Application-ID
+3 in the `Acct-Application-Id` AVP, and the `Accounting-Request` (ACR) and
+`Accounting-Answer` (ACA) commands with the command code 271 (TS 32.299
+clauses 6.2.1.1 and 6.2.2). The PCEF reports a session with an ACR of the
+type `START_RECORD`, zero or more ACRs of the type `INTERIM_RECORD`, and an
+ACR of the type `STOP_RECORD`, and reports a one-time event with an ACR of
+the type `EVENT_RECORD`. The CDF can set the interval for the interim
+records in the `Acct-Interim-Interval` AVP of the ACA (TS 32.299 clauses
+6.1.0 and 6.1.2). TS 32.251 calls the corresponding operations the
+Charging Data Request and Response (TS 32.251 clause 6.1A.1).
+
+Ga carries CDRs from a CDF to a CGF with the GTP′ protocol, which reuses
+parts of the GTP signaling plane (TS 32.295 clause 5.1.2). The table below
+lists the GTP′ messages that TS 32.295 Table 6.2.1.1 defines.
+
+[cols="1,2,4",options="header"]
+|===
+| Type | Message | Use
+
+| 1, 2
+| `Echo Request`, `Echo Response`
+| Check whether the peer CDF or CGF is alive. GTP′ reuses these messages from TS 29.060.
+
+| 3
+| `Version Not Supported`
+| Reports that the receiver does not support the GTP′ version of a request.
+
+| 4, 5
+| `Node Alive Request`, `Node Alive Response`
+| Inform the peer that a node has started.
+
+| 6, 7
+| `Redirection Request`, `Redirection Response`
+| Ask the CDF to send its CDRs to another CGF.
+
+| 240, 241
+| `Data Record Transfer Request`, `Data Record Transfer Response`
+| Transfer one or more CDRs, and acknowledge them.
+|===
+
+GTP′ runs over UDP or TCP. Over UDP, a request usually uses the destination
+port 3386, which is reserved for GTP′, or another port that operation and
+maintenance configures, except port 2123 of GTPv2-C (TS 32.295 clause
+5.1.3).
+
+==== CDR Types
+
+TS 32.251 clause 5.2.1.0 defines which node produces which CDR in the
+packet switched domain. For the IP-CAN bearers and the service data flows
+that this part describes, the CDR types are the S-CDR of the SGSN, the
+SGW-CDR of the S-GW, the PGW-CDR of the P-GW, and the TDF-CDR of the TDF
+(TS 32.251 clauses 6.1.1, 6.1.2, 6.1.3, and 6.1.14). The PGW-CDR carries
+the flow based charging data, with containers per rating group or per
+combination of rating group and service identifier (TS 32.251 clause
+5.2.1.3).
+
+TS 32.251 defines no CDR type of its own for the GGSN. A stand-alone GGSN
+applies the P-GW charging of TS 32.251, so its offline charging produces
+flow based charging data in the same way as the P-GW (TS 32.251 clause
+4.1). TS 32.298 specifies the fields of each CDR, which this book does not
+describe.
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.203
+a|
+* Clauses 5.2.4 and 5.2.5 — Gy and Gz reference points
+* Clause 6.1.3 — Credit management
+* Clause A.1.3.1.3 — GPRS credit management per PDP context
+
+| TS 23.214
+a|
+* Clause 5.3.1 — Termination of Gy and Gz in the PGW-C
+
+| TS 32.240
+a|
+* Clauses 4.2.2, 4.4.1.2, and 4.4.2.3 — Equivalence of Gz to Ga or Rf, and of Gy to Ro
+
+| TS 32.251
+a|
+* Clause 4.1 — Charging of a stand-alone GGSN
+* Clause 4.2 — PS domain offline charging architecture
+* Clauses 5.2.1.0 and 5.2.1.3 — CDR types and flow based bearer charging
+* Clauses 5.3.1.0, 5.3.2.0, and 5.3.2.2 — Online charging principles and triggers for FBC online charging
+* Clauses 6.1.1 to 6.1.3 and 6.1.14 — S-CDR, SGW-CDR, PGW-CDR, and TDF-CDR
+* Clauses 6.1A.1 and 6.2.1 — Rf and Ro message contents
+
+| TS 32.295
+a|
+* Clause 5.1.2 — CDR transport by GTP′
+* Clause 5.1.3 — Port usage
+* Clause 6.2.1 — GTP′ message types, Table 6.2.1.1
+
+| TS 32.299
+a|
+* Clauses 6.1.0 and 6.1.2 — Diameter offline charging and session based charging
+* Clauses 6.2.1.1 and 6.2.2 — Accounting-Request message on Rf
+* Clauses 6.3.8 and 6.5.5 — Re-authorization and service termination
+* Clauses 6.4.1.1 and 6.4.2 — Credit-Control-Request message on Ro
+* Clauses 7.1.9 and 7.1.12 — Multiple-Services-Credit-Control and Service-Context-Id AVPs
+* Clause 7.2.158 — PS-Information AVP
+|===

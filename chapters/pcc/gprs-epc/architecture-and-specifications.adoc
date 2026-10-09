@@ -1,0 +1,241 @@
+[#_pcc_architecture]
+=== Architecture and Specifications
+
+.PCC architecture for the EPC with CUPS (non-roaming)
+image::images/pcc-architecture-eps.svg[PCC architecture for the EPC with CUPS]
+
+The figure above shows the non-roaming Policy and Charging Control (PCC)
+architecture of TS 23.203 for the EPC with Control and User Plane
+Separation (CUPS), together with the specification and the protocol of
+each reference point. TS 23.203 specifies one architecture for all IP
+Connectivity Access Network (IP-CAN) types, and its Annex A describes the
+specifics of GPRS and of the GTP-based EPC (TS 23.203 clauses 5.1, A.1,
+and A.4). In GPRS, the GGSN takes the place of the PGW-C and the PGW-U
+(TS 23.203 clause A.1.3.2.2.1), because TS 23.214 defines the separation of
+the control plane and the user plane only for EPC nodes.
+
+==== Network Elements
+
+SPR (Subscription Profile Repository):: The SPR stores the subscription
+information that the PCRF uses for its policy decisions, for example the
+allowed services, the allowed QoS, and the usage monitoring information.
+When the operator uses the User Data Repository (UDR) instead, the PCRF
+reaches it over the Ud reference point (TS 23.203 clauses 5.1 and 6.2.4).
+
+AF (Application Function):: The AF offers an application that requires
+dynamic policy or charging control of the user plane, for example the
+P-CSCF of the IP Multimedia Subsystem (IMS), and it provides the session
+information of that application to the PCRF (TS 23.203 clause 6.2.3).
+
+PCRF (Policy and Charging Rules Function):: The PCRF makes the policy and
+charging control decisions, and it provides them as PCC rules to the PCEF
+and as ADC rules to the TDF (TS 23.203 clause 6.2.1.0).
+
+PGW-C (PDN Gateway - Control Plane):: The PGW-C contains the control part
+of the Policy and Charging Enforcement Function (PCEF). It terminates the
+Gx, Gy, and Gz reference points and translates the PCC rules into rules
+for the PGW-U (TS 23.214 clauses 4.4.1 and 5.3.1).
+
+PGW-U (PDN Gateway - User Plane):: The PGW-U contains the user plane part
+of the PCEF. It detects the service data flows, enforces the gates and the
+bitrates, and measures the usage, as the PGW-C instructs it over Sxb (TS
+23.214 clauses 5.2.1, 5.3.2, and 5.10).
+
+OCS (Online Charging System):: The OCS performs online credit control for
+the PCEF over Gy and for the TDF over Gyn, and it provides the status of
+the policy counters of a subscriber to the PCRF over Sy (TS 23.203 clauses
+5.2.4, 5.2.9, and 5.2.10).
+
+OFCS (Offline Charging System):: The OFCS receives the offline charging
+information of the PCEF over Gz and of the TDF over Gzn, and it produces
+the Charging Data Records (CDRs) (TS 23.203 clauses 5.2.5 and 5.2.11, and
+TS 32.240 clause 4.3.1.4).
+
+TDF-C (Traffic Detection Function - Control Plane):: The TDF-C is the
+control part of the TDF. It receives ADC rules from the PCRF over Sd,
+reports the detected applications to the PCRF, and terminates the Gyn and
+Gzn reference points (TS 23.203 clause 5.2.8, and TS 23.214 clauses 4.4.1
+and 5.3.1).
+
+TDF-U (Traffic Detection Function - User Plane):: The TDF-U is the user
+plane part of the TDF. It detects the application traffic on SGi as the
+TDF-C instructs it over Sxc (TS 23.214 clauses 4.4.1 and 5.2.1).
+
+PDN (Packet Data Network):: The PDN is the external packet data network
+that the UE reaches over SGi.
+
+==== Reference Points
+
+The table below describes the reference points that the figure shows,
+and the two offline charging reference points that lie inside the
+charging domain and that the figure does not show.
+
+[cols="1,2,4,2",options="header"]
+|===
+| Reference point | Network elements | Purpose | Protocol and specification
+
+| Gx
+| PCEF (PGW-C) and PCRF
+| Establishment and termination of the Gx session for each IP-CAN session, requests for PCC decisions, provisioning of PCC rules, event reporting, usage reporting, and the negotiation of the bearer control mode (TS 23.203 clause 5.2.2).
+| Diameter, TS 29.212
+
+| Rx
+| AF and PCRF
+| Transfer of the session information of the application, for example IP filters and bandwidth requirements, and subscription of the AF to IP-CAN bearer level events (TS 23.203 clause 5.2.1).
+| Diameter, TS 29.214
+
+| Sd
+| TDF (TDF-C) and PCRF
+| Establishment and termination of the Sd session, provisioning of ADC rules, and reporting of the start and the stop of applications and of usage (TS 23.203 clause 5.2.8).
+| Diameter, TS 29.212
+
+| Sy
+| PCRF and OCS
+| Requests for, and notifications of, the status of policy counters (TS 23.203 clause 5.2.9).
+| Diameter, TS 29.219
+
+| Sp
+| PCRF and SPR
+| Requests for subscription information, and notifications of changes to it (TS 23.203 clause 5.2.3.1).
+| Not specified in TS 23.203
+
+| Gy
+| PCEF (PGW-C) and OCS
+| Online credit control for service data flow based charging (TS 23.203 clause 5.2.4).
+| Diameter (Ro), TS 32.299
+
+| Gyn
+| TDF (TDF-C) and OCS
+| Online credit control for charging based on ADC rules (TS 23.203 clause 5.2.10).
+| Diameter (Ro), TS 32.299
+
+| Gz
+| PCEF (PGW-C) and OFCS
+| Transport of offline charging information for service data flow based charging (TS 23.203 clause 5.2.5).
+| Diameter (Rf), TS 32.299, or GTP′ (Ga), TS 32.295
+
+| Gzn
+| TDF (TDF-C) and OFCS
+| Transport of offline charging information for charging based on ADC rules (TS 23.203 clause 5.2.11).
+| Diameter (Rf), TS 32.299, or GTP′ (Ga), TS 32.295
+
+| Sxb
+| PGW-C and PGW-U
+| Control of the packet detection, enforcement, and usage reporting in the PGW-U (TS 23.214 clause 5.2.1).
+| PFCP, TS 29.244
+
+| Sxc
+| TDF-C and TDF-U
+| Control of the application detection and usage reporting in the TDF-U (TS 23.214 clause 5.2.1).
+| PFCP, TS 29.244
+
+| SGi
+| PGW-U, TDF-U, and PDN
+| User plane traffic towards the PDN. The TDF is located on SGi (TS 23.203 clause 7.1).
+| IP
+
+| Ga (not shown)
+| CDF and CGF, inside the OFCS
+| Transfer of CDRs from the Charging Data Function to the Charging Gateway Function (TS 32.240 clause 4.4.1.3).
+| GTP′, TS 32.295
+
+| Bx (not shown)
+| CGF and Billing Domain
+| Transfer of CDR files to the Billing Domain. TS 32.251 calls this reference point Bp for the packet switched domain (TS 32.240 clause 4.4.1.4, TS 32.251 clause 4.2).
+| File transfer, TS 32.297
+|===
+
+TS 32.240 maps Gy to the Ro reference point, and Gz to the Rf or the Ga
+reference point, so the charging specifications describe these reference
+points as Ro, Rf, and Ga (TS 32.240 clauses 4.2.2, 4.4.1.2, and 4.4.2.3).
+The Diameter applications of Gx, Rx, Sd, Sy, Gy, and Gz are listed in the
+<<_diameter_applications_in_the_epc,Diameter Applications in the EPC>>
+section of the <<_diameter,Diameter>> chapter.
+
+==== Enforcement Under CUPS
+
+With CUPS, the PGW-C and the PGW-U together provide the PCEF, and the TDF-C
+and the TDF-U together provide the TDF (TS 23.214 clause 4.4.1). The
+control plane functions terminate the Gx, Sd, Gy, Gyn, Gz, and Gzn
+reference points, so the PCRF, the OCS, and the OFCS do not interact with
+the user plane functions (TS 23.214 clause 5.3.1).
+
+The PGW-C enforces the PCC rules by provisioning rules in the PGW-U over
+Sxb with the Packet Forwarding Control Protocol (PFCP). The PGW-C keeps a
+mapping between each PCC rule that it receives over Gx and the Packet
+Detection Rules (PDRs) that it provisions over Sxb, and it can either send
+the filters of a rule to the PGW-U or refer to an application detection
+filter or to predefined rules that are configured in the PGW-U (TS 23.214
+clauses 5.11.1 and 5.11.2). The PGW-C provides the APN-AMBR and the GBR and
+MBR of each GBR bearer to the PGW-U for policing (TS 23.214 clause 5.10),
+and it provides Usage Reporting Rules (URRs) so that the PGW-U reports the
+usage that online charging, offline charging, and usage monitoring need
+(TS 23.214 clause 5.3.2). The <<_pfcp_packet_forwarding_control_protocol>>
+chapter describes PFCP and its rules.
+
+==== Differences Between GPRS and the EPC
+
+TS 23.203 Annex A realizes the PCC architecture for each 3GPP IP-CAN. The
+table below summarizes the main differences between GPRS and the
+GTP-based EPC.
+
+[cols="2,3,3",options="header"]
+|===
+| Aspect | GPRS | GTP-based EPC
+
+| PCEF location
+| GGSN (TS 23.203 clause A.1.3.2.2.1)
+| PDN GW, that is the PGW-C and the PGW-U with CUPS (TS 23.203 clause A.4.2.1)
+
+| IP-CAN bearer
+| PDP context (TS 23.203 clause A.1.0)
+| EPS bearer
+
+| IP-CAN session establishment
+| A `Create PDP Context Request` for the first PDP context of a new UE IP address (TS 23.203 clause A.1.4.2)
+| The creation of the default bearer (TS 23.203 clause A.4.4.1)
+
+| IP-CAN session termination
+| The deletion of the last PDP context of the UE IP address (TS 23.203 clause A.1.4.1)
+| The release of the last EPS bearer of the IP-CAN session (TS 23.203 clause A.4.4.1)
+
+| Bearer binding
+| The PCRF in UE-only mode, and the PCRF and the GGSN in UE/NW mode (TS 23.203 clause A.1.3.1.1.0)
+| The PCEF (TS 23.203 clause A.4.3.1.3)
+
+| Default bearer QoS
+| Not applicable
+| The PCRF authorizes the QCI and ARP of the default EPS bearer (TS 23.203 clause A.4.3.4)
+
+| Credit management session
+| One per PDP context (TS 23.203 clause A.1.3.1.3)
+| One per IP-CAN session, unless an IP-CAN specific annex specifies otherwise (TS 23.203 clause 6.1.3)
+
+| Specific event triggers
+| For example SGSN change, RAT type change, PDP context activity, and routeing area change (TS 23.203 Table A.2)
+| For example SGSN change, Serving GW change, RAT type change, tracking area change, and ECGI change (TS 23.203 Table A.4.3-2)
+|===
+
+TS 29.212 Annex A specifies the access specific aspects of Gx for GPRS,
+and TS 29.212 Annex B specifies them for the 3GPP accesses of the EPS.
+
+==== Technical Specifications
+
+* *3GPP TS 23.203* _Policy and charging control architecture_
+* *3GPP TS 23.214* _Architecture enhancements for control and user plane separation of EPC nodes; Stage 2_
+* *3GPP TS 29.212* _Policy and Charging Control (PCC); Reference points_
+* *3GPP TS 29.213* _Policy and Charging Control signalling flows and Quality of Service (QoS) parameter mapping_
+* *3GPP TS 29.214* _Policy and Charging Control over Rx reference point_
+* *3GPP TS 29.219* _Policy and Charging Control: Spending Limit Reporting over Sy reference point_
+* *3GPP TS 29.244* _Interface between the Control Plane and the User Plane Nodes; Stage 3_
+* *3GPP TS 32.240* _Telecommunication management; Charging management; Charging architecture and principles_
+* *3GPP TS 32.251* _Telecommunication management; Charging management; Packet Switched (PS) domain charging_
+* *3GPP TS 32.295* _Telecommunication management; Charging management; Charging Data Record (CDR) transfer_
+* *3GPP TS 32.297* _Telecommunication management; Charging management; Charging Data Record (CDR) file format and transfer_
+* *3GPP TS 32.299* _Telecommunication management; Charging management; Diameter charging applications_
+
+==== IETF Specifications
+
+* *IETF RFC 6733* _Diameter Base Protocol_
+* *IETF RFC 8506* _Diameter Credit-Control Application_, which obsoletes IETF RFC 4006
+* *IETF RFC 4006* _Diameter Credit-Control Application_, which TS 32.299 still references

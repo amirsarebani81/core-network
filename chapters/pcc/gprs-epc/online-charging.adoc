@@ -1,0 +1,191 @@
+[#_pcc_online_charging]
+=== Online Charging
+
+==== Technical Overview
+
+In online charging, the PCEF obtains credit from the Online Charging
+System (OCS) before it lets the traffic of a service pass, and it reports
+the used credit while the service continues. The PCEF uses Session
+Charging with Unit Reservation (SCUR) on Gy: one Diameter Credit-Control
+session carries an initial request, any number of update requests, and a
+termination request, and each of them can report used units and request
+new ones (TS 32.299 clause 6.3.5 and TS 32.251 clause 5.3.1.0). The
+<<_pcc_charging_models>> page describes the quota management elements, and
+the <<_pcc_gy_gz>> page describes the Gy reference point.
+
+The figure below shows one rating group of a credit-control session in
+the EPC with Control and User Plane Separation (CUPS), from the grant of a
+quota to the redirection of the traffic after the final units are used.
+The credit-control session already exists, because the PGW-C started it at
+IP-CAN session establishment, as <<_pcc_ip_can_session_establishment>>
+describes. The PGW-C decides on the thresholds of the Usage Reporting
+Rules (URRs) in the PGW-U based on the quota that the OCS grants, so the
+PGW-U reports the usage when the PGW-C needs to contact the OCS (TS 23.214
+clause 5.3.2).
+
+==== Call Flow
+
+The call flow has three phases: Quota Grant, Quota Threshold Reached, and
+Final Units Consumed.
+
+.Online charging call flow
+plantuml::diagrams/pcc-online-charging-call-flow.puml[svg]
+
+==== Step-by-Step Description
+
+. The PGW-C detects the start of a service data flow for which no valid
+quota exists, so the *PGW-C* sends a `Credit-Control-Request` with the
+`CC-Request-Type` set to `UPDATE_REQUEST` to the *OCS*. The CCR contains a
+`Multiple-Services-Credit-Control` AVP with the `Rating-Group` of the
+service, that is the charging key of its PCC rule, and can request units
+in the `Requested-Service-Unit` AVP (TS 32.251 clauses 5.3.1.2 and
+5.3.2.2.0, and TS 32.299 clause 6.3.5, step 6).
+
+. The *OCS* reserves credit on the account of the subscriber and returns a
+`Credit-Control-Answer` to the *PGW-C*. Its `Multiple-Services-Credit-Control`
+AVP grants a quota in the `Granted-Service-Unit` AVP, for example a volume,
+and can limit the validity of the quota in the `Validity-Time` AVP and set a
+`Volume-Quota-Threshold` at which the PGW-C requests more units (TS 32.299
+clauses 6.3.5, step 8, and 6.5.2, and IETF RFC 8506 section 8.33).
+
+. The *PGW-C* sends a PFCP `Session Modification Request` to the *PGW-U*.
+The request provides a URR for the rating group with a volume threshold
+and a volume quota that the PGW-C derives from the grant, and sets the
+reporting triggers for the threshold (VOLTH) and the quota (VOLQU) (TS
+23.214 clause 5.3.2 and TS 29.244 clause 5.2.2.2).
+
+. The *PGW-U* confirms the update with a PFCP `Session Modification
+Response` and starts to measure the traffic of the rating group.
+
+. When the measured volume reaches the threshold, the *PGW-U* sends a PFCP
+`Session Report Request` to the *PGW-C*, which carries a usage report with
+the measured volume and the trigger that caused it (TS 29.244 clause
+5.2.2.3.1).
+
+. The *PGW-C* acknowledges the report with a PFCP `Session Report
+Response`. The PGW-U continues to forward the traffic of the rating group
+within the remaining quota (TS 29.244 clause 5.2.2.2).
+
+. The *PGW-C* requests a re-authorization from the *OCS* with a
+`Credit-Control-Request` with the `CC-Request-Type` set to
+`UPDATE_REQUEST`. The CCR reports the used units in the
+`Used-Service-Unit` AVP, with the `Reporting-Reason` AVP set to
+`THRESHOLD` (0) (TS 32.299 clauses 6.5.1.3, 6.5.2, and 7.2.175). The PGW-C
+lets the service continue while the re-authorization is in progress, until
+the original quota is used up (TS 32.299 clause 6.5.2).
+
+. The *OCS* deducts the reported units from the account and returns a
+`Credit-Control-Answer`. In this example, the account can cover only a last
+amount of units, so the OCS grants them as the final units: the
+`Multiple-Services-Credit-Control` AVP contains a `Final-Unit-Indication`
+AVP with the `Final-Unit-Action` set to `REDIRECT` and a `Redirect-Server`
+AVP with the address of a top-up server (TS 32.299 clause 6.5.3 and IETF
+RFC 8506 sections 8.34 to 8.37).
+
+. The *PGW-C* sends a PFCP `Session Modification Request` to the *PGW-U*
+with the new quota for the URR. For the redirection, the PGW-C provides the
+redirect destination to the PGW-U, or instructs the PGW-U to forward the
+affected traffic to the PGW-C, depending on where the redirection is
+enforced (TS 23.214 clause 5.11.3).
+
+. The *PGW-U* confirms the update with a PFCP `Session Modification
+Response`.
+
+. When the final quota is used up, the *PGW-U* sends a PFCP `Session Report
+Request` with a usage report for the volume quota trigger. From this point
+the PGW-U applies the quota action that the PGW-C provisioned for the URR,
+for example the redirection of the traffic (TS 29.244 clause 5.2.2.3.1).
+
+. The *PGW-C* acknowledges the report with a PFCP `Session Report
+Response`.
+
+. The *PGW-C* starts the redirection of the service and informs the *OCS*
+with a `Credit-Control-Request` with the `CC-Request-Type` set to
+`UPDATE_REQUEST`. The CCR reports the used final units, with the
+`Reporting-Reason` set to `QUOTA_EXHAUSTED` (3), and carries no
+rating-related AVPs, which indicates that the final unit action has started
+and that the OCS does not need to reserve more credit (IETF RFC 8506
+section 5.6.2 and TS 32.299 clause 7.2.175).
+
+. The *OCS* deducts the used units and answers with a
+`Credit-Control-Answer` without a new reservation. The OCS can use the
+`Validity-Time` AVP to limit how long the redirection lasts before the
+PGW-C sends a new request (IETF RFC 8506 sections 5.6.2 and 8.33).
+
+. If the PCRF armed the `OUT_OF_CREDIT` event trigger, the *PGW-C* informs
+the *PCRF* with a Gx `Credit-Control-Request` with the `CC-Request-Type`
+set to `UPDATE_REQUEST`. The CCR contains the `Event-Trigger`
+`OUT_OF_CREDIT` (15) and a `Charging-Rule-Report` for the affected PCC
+rules, which carries the `Final-Unit-Indication` of the termination action
+that the PCEF applies (TS 23.203 clause 6.1.3 and TS 29.212 clauses 5.3.7
+and 5.3.18).
+
+. The *PCRF* acknowledges the report with a Gx `Credit-Control-Answer`,
+which can also carry new or removed PCC rules for the affected services (TS
+29.212 clause 5.6.3).
+
+==== Termination Action TERMINATE
+
+If the OCS sets the `Final-Unit-Action` to `TERMINATE` instead, the PCEF
+terminates the service when the final units are used, or immediately when
+the OCS grants a zero quota. It then reports the used units for the
+terminated service in a CCR with the `CC-Request-Type` set to
+`UPDATE_REQUEST` (TS 32.299 clause 6.5.3). `TERMINATE` is also the default
+when the PCEF receives a `Final-Unit-Action` value that it does not support
+(IETF RFC 8506 section 8.35). If the OCS has not provided any termination
+action before it denies credit, the PCEF applies its preconfigured default
+termination action (TS 23.203 clause 6.1.8).
+
+==== Differences for GPRS
+
+In GPRS, the GGSN runs one credit-control session for each PDP context,
+and both measures and enforces the quota itself, so there are no PFCP
+steps (TS 23.203 clause A.1.3.1.3). For a network-requested dedicated
+bearer, the GGSN sends the initial request for the new PDP context to the
+OCS before it starts any signaling towards the UE (TS 32.251 clause
+5.3.2.2.1).
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.203
+a|
+* Clause 6.1.3 — Credit management
+* Clause 6.1.8 — Termination action
+* Clause A.1.3.1.3 — GPRS credit management per PDP context
+
+| TS 23.214
+a|
+* Clause 5.3.2 — Activation of usage reporting in the UP function
+* Clause 5.11.3 — Redirection
+
+| TS 29.212
+a|
+* Clauses 5.3.7 and 5.3.18 — Event-Trigger and Charging-Rule-Report AVPs
+* Clause 5.6.3 — CC-Answer command
+
+| TS 29.244
+a|
+* Clause 5.2.2.2 — Provisioning of Usage Reporting Rules in the UP function
+* Clause 5.2.2.3.1 — Reporting of usage reports to the CP function
+
+| TS 32.251
+a|
+* Clause 5.3.1.0 — Online charging principles
+* Clause 5.3.1.2 — Flow based bearer charging
+* Clauses 5.3.2.2.0 and 5.3.2.2.1 — Triggers for FBC online charging
+
+| TS 32.299
+a|
+* Clause 6.3.5 — Session Charging with Unit Reservation
+* Clauses 6.5.1.3, 6.5.2, and 6.5.3 — Reporting quota usage, threshold based re-authorization, and termination action
+* Clause 7.2.175 — Reporting-Reason AVP
+
+| IETF RFC 8506
+a|
+* Section 5.6.2 — Redirect action
+* Sections 8.33 to 8.37 — Validity-Time, Final-Unit-Indication, Final-Unit-Action, Restriction-Filter-Rule, and Redirect-Server AVPs
+|===

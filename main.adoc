@@ -1,8 +1,8 @@
 = Core Network: Architecture and Signaling Procedures
 Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :doctype: book
-:revnumber: 1.3.0
-:revdate: 2026-10-07
+:revnumber: 1.4.0
+:revdate: 2026-10-09
 :toc: left
 :toclevels: 3
 :sectnums:
@@ -16,7 +16,7 @@ Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :kroki-server-url: http://localhost:8000
 :sectanchors:
 :sectlinks:
-:description: A reference to the architecture of the GPRS core network and the Evolved Packet Core (EPC), and to the signaling procedures between their network elements, with call flows and 3GPP TS clause citations.
+:description: A reference to the architecture of the mobile packet core network, its signaling procedures, and its policy and charging control, with call flows and 3GPP TS clause citations.
 :favicon: favicon.svg
 :copyright: © 2026 Amir Hossein Sarebani. Licensed under CC BY-NC-ND 4.0.
 :license-url: https://creativecommons.org/licenses/by-nc-nd/4.0/
@@ -25,14 +25,15 @@ ifdef::backend-multipage_html5[]
 endif::[]
 
 ifdef::backend-multipage_html5[]
-This book describes the architecture of two generations of the mobile
-packet core network, and the signaling procedures that run between their
-network elements. Part I covers the General Packet Radio Service (GPRS)
-core network, and Part II covers the Evolved Packet Core (EPC). Each
-procedure has a call flow diagram and a step-by-step description of its
-messages, and each technical claim cites the 3GPP Technical Specification
-(TS) and clause that defines it, so that a network engineer can move
-directly between this book and the specifications.
+This book describes the architecture of the mobile packet core network
+and the signaling procedures that run between its network elements. Each
+generation of the packet core has a part of its own, and a further part
+describes the policy and charging control framework that operates across
+these generations. Each procedure has a call flow diagram and a
+step-by-step description of its messages, and each technical claim cites
+the 3GPP Technical Specification (TS) and clause that defines it, so that
+a network engineer can move directly between this book and the
+specifications.
 
 [.cn-button]
 link:core-network.pdf[Download the PDF edition]
@@ -89,3 +90,17 @@ include::chapters/epc/architecture-and-specifications.adoc[]
 include::chapters/epc/protocol-stack.adoc[]
 
 include::chapters/epc/functional-description-and-information-flows.adoc[]
+
+[#_policy_and_charging_control]
+= Part III: Policy and Charging Control
+
+[partintro]
+This part describes the policy and charging control framework of the
+mobile packet core network: the principles that the framework applies in
+every generation, its network elements and reference points, the
+protocols that carry policy and charging information between the network
+elements, and the procedures that run over those protocols.
+
+include::chapters/pcc/common/principles.adoc[]
+
+include::chapters/pcc/gprs-epc/pcc-gprs-epc.adoc[]

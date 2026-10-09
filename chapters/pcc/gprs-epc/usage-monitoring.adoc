@@ -1,0 +1,149 @@
+[#_pcc_usage_monitoring]
+=== Usage Monitoring
+
+==== Technical Overview
+
+Usage monitoring lets the PCRF base its policy decisions on the total
+network usage of a user in real time, independently of the charging of
+that user. The PCRF provides volume or time thresholds for a monitoring
+key, and the PCEF reports the accumulated usage when a threshold is
+reached. The PCRF can then, for example, reduce the authorized bandwidth
+of the user (TS 23.203 clauses 4.4 and 6.6). <<_pcc_policy_triggers_and_usage_monitoring>>
+describes the monitoring keys, the thresholds, and the conditions for
+reporting.
+
+The figure below shows the procedure for the EPC with Control and User
+Plane Separation (CUPS) in the non-roaming case, with one example: the
+PCRF activates the monitoring of all the traffic of the IP-CAN session,
+and when the volume threshold is reached, it reduces the APN-AMBR of the
+user. The PGW-C measures the usage through Usage Reporting Rules (URRs)
+that it provisions in the PGW-U for each monitoring key (TS 23.214 clause
+5.3.2).
+
+==== Call Flow
+
+The call flow has three phases: Usage Monitoring Activation, Usage
+Threshold Reached, and Enforcement of the New Policy.
+
+.Usage monitoring call flow
+plantuml::diagrams/pcc-usage-monitoring-call-flow.puml[svg]
+
+==== Step-by-Step Description
+
+. The *PCRF* sends a Diameter `Re-Auth-Request` over Gx to the *PGW-C*
+that activates usage monitoring. The RAR sets the `Event-Trigger` to
+`USAGE_REPORT` (33) and contains a `Usage-Monitoring-Information` AVP with
+the `Monitoring-Key`, the volume threshold in the `CC-Total-Octets` AVP of
+the `Granted-Service-Unit` AVP, and the `Usage-Monitoring-Level` AVP set to
+`SESSION_LEVEL` (0) for the whole IP-CAN session (TS 29.212 clauses 4.5.16,
+5.3.60, and 5.3.61). The PCRF can provide the same information in the CCA
+of the IP-CAN session establishment instead (TS 29.213 clause 4.1, step
+13).
+
+. The *PGW-C* acknowledges the RAR with a Diameter `Re-Auth-Answer`.
+
+. The *PGW-C* sends a PFCP `Session Modification Request` to the *PGW-U*
+with a URR for the monitoring key, whose volume threshold the PGW-C
+derives from the threshold that the PCRF provided (TS 23.214 clause 5.3.2
+and TS 29.244 clause 5.2.2.2).
+
+. The *PGW-U* confirms the update with a PFCP `Session Modification
+Response` and starts to measure the traffic of the IP-CAN session.
+
+. When the measured volume reaches the threshold, the *PGW-U* sends a PFCP
+`Session Report Request` with a usage report for the URR to the *PGW-C*
+(TS 23.214 clause 5.3.3 and TS 29.244 clause 5.2.2.3.1).
+
+. The *PGW-C* acknowledges the report with a PFCP `Session Report
+Response`. The PGW-U continues to measure the usage after the threshold is
+reached, until the PCRF provides a new threshold (TS 23.203 clause
+6.2.2.3).
+
+. The *PGW-C* reports the usage to the *PCRF* in a Diameter
+`Credit-Control-Request` with the `CC-Request-Type` set to
+`UPDATE_REQUEST` and the `Event-Trigger` set to `USAGE_REPORT`. The
+`Usage-Monitoring-Information` AVP contains the `Monitoring-Key` and the
+usage accumulated since the last report in the `Used-Service-Unit` AVP (TS
+29.212 clauses 4.5.17.1 and 5.3.60). If both volume and time thresholds
+were provided, the PGW-C reports both measurements even when only one
+threshold is reached (TS 23.203 clause 6.1.4).
+
+. The *PCRF* makes a new policy decision based on the usage and returns a
+`Credit-Control-Answer` to the *PGW-C*. In this example, the CCA carries a
+reduced authorized APN-AMBR in the `QoS-Information` AVP. To continue the
+monitoring, the CCA also carries a new threshold in the
+`Usage-Monitoring-Information` AVP; without a new threshold, the PGW-C
+stops monitoring that key (TS 29.212 clause 4.5.16 and TS 23.203 clauses
+6.2.2.3 and A.4.4.4.1).
+
+. The *PGW-C* sends a PFCP `Session Modification Request` to the *PGW-U*
+with the new APN-AMBR for policing and the new threshold for the URR (TS
+23.214 clauses 5.10 and 6.3.1.7, step 11).
+
+. The *PGW-U* confirms the update with a PFCP `Session Modification
+Response` (TS 23.214 clause 6.3.1.7, step 12).
+
+. Because the APN-AMBR changed, the *PGW-C* starts the PDN GW initiated
+bearer modification without bearer QoS update and sends a GTPv2-C `Update
+Bearer Request` with the new APN-AMBR to the *SGW-C* (TS 23.401 clause
+5.4.3, step 2). The SGW-C, the MME, and the UE then apply the new APN-AMBR.
+
+. The *SGW-C* returns a GTPv2-C `Update Bearer Response` to the *PGW-C*
+(TS 23.401 clause 5.4.3).
+
+==== Monitoring Time
+
+The PCRF can also provide a monitoring time, for example the start of a
+new billing day, together with subsequent thresholds. At the monitoring
+time, the PCEF records the accumulated usage and applies the subsequent
+thresholds, and its next usage report separates the usage before and after
+the monitoring time (TS 23.203 clauses 6.2.2.3 and 6.6.1, and TS 29.212
+clause 4.5.16).
+
+==== Differences for GPRS
+
+In GPRS, the GGSN performs the measurement itself, so there are no PFCP
+steps. The PCRF can provide a new authorized APN-AMBR in the CCA of the
+IP-CAN session modification, and the GGSN enforces it for the total
+bandwidth of the non-GBR traffic of the APN (TS 23.203 clauses A.1.3.2.2.1
+and A.1.4.4.1).
+
+==== References
+
+[cols="1,4",options="header"]
+|===
+| Specification | Clauses and coverage
+
+| TS 23.203
+a|
+* Clause 4.4 — Usage monitoring control
+* Clause 6.1.4 — Event triggers, covering the usage report
+* Clause 6.2.2.3 — Measurement for usage monitoring
+* Clause 6.6 — Usage monitoring control information
+* Clauses A.1.3.2.2.1 and A.1.4.4.1 — GPRS APN-AMBR enforcement and PCEF-initiated modification
+* Clause A.4.4.4.1 — EPC PCEF-initiated modification
+
+| TS 23.214
+a|
+* Clauses 5.3.2 and 5.3.3 — Activation and reporting of usage information
+* Clause 5.10 — Bearer and APN policing
+* Clause 6.3.1.7 — Interaction between CP and UP function during modification of bearer
+
+| TS 23.401
+a|
+* Clause 5.4.3 — PDN GW initiated bearer modification without bearer QoS update
+
+| TS 29.212
+a|
+* Clause 4.5.16 — Requesting usage monitoring control
+* Clause 4.5.17.1 — Usage threshold reached
+* Clauses 5.3.60 and 5.3.61 — Usage-Monitoring-Information and Usage-Monitoring-Level AVPs
+
+| TS 29.213
+a|
+* Clause 4.1 — IP-CAN session establishment, covering the thresholds in the CCA
+
+| TS 29.244
+a|
+* Clauses 5.2.2.2 and 5.2.2.3.1 — Provisioning of URRs and reporting of usage reports
+|===
