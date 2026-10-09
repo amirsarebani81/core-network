@@ -3,17 +3,17 @@
 .EPC architecture and Specification
 image::images/epc-architecture.svg[EPC Architecture]
 
-The figure above shows the EPC architecture and its technical specification.
+The figure above shows the network elements of the EPC and the reference points between them, and it labels each reference point with the 3GPP specification and the protocol that the reference point uses. The dotted rectangle encloses the EPC elements that serve 3GPP access. The figure draws the ePDG and the 3GPP AAA Server, which serve untrusted non-3GPP access (TS 23.402 clause 4.2.2), outside the rectangle, together with the UE, the E-UTRAN, and the PDN.
 
 === Network Elements
 
-UE (User Equipment):: The UE is the subscriber's device, for example a smartphone or an IoT module, that attaches to the network over the radio interface. It is the endpoint for all mobility management, session management, and user-plane traffic.
+UE (User Equipment):: The UE is the subscriber's device, for example a smartphone or an IoT module, that attaches to the network over the radio interface. It is the endpoint for all mobility management, session management, and user-plane traffic. The UE reaches the E-UTRAN over LTE-Uu, and over an untrusted non-3GPP access network, such as public Wi-Fi, the UE reaches the ePDG over SWu (TS 23.402 clause 4.2.2).
 
-E-UTRAN (Evolved UMTS Terrestrial Radio Access Network):: The E-UTRAN is the LTE radio access network, made up of eNodeBs. It provides the radio interface towards the UE over LTE-Uu, relays control-plane signaling to the MME over S1-MME, and relays user-plane traffic to the SGW-U over S1-U.
+E-UTRAN (Evolved UMTS Terrestrial Radio Access Network):: The E-UTRAN is the LTE radio access network, made up of eNodeBs. It provides the radio interface towards the UE over LTE-Uu, relays control-plane signaling to the MME over S1-MME, and relays user-plane traffic to the SGW-U over S1-U. Neighboring eNodeBs interconnect over X2, for example to prepare a handover.
 
-MME (Mobility Management Entity):: The MME is the control-plane node of the EPC, handling UE authentication, mobility management, tracking area management, paging, and bearer session signaling. The MME carries no user-plane traffic itself and relies on the SGW-C for session establishment towards the user plane.
+MME (Mobility Management Entity):: The MME is the control-plane node of the EPC, handling UE authentication, mobility management, tracking area management, paging, and bearer session signaling. The MME carries no user-plane traffic itself and relies on the SGW-C for session establishment towards the user plane. Two MMEs exchange the context of a UE over S10 when the serving MME changes.
 
-HSS (Home Subscriber Server):: The HSS is the master subscriber database of the EPC. It stores subscription profiles, authentication data, and the identity of the MME currently serving each subscriber, and the MME queries the HSS over S6a for authentication vectors and location updates.
+HSS (Home Subscriber Server):: The HSS is the master subscriber database of the EPC. It stores subscription profiles, authentication data, and the identity of the MME currently serving each subscriber, and the MME queries the HSS over S6a for authentication vectors and location updates. The 3GPP AAA Server retrieves the authentication data and the subscription data for non-3GPP access from the HSS over SWx (TS 23.402 clause 4.2.2).
 
 SGW-C (Serving Gateway - Control Plane):: The SGW-C is the control-plane function of the Serving Gateway. It terminates S11 signaling from the MME and translates this signaling into PFCP rules that configure the SGW-U, without handling any user data itself.
 
@@ -21,19 +21,19 @@ SGW-U (Serving Gateway - User Plane):: The SGW-U is the user-plane function of t
 
 PGW-C (PDN Gateway - Control Plane):: The PGW-C is the control-plane function of the PDN Gateway, handling session establishment, IP address allocation, and QoS/policy signaling. It then provisions the PGW-U with the corresponding PFCP rules.
 
-PCRF (Policy and Charging Rules Function):: The PCRF is the policy control node of the EPC. It derives QoS, charging, and traffic-detection rules from subscriber and service policies, and it provisions the PGW-C with these rules over Gx for enforcement in the user plane. <<_pcc_architecture>> describes the complete policy and charging control architecture.
+PCRF (Policy and Charging Rules Function):: The PCRF is the policy control node of the EPC. It derives QoS, charging, and traffic-detection rules from subscriber and service policies, and it provisions the PGW-C with these rules over Gx and the TDF-C with application detection and control (ADC) rules over Sd for enforcement in the user plane. <<_pcc_architecture>> describes the complete policy and charging control architecture.
 
-OCS (Online Charging System):: The OCS is the real-time charging system for prepaid and quota-based services. It receives credit-control requests from the PGW-C over Gy and authorizes or denies continued user-plane usage based on the subscriber's available balance, as <<_pcc_online_charging>> describes.
+OCS (Online Charging System):: The OCS is the real-time charging system for prepaid and quota-based services. It receives credit-control requests from the PGW-C over Gy and from the TDF-C over Gyn, and it authorizes or denies continued user-plane usage based on the subscriber's available balance, as <<_pcc_online_charging>> describes.
 
-OFCS (Offline Charging System):: The OFCS is the offline, postpaid charging system of the EPC. It collects charging information from the PGW-C over Gz for billing purposes, without affecting the subscriber's session in real time, as <<_pcc_offline_charging>> describes.
+OFCS (Offline Charging System):: The OFCS is the offline, postpaid charging system of the EPC. It collects charging information from the PGW-C over Gz and from the TDF-C over Gzn for billing purposes, without affecting the subscriber's session in real time, as <<_pcc_offline_charging>> describes.
 
 PGW-U (PDN Gateway - User Plane):: The PGW-U is the user-plane function of the PDN Gateway. It routes user traffic between the SGW-U and the TDF-U, enforcing the QoS, charging, and packet-filtering rules that the PGW-C provisions over Sxb.
 
-3GPP AAA Server:: The 3GPP AAA Server is the authentication, authorization, and accounting server for non-3GPP access. When the UE connects through an untrusted non-3GPP access network, the 3GPP AAA Server authenticates the UE and supplies the PGW-C with the authorization data needed over S6b.
+3GPP AAA Server:: The 3GPP AAA Server is the authentication, authorization, and accounting server for non-3GPP access. When the UE connects through an untrusted non-3GPP access network, the 3GPP AAA Server authenticates the UE through the ePDG over SWm, with the authentication data that it retrieves from the HSS over SWx, and it supplies the PGW-C with the required authorization data over S6b (TS 23.402 clause 4.2.2).
 
-ePDG (evolved Packet Data Gateway):: The ePDG is the security gateway for untrusted non-3GPP access, such as public Wi-Fi. It terminates the IPsec tunnel from the UE and relays control-plane signaling to the PGW-C over S2b-C and user-plane traffic to the PGW-U over S2b-U.
+ePDG (evolved Packet Data Gateway):: The ePDG is the security gateway for untrusted non-3GPP access, such as public Wi-Fi. It terminates the IPsec tunnel that the UE establishes over SWu, relays the authentication of the UE to the 3GPP AAA Server over SWm, and relays control-plane signaling to the PGW-C over S2b-C and user-plane traffic to the PGW-U over S2b-U.
 
-TDF-C (Traffic Detection Function - Control Plane):: The TDF-C is the control-plane function of the Traffic Detection Function, handling traffic-detection and application-control policy signaling. It then provisions the TDF-U with the corresponding PFCP rules over Sxc.
+TDF-C (Traffic Detection Function - Control Plane):: The TDF-C is the control-plane function of the Traffic Detection Function, handling traffic-detection and application-control policy signaling. It receives ADC rules from the PCRF over Sd, it reports usage to the OCS over Gyn and to the OFCS over Gzn, and it provisions the TDF-U with the corresponding PFCP rules over Sxc (TS 23.214 clauses 4.4.1 and 5.3.1).
 
 TDF-U (Traffic Detection Function - User Plane):: The TDF-U is the user-plane function of the Traffic Detection Function. Sitting inline between the PGW-U and the external PDN, it performs deep packet inspection and traffic detection on user traffic according to the rules that the TDF-C provisions over Sxc.
 
@@ -49,6 +49,7 @@ PDN (Packet Data Network):: The PDN is the external packet data network, for exa
 * *3GPP TS 23.402* _Universal Mobile Telecommunications System (UMTS); LTE; Architecture enhancements for non-3GPP accesses_
 * *3GPP TS 24.008* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); LTE; 5G; Mobile radio interface Layer 3 specification; Core network protocols; Stage 3_
 * *3GPP TS 24.301* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; Non-Access-Stratum (NAS) protocol for Evolved Packet System (EPS); Stage 3_
+* *3GPP TS 24.302* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; Access to the 3GPP Evolved Packet Core (EPC) via non-3GPP access networks; Stage 3_
 * *3GPP TS 29.061* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); LTE; 5G; Interworking between the Public Land Mobile Network (PLMN) supporting packet based services and Packet Data Networks (PDN)_
 * *3GPP TS 29.212* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; Policy and Charging Control (PCC); Reference points_
 * *3GPP TS 29.213* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); LTE; 5G; Policy and charging control signalling flows and Quality of Service (QoS) parameter mapping_
@@ -60,10 +61,13 @@ PDN (Packet Data Network):: The PDN is the external packet data network, for exa
 * *3GPP TS 29.281* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; General Packet Radio System (GPRS) Tunnelling Protocol User Plane (GTPv1-U)_
 * *3GPP TS 29.303* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; Domain Name System Procedures; Stage 3_
 * *3GPP TS 32.240* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); LTE; 5G; Telecommunication management; Charging management; Charging architecture and principles_
+* *3GPP TS 32.295* _Telecommunication management; Charging management; Charging Data Record (CDR) transfer_
 * *3GPP TS 32.298* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); LTE; 5G; Telecommunication management; Charging management; Charging Data Record (CDR) parameter description_
 * *3GPP TS 32.299* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); LTE; 5G; Telecommunication management; Charging management; Diameter charging applications_
 * *3GPP TS 33.401* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); LTE; 3GPP System Architecture Evolution (SAE); Security architecture_
+* *3GPP TS 36.331* _LTE; Evolved Universal Terrestrial Radio Access (E-UTRA); Radio Resource Control (RRC); Protocol specification_
 * *3GPP TS 36.401* _LTE; Evolved Universal Terrestrial Radio Access Network (E-UTRAN); Architecture description_
 * *3GPP TS 36.413* _LTE; Evolved Universal Terrestrial Radio Access Network (E-UTRAN); S1 Application Protocol (S1AP)_
+* *3GPP TS 36.423* _LTE; Evolved Universal Terrestrial Radio Access Network (E-UTRAN); X2 Application Protocol (X2AP)_
 * *ETSI TS 103 653-1* _Core Network and Interoperability Testing (INT); VoLTE/ViLTE interoperability test description over 4G/early 5G in physical/virtual environments; (3GPP Release 15); Part 1: Test Purposes (TP) and Protocol Implementation Conformance Statement (PICS) for VoLTE/ViLTE interoperability_
 * *ETSI TS 103 653-2* _Core Network and Interoperability Testing (INT); VoLTE/ViLTE interoperability test description over 4G/early 5G in physical/virtual environments; (3GPP Release 15); Part 2: Test Descriptions for VoLTE/ViLTE interoperability_

@@ -7,7 +7,8 @@ subscriber and is the direct predecessor of the EPC architecture that
 Part II describes. This chapter describes the GPRS Core in Iu mode with
 Gn/Gp interfaces, based on the configuration that 3GPP TS 23.060 clause
 5.4.0 shows in Figure 2 ("Overview of the GPRS Logical Architecture when
-based on Gn/Gp interfaces"), with the optional PCRF added.
+based on Gn/Gp interfaces"), with the optional PCRF and the charging
+systems of the policy and charging control architecture added.
 
 .GPRS Core architecture
 image::images/gprs-architecture.svg[GPRS Core Architecture]
@@ -15,11 +16,15 @@ image::images/gprs-architecture.svg[GPRS Core Architecture]
 The figure above shows the path of packet-switched traffic from the User
 Equipment (UE), through the Universal Mobile Telecommunications System
 (UMTS) Terrestrial Radio Access Network (UTRAN) and the two GPRS Support
-Nodes, to an external packet data network. The figure also shows two
-control-plane nodes: the Home Subscriber Server/Home Location Register
-(HSS/HLR), which holds subscription data for the SGSN and the GGSN, and
-the Policy and Charging Rules Function (PCRF), which provides policy and
-charging control to the GGSN.
+Nodes, to an external packet data network. The figure also shows the
+control-plane nodes that serve the GPRS Support Nodes: the Home
+Subscriber Server/Home Location Register (HSS/HLR), which holds
+subscription data for the SGSN and the GGSN, the Policy and Charging
+Rules Function (PCRF), which provides policy and charging control to the
+GGSN, and the Online Charging System (OCS) and the Offline Charging
+System (OFCS), which charge for the traffic that the GGSN carries. Each
+reference point in the figure carries the 3GPP specification and the
+protocol that it uses.
 
 [#_gprs_network_elements]
 === Network Elements
@@ -34,18 +39,24 @@ radio access network, made up of Radio Network Subsystems (RNSs), each
 of which contains a Radio Network Controller (RNC) and the Node Bs that
 the RNC controls. It provides the Uu radio interface towards the UE and
 relays packet-switched signaling and user data to the SGSN over IuPs.
+Two RNCs interconnect over Iur, for example to support soft handover
+across the border between two RNSs (TS 25.401 clause 6.1).
 
 SGSN (Serving GPRS Support Node):: The SGSN is the node that serves the
 UE, handling mobility management, session management, and the
 forwarding of user data between the UTRAN and the GGSN. Unlike the MME
 in the EPC, the SGSN usually carries both control-plane signaling and
 user-plane traffic, and it reaches the GGSN over Gn within the same
-Public Land Mobile Network (PLMN) or over Gp towards another PLMN.
+Public Land Mobile Network (PLMN) or over Gp towards another PLMN. Two
+SGSNs also interconnect over Gn, for example to transfer the context of
+a UE when the serving SGSN changes.
 
 GGSN (Gateway GPRS Support Node):: The GGSN is the gateway between the
 GPRS Core and the external packet data network. It anchors the Packet
 Data Protocol (PDP) address of the UE and routes packets between the
-SGSN over Gn/Gp and the PDN over Gi.
+SGSN over Gn/Gp and the PDN over Gi. The GGSN requests online credit
+control from the OCS over Gy and sends offline charging information to
+the OFCS over Gz (TS 23.203 clauses 5.2.4 and 5.2.5).
 
 HSS/HLR (Home Subscriber Server/Home Location Register):: The HSS/HLR is
 the subscriber database of the GPRS Core. It stores subscription data,
@@ -59,6 +70,18 @@ policy and charging control element. It makes policy control decisions
 and flow-based charging control decisions, and it provides the GGSN
 with the resulting rules over Gx for enforcement. <<_pcc_architecture>>
 describes the complete policy and charging control architecture.
+
+OCS (Online Charging System):: The OCS is the real-time charging system
+for prepaid and quota-based services. It receives credit-control
+requests from the GGSN over Gy and grants or denies the quota for
+continued user-plane usage based on the available balance of the
+subscriber, as <<_pcc_online_charging>> describes.
+
+OFCS (Offline Charging System):: The OFCS is the postpaid charging
+system. It collects charging information from the GGSN over Gz and
+produces Charging Data Records (CDRs) for billing, without affecting the
+session of the subscriber in real time, as <<_pcc_offline_charging>>
+describes.
 
 PDN (Packet Data Network):: The PDN is the external packet data network,
 for example the internet or a corporate intranet, that the UE obtains
@@ -77,6 +100,8 @@ connectivity to, reached from the GGSN over Gi.
 * *3GPP TS 25.401* _Universal Mobile Telecommunications System (UMTS); UTRAN overall description_
 * *3GPP TS 25.410* _Universal Mobile Telecommunications System (UMTS); UTRAN Iu interface: General aspects and principles_
 * *3GPP TS 25.413* _Universal Mobile Telecommunications System (UMTS); UTRAN Iu interface Radio Access Network Application Part (RANAP) signalling_
+* *3GPP TS 25.423* _UTRAN Iur interface Radio Network Subsystem Application Part (RNSAP) signalling_
+* *3GPP TS 29.002* _Mobile Application Part (MAP) specification_
 * *3GPP TS 29.060* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); General Packet Radio Service (GPRS); GPRS Tunnelling Protocol (GTP) across the Gn and Gp interface_
 * *3GPP TS 29.061* _Digital cellular telecommunications system (Phase 2+) (GSM); Universal Mobile Telecommunications System (UMTS); LTE; 5G; Interworking between the Public Land Mobile Network (PLMN) supporting packet based services and Packet Data Networks (PDN)_
 * *3GPP TS 29.212* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; Policy and Charging Control (PCC); Reference points_
@@ -84,3 +109,4 @@ connectivity to, reached from the GGSN over Gi.
 * *3GPP TS 29.274* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; 3GPP Evolved Packet System (EPS); Evolved General Packet Radio Service (GPRS) Tunnelling Protocol for Control plane (GTPv2-C); Stage 3_
 * *3GPP TS 29.281* _Universal Mobile Telecommunications System (UMTS); LTE; 5G; General Packet Radio System (GPRS) Tunnelling Protocol User Plane (GTPv1-U)_
 * *3GPP TS 32.295* _Telecommunication management; Charging management; Charging Data Record (CDR) transfer_
+* *3GPP TS 32.299* _Telecommunication management; Charging management; Diameter charging applications_
