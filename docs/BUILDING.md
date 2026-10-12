@@ -148,6 +148,12 @@ these steps:
    references `localhost:8000` or the search index is missing.
 4. If the `GOATCOUNTER_CODE` repository variable is set, it adds the
    GoatCounter analytics script to every page.
+5. It adds a `<link rel="canonical">` to every page and writes
+   `sitemap.xml`, both built from the Pages base URL. The canonical URL of
+   `index.html` and `main.html` is the site root with a trailing slash,
+   because GitHub Pages redirects the URL without the slash (and every
+   `http://` URL) to that address, and Google Search Console reports a
+   redirecting URL as not indexed.
 
 One-time setup: go to **Settings → Pages** and set **Source** to
 **GitHub Actions**.

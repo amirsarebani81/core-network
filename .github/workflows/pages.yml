@@ -87,7 +87,29 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/configure-pages@v5
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Add canonical links and sitemap
+        env:
+          BASE_URL: ${{ steps.pages.outputs.base_url }}
+        run: |
+          base="${BASE_URL%/}/"
+          {
+            echo '<?xml version="1.0" encoding="UTF-8"?>'
+            echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+            echo "  <url><loc>${base}</loc></url>"
+            for f in site/*.html; do
+              name=$(basename "$f")
+              case "$name" in
+                index.html|main.html) url="$base" ;;
+                *) url="$base$name"; echo "  <url><loc>${url}</loc></url>" ;;
+              esac
+              sed -i "s|</head>|<link rel=\"canonical\" href=\"${url}\">\n</head>|" "$f"
+            done
+            echo '</urlset>'
+          } > site/sitemap.xml
+          echo "Sitemap: $(grep -c '<loc>' site/sitemap.xml) URLs under $base"
 
       - uses: actions/upload-pages-artifact@v3
         with:
