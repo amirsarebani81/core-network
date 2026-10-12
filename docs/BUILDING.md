@@ -12,6 +12,7 @@ workflow. For what the book is and where to read it, see the
 | PDF output     | `asciidoctor-pdf` (pure Ruby, no LaTeX needed)              |
 | HTML output    | `asciidoctor` + `asciidoctor-multipage` (multi-page HTML5)  |
 | Diagrams       | Kroki (PlantUML, packetdiag, …) through `asciidoctor-kroki` |
+| Architecture   | draw.io desktop CLI (`drawio`), optional                    |
 | Diagram server | Kroki in Docker Compose, on `http://localhost:8000`         |
 | Search         | Pagefind (optional)                                         |
 
@@ -45,6 +46,13 @@ gem install asciidoctor asciidoctor-pdf asciidoctor-kroki asciidoctor-multipage 
 
 - `gem install open-uri-cached` lets the PDF build cache diagrams between
   runs (`cache-uri`). Without it, every build fetches them again.
+- The [draw.io desktop app](https://github.com/jgraph/drawio-desktop)
+  provides the `drawio` CLI. Before each build, `build.sh` exports every
+  page of `drawio/core-network.drawio` whose name is not a default
+  `Page-N` name to `images/<page-name>.svg`, with a white background,
+  when the `.drawio` file is newer than the SVG. The export needs a
+  display. Without the CLI, the build uses the committed SVGs, so commit
+  the re-exported SVGs together with the `.drawio` change.
 - [Pagefind](https://pagefind.app/) builds the search index for the HTML
   site. `build.sh` uses a `pagefind` binary, the `pagefind` Python package
   (`pip install 'pagefind[extended]'`), or `npx`, whichever it finds first,

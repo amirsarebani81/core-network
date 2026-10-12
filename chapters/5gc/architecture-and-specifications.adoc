@@ -1,0 +1,250 @@
+[#_5gc_architecture_and_specifications]
+== Architecture and Specifications
+
+The 5G Core Network (5GC) is the core network of the 5G System (5GS).
+TS 23.501 clause 4.2.3 describes the non-roaming 5GS architecture in two
+equivalent representations: a service-based representation, in which
+each control-plane network function (NF) exposes its services over a
+service-based interface (SBI), and a reference point representation, in
+which a named reference point connects each pair of NFs that interact.
+This chapter shows the 5GC in both representations, with 3GPP access
+through the Next Generation Radio Access Network (NG-RAN). Roaming
+(TS 23.501 clause 4.2.4) and non-3GPP access (TS 23.501 clause 4.2.8)
+are outside the scope of both figures.
+
+=== Service-Based Representation
+
+.5GC architecture, service-based representation
+image::images/5gc-architecture-sba.svg[5GC Architecture, Service-Based Representation]
+
+The figure above follows TS 23.501 figure 4.2.3-1 and attaches every
+control-plane NF to the common service-based interconnect through the SBI
+that the NF exposes, for example Namf for the AMF (TS 23.501 clause
+4.2.6). Any NF can consume the services of any other NF over this
+interconnect, so the figure shows which NFs are part of the 5GC rather
+than which pairs of NFs interact. The NF services use HTTP/2 over TCP,
+as TS 29.500 specifies for the technical realization of the service-based
+architecture. The UE, the NG-RAN, and the DN do not expose an SBI and
+therefore connect to the 5GC through the reference points N1, N2, N3, and
+N6. The SMF controls the UPF over the N4 reference point; the Nupf SBI of
+the UPF only serves specific exposure features (TS 23.501 clause 4.2.16)
+and is not shown.
+
+Compared with TS 23.501 figure 4.2.3-1, the figure adds the UDR and the
+NWDAF, which NOTE 4 and NOTE 5 of TS 23.501 clause 4.2.3 leave out of the
+TS 23.501 figures for clarity, and the UDSF, the CHF, and the 5G-EIR,
+which TS 23.501 figure 4.2.3-1 does not show either. The figure leaves
+out the EASDF, which TS 23.501 figure 4.2.3-1 shows, together with the
+NFs of other specific features, for example the UCMF, the TSCTSF, the
+DCCF, the MFAF, and the ADRF (TS 23.501 clause 4.2.2).
+
+=== Reference Point Representation
+
+.5GC architecture, reference point representation
+image::images/5gc-architecture.svg[5GC Architecture, Reference Point Representation]
+
+The figure above shows the same NFs as the service-based representation
+and connects them with the reference points that TS 23.501 clause 4.2.7
+defines between them. TS 23.501 figure 4.2.3-2 leaves out the NRF, the
+NEF, the UDR, the UDSF, and the NWDAF for clarity (NOTE 2, NOTE 4, and
+NOTE 5 of TS 23.501 clause 4.2.3) and does not show the CHF and the
+5G-EIR, and TS 23.501 figure 4.2.3-5 shows the NEF separately; this
+figure combines these NFs into one view.
+
+The figure is arranged around the AMF and the SMF, which interact with
+more NFs than any other NF. The centre column holds the NFs that both the
+AMF and the SMF use, namely the UDM, the NEF, the PCF, the CHF, and the
+NSACF. The AMF reaches each of these NFs over a reference point that rises
+from the top of the AMF and turns right at the height of the target NF,
+and the SMF reaches the same NFs over the mirrored reference points on the
+right, so that each row of the centre column reads as one pair of
+reference points, for example N8 and N10 for the UDM. The NFs that the
+AMF uses and the SMF does not use sit to the left: the AUSF, the NSSAAF,
+and the 5G-EIR to the left of the AMF, and the NSSF, together with the
+NWDAF that serves the NSSF and the PCF, between the AMF and the centre
+column. The NFs that only connect to the centre column, namely the UDR
+and the AF, sit to its right. The bottom row holds the UE
+and the user-plane path from the NG-RAN through the UPF to the DN.
+
+The NRF, the SCP, and the UDSF are grouped in a frame because every NF
+can interact with them. The NRF and the SCP have no reference point to a
+specific NF in a non-roaming PLMN, apart from N116 between the SCP and the
+NWDAF, and N18 connects any NF to the UDSF, so the figure does not draw
+these reference points.
+
+Next to each reference point, the figure gives the 3GPP technical
+specification (TS) that defines the protocol on that reference point and
+the name of the protocol. For a reference point between two control-plane
+NFs, the TS is the stage 3 specification of the SBI that realizes the
+reference point, and the protocol is HTTP/2. Where a reference point
+crosses another reference point without a connection, the figure draws a
+small arc.
+
+=== Network Functions
+
+UE (User Equipment):: The UE is the subscriber's device. The UE
+communicates with the NG-RAN over the Uu radio interface and with the AMF
+over N1, which carries the Non-Access Stratum (NAS) protocol of TS 24.501.
+
+NG-RAN (Next Generation Radio Access Network):: The NG-RAN is the 5G radio
+access network, made up of gNBs and ng-eNBs (TS 38.300). The NG-RAN
+relays control-plane signaling to the AMF over N2 and user-plane traffic
+to the UPF over N3, and NG-RAN nodes interconnect over Xn.
+
+AMF (Access and Mobility Management Function):: The AMF terminates N1 and
+N2 and handles registration, connection, reachability, and mobility
+management for the UE, together with access authentication and
+authorization (TS 23.501 clause 6.2.1). The AMF relays session management
+messages between the UE and the SMF and exposes the Namf SBI (TS 29.518).
+
+SMF (Session Management Function):: The SMF establishes, modifies, and
+releases PDU sessions, allocates the UE IP address, and selects and
+controls the UPF over N4 (TS 23.501 clause 6.2.2). The SMF exposes the
+Nsmf SBI (TS 29.502).
+
+UPF (User Plane Function):: The UPF is the anchor point of the PDU session
+in the user plane. The UPF routes and forwards packets between the NG-RAN
+and the DN and applies the packet detection, QoS, and usage reporting
+rules that the SMF provisions over N4 (TS 23.501 clause 6.2.3). Two UPFs
+interconnect over N9, for example when an intermediate UPF serves a PDU
+session.
+
+DN (Data Network):: The DN is the data network that the PDU session gives
+access to, for example the internet, operator services, or third-party
+services. The UPF connects to the DN over N6.
+
+AUSF (Authentication Server Function):: The AUSF authenticates the UE for
+3GPP access and for untrusted non-3GPP access (TS 23.501 clause 6.2.8).
+The AUSF exposes the Nausf SBI (TS 29.509).
+
+UDM (Unified Data Management):: The UDM generates the authentication
+credentials, handles the user identification, and manages the
+subscription data and the registration of the serving NFs for each UE
+(TS 23.501 clause 6.2.7). The UDM can keep the subscription data in the
+UDR and exposes the Nudm SBI (TS 29.503).
+
+UDR (Unified Data Repository):: The UDR stores and retrieves the
+subscription data for the UDM and the policy data for the PCF, together
+with the structured data for exposure and the application data, for
+example the Packet Flow Descriptions (PFDs) for application detection
+(TS 23.501 clause 6.2.11). The UDR exposes the Nudr SBI (TS 29.504).
+
+PCF (Policy Control Function):: The PCF provides the policy rules for
+access and mobility management to the AMF and the policy and charging
+control rules for the PDU session to the SMF (TS 23.501 clause 6.2.4).
+The PCF exposes the Npcf SBI, whose services several stage 3
+specifications define, for example TS 29.507, TS 29.512, and TS 29.514.
+
+AF (Application Function):: The AF interacts with the 5GC to influence
+traffic routing, to request policy control from the PCF, or to use the
+exposure framework of the NEF (TS 23.501 clause 6.2.10). An AF in a
+trusted domain can interact with the PCF directly over N5, and any other
+AF uses the NEF.
+
+NEF (Network Exposure Function):: The NEF exposes the capabilities and
+events of the 5GC to the AF and translates the information that the AF
+provides into requests towards the other NFs (TS 23.501 clause 6.2.5).
+The NEF exposes the Nnef SBI, and TS 29.522 defines the northbound
+application programming interfaces (APIs) of the NEF towards the AF.
+
+NRF (Network Repository Function):: The NRF holds the profiles of the
+available NF instances and their services, and it supports NF
+registration and NF discovery (TS 23.501 clause 6.2.6). The NRF exposes
+the Nnrf SBI (TS 29.510).
+
+NSSF (Network Slice Selection Function):: The NSSF selects the set of
+network slice instances that serve the UE and determines the allowed and
+configured network slices (TS 23.501 clause 6.2.14). The NSSF exposes the
+Nnssf SBI (TS 29.531).
+
+NSSAAF (Network Slice-specific and SNPN Authentication and Authorization Function):: The NSSAAF
+performs network slice-specific authentication and authorization with an
+external authentication, authorization, and accounting (AAA) server, and
+it supports access to a standalone non-public network (SNPN) with
+credentials from a credentials holder (TS 23.501 clause 6.2.23). The
+NSSAAF exposes the Nnssaaf SBI (TS 29.526).
+
+NSACF (Network Slice Admission Control Function):: The NSACF monitors and
+controls the number of registered UEs and the number of PDU sessions per
+network slice (TS 23.501 clause 6.2.28). The NSACF exposes the Nnsacf SBI
+(TS 29.536).
+
+5G-EIR (5G Equipment Identity Register):: The 5G-EIR is an optional NF
+that checks the status of the Permanent Equipment Identifier (PEI) of the
+UE, for example to check that the PEI is not prohibited (TS 23.501 clause
+6.2.15). The 5G-EIR exposes the N5g-eir SBI (TS 29.511).
+
+CHF (Charging Function):: The CHF performs converged online and offline
+charging for the charging data that the SMF and the AMF report (TS 32.240,
+TS 32.255 for the SMF, and TS 32.256 for the AMF), and it provides the policy counters for spending limit
+control to the PCF (TS 29.594). The CHF exposes the Nchf SBI (TS 32.291).
+
+NWDAF (Network Data Analytics Function):: The NWDAF collects data from the
+NFs, from the AF, and from operations, administration, and maintenance
+(OAM) and provides analytics information to the NFs and to the AF
+(TS 23.501 clause 6.2.18 and TS 23.288). The NWDAF exposes the Nnwdaf SBI
+(TS 29.520).
+
+UDSF (Unstructured Data Storage Function):: The UDSF is an optional NF in
+which any NF can store and retrieve its unstructured data, for example UE
+contexts (TS 23.501 clause 6.2.12 and clause 4.2.5). The UDSF exposes the
+Nudsf SBI.
+
+SCP (Service Communication Proxy):: The SCP is an optional NF that routes
+the service requests between NFs for indirect communication and can
+perform the NF discovery and selection on behalf of the consumer NF
+(TS 23.501 clause 6.2.19 and Annex E). When an operator deploys no SCP,
+the NFs communicate with each other directly.
+
+[#_5gc_reference_points]
+=== Reference Points
+
+The following table lists the reference points in the reference point
+representation figure. TS 23.501 clause 4.2.7 defines all of these
+reference points except Uu and Xn, which TS 38.300 defines for the
+NG-RAN.
+
+.Reference points in the reference point representation
+[cols="1,3,2,2",options="header"]
+|===
+|Reference point |Between |Specification |Protocol
+
+|Uu |UE and NG-RAN |TS 38.331 |RRC
+|Xn |Two NG-RAN nodes |TS 38.423 |XnAP
+|N1 |UE and AMF |TS 24.501 |NAS
+|N2 |NG-RAN and AMF |TS 38.413 |NGAP
+|N3 |NG-RAN and UPF |TS 29.281 |GTPv1-U
+|N4 |SMF and UPF |TS 29.244 |PFCP
+|N5 |PCF and AF |TS 29.514 |HTTP/2
+|N6 |UPF and DN |TS 29.561 |IP
+|N7 |SMF and PCF |TS 29.512 |HTTP/2
+|N8 |UDM and AMF |TS 29.503 |HTTP/2
+|N9 |Two UPFs |TS 29.281 |GTPv1-U
+|N10 |UDM and SMF |TS 29.503 |HTTP/2
+|N11 |AMF and SMF |TS 29.502 |HTTP/2
+|N12 |AMF and AUSF |TS 29.509 |HTTP/2
+|N13 |UDM and AUSF |TS 29.503 |HTTP/2
+|N14 |Two AMFs |TS 29.518 |HTTP/2
+|N15 |PCF and AMF |TS 29.507 |HTTP/2
+|N17 |AMF and 5G-EIR |TS 29.511 |HTTP/2
+|N22 |AMF and NSSF |TS 29.531 |HTTP/2
+|N23 |PCF and NWDAF |TS 29.520 |HTTP/2
+|N28 |PCF and CHF |TS 29.594 |HTTP/2
+|N29 |NEF and SMF |TS 29.508 |HTTP/2
+|N30 |PCF and NEF |TS 29.514 |HTTP/2
+|N33 |NEF and AF |TS 29.522 |HTTP/2
+|N34 |NSSF and NWDAF |TS 29.520 |HTTP/2
+|N35 |UDM and UDR |TS 29.504 |HTTP/2
+|N36 |PCF and UDR |TS 29.504 |HTTP/2
+|N37 |NEF and UDR |TS 29.504 |HTTP/2
+|N40 |SMF and CHF |TS 32.291 |HTTP/2
+|N41 |AMF and CHF |TS 32.291 |HTTP/2
+|N51 |AMF and NEF |TS 29.518 |HTTP/2
+|N52 |NEF and UDM |TS 29.503 |HTTP/2
+|N58 |AMF and NSSAAF |TS 29.526 |HTTP/2
+|N59 |UDM and NSSAAF |TS 29.503 |HTTP/2
+|N80 |AMF and NSACF |TS 29.536 |HTTP/2
+|N81 |SMF and NSACF |TS 29.536 |HTTP/2
+|N82 |NSACF and NEF |TS 29.536 |HTTP/2
+|N83 |AUSF and NSSAAF |TS 29.526 |HTTP/2
+|===

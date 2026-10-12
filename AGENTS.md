@@ -5,7 +5,7 @@ Instructions for AI agents working in this repository.
 ## What this is
 
 A docs-as-code reference document covering the architecture and signaling
-procedures of the mobile core network (GPRS and EPC). Source is AsciiDoc, built into
+procedures of the mobile core network (GPRS, EPC, and 5GC). Source is AsciiDoc, built into
 PDF and HTML. `README.md` is the public front page of the repository;
 see `docs/BUILDING.md` for the full toolchain and install steps.
 
@@ -71,19 +71,23 @@ Treat the documentation as living, not archival:
 ## Repository layout
 
 - `main.adoc` — book entry point; a `= Part` heading per book part (currently
-  Part I: GPRS Core, Part II: EPC), each `include::`ing that part's chapters.
-- `chapters/epc/*.adoc`, `chapters/gprs/*.adoc` — chapter content, one topic
+  Part I: GPRS Core, Part II: EPC, Part III: 5GC), each `include::`ing that
+  part's chapters.
+- `chapters/gprs/*.adoc`, `chapters/epc/*.adoc`, `chapters/5gc/*.adoc` —
+  chapter content, one topic
   per file, grouped by book part.
 - `images/*.svg` — rendered diagram exports referenced by `image::` macros
   (paths in `.adoc` files are resolved relative to the repo root, i.e.
   `main.adoc`'s directory — not relative to the including chapter file).
 - `drawio/core-network.drawio` — editable source for architecture diagrams,
   one page per diagram (e.g. the `epc-architecture` and `gprs-architecture`
-  pages); export a page to `images/*.svg` after editing it, e.g.
-  `drawio -x -p <page-number> -f svg --svg-theme light -e -b 5 -o
-  images/<name>.svg drawio/core-network.drawio` (the `drawio` CLI needs a
-  display; the sandboxed Electron GPU warning it prints on startup is
-  harmless).
+  pages). `build.sh` exports every page to `images/<page-name>.svg`
+  before each build when the `.drawio` file is newer than the SVG, so name
+  a new page after its image; pages that keep a default `Page-N` name are
+  scratch pages and are skipped. The export needs the `drawio` CLI and a
+  display; without the CLI (as in the Pages workflow), the build uses the
+  committed SVGs, so commit the re-exported SVGs together with the
+  `.drawio` change.
 - `diagrams/*.puml` — PlantUML sequence diagrams, rendered via the Kroki
   service referenced in `main.adoc`'s `:kroki-server-url:` attribute.
 - `theme/core-network-theme.yml` — base PDF theme (asciidoctor-pdf),
@@ -203,7 +207,7 @@ change done.
 
 ## Technical accuracy
 
-This documentation describes standardized 3GPP procedures (GPRS and EPC/EPS). Cite
+This documentation describes standardized 3GPP procedures (GPRS, EPC/EPS, and 5GC/5GS). Cite
 the specific 3GPP TS number and clause when adding technical claims (e.g.
 "TS 29.274 clause 7.2.1"), and cross-check node/interface/message names
 against the referenced spec or existing diagrams rather than assuming.

@@ -105,6 +105,27 @@ EXTRA_ATTRS=()
 [ -n "$TABLE_STRIPES" ] && EXTRA_ATTRS+=(-a "table-stripes=$TABLE_STRIPES")
 [ -n "$ROUGE_STYLE" ] && EXTRA_ATTRS+=(-a "rouge-style=$ROUGE_STYLE")
 
+export_diagrams() {
+  local src=drawio/core-network.drawio
+  if ! command -v drawio >/dev/null 2>&1; then
+    echo "==> drawio not found; using the committed images/*.svg"
+    return
+  fi
+  local index=0 name
+  while IFS= read -r name; do
+    index=$((index + 1))
+    [[ "$name" =~ ^Page-[0-9]+$ ]] && continue
+    local svg="images/$name.svg"
+    [ "$svg" -nt "$src" ] && continue
+    echo "==> Exporting drawio page $index ($name) to $svg..."
+    if ! drawio -x -p "$index" -f svg --theme light -e -b 5 -o "$svg" "$src" >/dev/null 2>&1; then
+      echo "==> drawio export of page $index failed (no display?); using the committed $svg"
+      continue
+    fi
+    sed -i 's/background: transparent; background-color: transparent;/background: #ffffff; background-color: #ffffff;/' "$svg"
+  done < <(grep -o '<diagram [^>]*' "$src" | sed -n 's/.* name="\([^"]*\)".*/\1/p')
+}
+
 build_pdf() {
   echo "==> Building PDF (theme: $THEME)..."
   asciidoctor-pdf \
@@ -152,6 +173,10 @@ build_search_index() {
     echo "==> pagefind not found; skipping the search index (pip install 'pagefind[extended]')"
   fi
 }
+
+case "$TARGET" in
+  pdf|html|all) export_diagrams ;;
+esac
 
 case "$TARGET" in
   pdf) build_pdf ;;
