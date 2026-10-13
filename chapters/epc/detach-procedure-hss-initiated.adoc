@@ -8,7 +8,7 @@ triggers this procedure.
 
 The HSS starts the procedure for operator-determined reasons, for example
 a subscription withdrawal, a profile change that no longer allows
-Packet-Switched (PS) services, or a Core Network access restriction.
+PS services, or a Core Network access restriction.
 
 The procedure removes the contexts from the MME and, if the network
 deploys an SGSN for the subscriber, from the SGSN as well.
@@ -58,8 +58,8 @@ telling the UE that the network detached it.
 
 . To deactivate the associated EPS bearers, the *MME* sends a GTPv2
 `Delete Session Request` message to the *S-GW* for each active PDN
-connection, carrying the LBI, the User Location Information (ECGI), and,
-if policy permits, the NAS Release Cause.
+connection, carrying the LBI, the User Location Information, that is the
+ECGI, and, if policy permits, the NAS Release Cause.
 
 . For each PDN connection that the procedure releases, the *S-GW*
 forwards the GTPv2 `Delete Session Request` message to the *P-GW*,

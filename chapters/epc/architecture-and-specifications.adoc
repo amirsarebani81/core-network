@@ -3,23 +3,23 @@
 .EPC architecture and Specification
 image::images/epc-architecture.svg[EPC Architecture]
 
-The figure above shows the network elements of the EPC and the reference points between them, and it labels each reference point with the 3GPP specification and the protocol that the reference point uses.
+The figure above shows the network elements of the EPC, the core network of the Evolved Packet System (EPS), and the reference points between them, and it labels each reference point with the 3GPP specification and the protocol that the reference point uses.
 
 === Network Elements
 
-UE (User Equipment):: The UE is the subscriber's device, for example a smartphone or an IoT module, that attaches to the network over the radio interface. It is the endpoint for all mobility management, session management, and user-plane traffic. The UE reaches the E-UTRAN over LTE-Uu, and over an untrusted non-3GPP access network, such as public Wi-Fi, the UE reaches the ePDG over SWu (TS 23.402 clause 4.2.2).
+UE (User Equipment):: The UE is the subscriber's device, for example a smartphone or an Internet of Things (IoT) module, that attaches to the network over the radio interface. It is the endpoint for all mobility management, session management, and user-plane traffic. The UE reaches the E-UTRAN over LTE-Uu, and over an untrusted non-3GPP access network, such as public Wi-Fi, the UE reaches the ePDG over SWu (TS 23.402 clause 4.2.2).
 
-E-UTRAN (Evolved UMTS Terrestrial Radio Access Network):: The E-UTRAN is the LTE radio access network, made up of eNodeBs. It provides the radio interface towards the UE over LTE-Uu, relays control-plane signaling to the MME over S1-MME, and relays user-plane traffic to the SGW-U over S1-U. Neighboring eNodeBs interconnect over X2, for example to prepare a handover.
+E-UTRAN (Evolved Universal Terrestrial Radio Access Network):: The E-UTRAN is the Long Term Evolution (LTE) radio access network, made up of E-UTRAN Node Bs (eNodeBs). It provides the radio interface towards the UE over LTE-Uu, relays control-plane signaling to the MME over S1-MME, and relays user-plane traffic to the SGW-U over S1-U. Neighboring eNodeBs interconnect over X2, for example to prepare a handover.
 
 MME (Mobility Management Entity):: The MME is the control-plane node of the EPC, handling UE authentication, mobility management, tracking area management, paging, and bearer session signaling. The MME carries no user-plane traffic itself and relies on the SGW-C for session establishment towards the user plane. Two MMEs exchange the context of a UE over S10 when the serving MME changes.
 
 HSS (Home Subscriber Server):: The HSS is the master subscriber database of the EPC. It stores subscription profiles, authentication data, and the identity of the MME currently serving each subscriber, and the MME queries the HSS over S6a for authentication vectors and location updates. The 3GPP AAA Server retrieves the authentication data and the subscription data for non-3GPP access from the HSS over SWx (TS 23.402 clause 4.2.2).
 
-SGW-C (Serving Gateway - Control Plane):: The SGW-C is the control-plane function of the Serving Gateway. It terminates S11 signaling from the MME and translates this signaling into PFCP rules that configure the SGW-U, without handling any user data itself.
+SGW-C (Serving Gateway - Control Plane):: The SGW-C is the control-plane function of the Serving Gateway. It terminates S11 signaling from the MME and translates this signaling into Packet Forwarding Control Protocol (PFCP) rules that configure the SGW-U, without handling any user data itself.
 
-SGW-U (Serving Gateway - User Plane):: The SGW-U is the user-plane function of the Serving Gateway. It forwards user IP packets between the eNodeB and the PGW-U according to the forwarding rules that the SGW-C provisions over Sxa, and it acts as the local mobility anchor for inter-eNodeB handovers.
+SGW-U (Serving Gateway - User Plane):: The SGW-U is the user-plane function of the Serving Gateway. It forwards the Internet Protocol (IP) packets of the user between the eNodeB and the PGW-U according to the forwarding rules that the SGW-C provisions over Sxa, and it acts as the local mobility anchor for inter-eNodeB handovers.
 
-PGW-C (PDN Gateway - Control Plane):: The PGW-C is the control-plane function of the PDN Gateway, handling session establishment, IP address allocation, and QoS/policy signaling. It then provisions the PGW-U with the corresponding PFCP rules.
+PGW-C (PDN Gateway - Control Plane):: The PGW-C is the control-plane function of the PDN Gateway, handling session establishment, IP address allocation, and Quality of Service (QoS) and policy signaling. It then provisions the PGW-U with the corresponding PFCP rules.
 
 PCRF (Policy and Charging Rules Function):: The PCRF is the policy control node of the EPC. It derives QoS, charging, and traffic-detection rules from subscriber and service policies, and it provisions the PGW-C with these rules over Gx and the TDF-C with application detection and control (ADC) rules over Sd for enforcement in the user plane.
 
@@ -29,7 +29,7 @@ OFCS (Offline Charging System):: The OFCS is the offline, postpaid charging syst
 
 PGW-U (PDN Gateway - User Plane):: The PGW-U is the user-plane function of the PDN Gateway. It routes user traffic between the SGW-U and the TDF-U, enforcing the QoS, charging, and packet-filtering rules that the PGW-C provisions over Sxb.
 
-3GPP AAA Server:: The 3GPP AAA Server is the authentication, authorization, and accounting server for non-3GPP access. When the UE connects through an untrusted non-3GPP access network, the 3GPP AAA Server authenticates the UE through the ePDG over SWm, with the authentication data that it retrieves from the HSS over SWx, and it supplies the PGW-C with the required authorization data over S6b (TS 23.402 clause 4.2.2).
+3GPP AAA Server:: The 3GPP AAA Server is the Authentication, Authorization, and Accounting (AAA) server for non-3GPP access. When the UE connects through an untrusted non-3GPP access network, the 3GPP AAA Server authenticates the UE through the ePDG over SWm, with the authentication data that it retrieves from the HSS over SWx, and it supplies the PGW-C with the required authorization data over S6b (TS 23.402 clause 4.2.2).
 
 ePDG (evolved Packet Data Gateway):: The ePDG is the security gateway for untrusted non-3GPP access, such as public Wi-Fi. It terminates the IPsec tunnel that the UE establishes over SWu, relays the authentication of the UE to the 3GPP AAA Server over SWm, and relays control-plane signaling to the PGW-C over S2b-C and user-plane traffic to the PGW-U over S2b-U.
 

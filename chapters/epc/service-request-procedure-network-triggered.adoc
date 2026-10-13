@@ -2,11 +2,11 @@
 
 ===== Technical Overview
 
-The Network-Triggered Service Request procedure moves a UE from
-ECM-IDLE mode to ECM-CONNECTED mode when the Evolved Packet Core (EPC)
-has downlink user data or downlink signalling to deliver. The Serving
-Gateway (S-GW) starts the procedure when it receives a downlink packet
-for a UE that has no active S1 user-plane connection.
+The Network-Triggered Service Request procedure moves a UE from ECM-IDLE
+mode to ECM-CONNECTED mode when the EPC has downlink user data or
+downlink signalling to deliver. The S-GW starts the
+procedure when it receives a downlink packet for a UE that has no active
+S1 user-plane connection.
 
 The procedure establishes the radio bearers and the S1 bearers for the
 UE, synchronizes the EPS bearer contexts between the UE and the MME,
@@ -29,9 +29,8 @@ incoming data.
 
 . The *S-GW* identifies the MME that serves the UE and sends it a GTPv2
 `Downlink Data Notification` (DDN) message to start the paging process.
-The message carries the Allocation and Retention Priority (ARP), derived
-from the bearer on which the data arrived, and the EPS Bearer Identity
-(EBI).
+The message carries the ARP, derived from the bearer on which the data
+arrived, and the EBI.
 
 . The *MME* acknowledges the DDN message by returning a GTPv2 `Downlink
 Data Notification Acknowledge` message to the *S-GW*, carrying a Cause
@@ -41,8 +40,7 @@ UE.
 . The *MME* sends an S1AP `Paging` message to every eNodeB in the UE's
 registered Tracking Area List. The message carries the UE Identity Index
 Value, for calculating the paging frame, the UE Paging ID, that is the
-S-TMSI, the Paging Discontinuous Reception (DRX) cycle, and the List of
-TAIs.
+S-TMSI, the Paging DRX cycle, and the List of TAIs.
 
 . During the UE's paging occasion, the *eNodeB* broadcasts the paging
 indication over the radio interface by sending an RRC `Paging` message
@@ -51,8 +49,7 @@ to the *UE*.
 . The *UE* matches its S-TMSI in the Paging message and starts the RRC
 connection establishment procedure, sending a `Service Request` message
 to the *eNodeB* inside this procedure. The message carries the Protocol
-Discriminator, the NAS key set identifier (KSI), the NAS sequence
-number, and the NAS Message Authentication Code (NAS-MAC).
+Discriminator, the NAS KSI, the NAS sequence number, and the NAS-MAC.
 
 . The *eNodeB* forwards the NAS message to the *MME* inside an S1AP
 `Initial UE Message`.
@@ -82,14 +79,13 @@ the *S-GW* for each PDN connection. The message carries the Bearer
 Contexts to be modified, that is the EBI and the S1-U eNodeB F-TEID for
 the downlink, the User Location Information, and the RAT type.
 
-. If the network deploys dynamic Policy and Charging Control (PCC), for
-example for location reporting or RAT change reporting, the *S-GW*
-forwards the GTPv2 `Modify Bearer Request` message to the *P-GW*. The
-P-GW then starts a Diameter `Credit-Control-Request`/
-`Credit-Control-Answer` (Update) exchange with the *PCRF* over the Gx
-interface, carrying the CC-Request-Type set to UPDATE_REQUEST, the
-3GPP-User-Location-Info, and the RAT-Type, before returning a GTPv2
-`Modify Bearer Response` message to the S-GW.
+. If the network deploys dynamic PCC, for example for location reporting
+or RAT change reporting, the *S-GW* forwards the GTPv2 `Modify Bearer
+Request` message to the *P-GW*. The P-GW then starts a Diameter
+`Credit-Control-Request`/ `Credit-Control-Answer` (Update) exchange with
+the *PCRF* over the Gx interface, carrying the CC-Request-Type set to
+UPDATE_REQUEST, the 3GPP-User-Location-Info, and the RAT-Type, before
+returning a GTPv2 `Modify Bearer Response` message to the S-GW.
 
 . Whether or not the network deployed dynamic PCC, the *S-GW* updates
 its bearer contexts and returns a GTPv2 `Modify Bearer Response` message

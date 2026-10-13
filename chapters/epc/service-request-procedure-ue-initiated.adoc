@@ -3,9 +3,9 @@
 ===== Technical Overview
 
 The UE-initiated Service Request procedure lets a UE in ECM-IDLE mode
-establish a Non-Access Stratum (NAS) signalling connection with the
-network, and the UE starts the procedure when it has pending uplink user
-data or pending uplink signalling.
+establish a NAS signalling connection with the network, and the UE
+starts the procedure when it has pending uplink user data or pending
+uplink signalling.
 
 The procedure establishes the radio bearers and the S1 user-plane bearers
 for the UE's active EPS bearers, moving the UE from ECM-IDLE mode to
@@ -26,14 +26,14 @@ plantuml::diagrams/service-request-ue-initiated-call-flow.puml[svg]
 
 . The *UE* sends a `Service Request` message to the *eNodeB*, carrying
 this NAS message inside the RRC connection establishment procedure. The
-message carries the NAS key set identifier (KSI), the NAS sequence
-number, and the NAS Message Authentication Code (NAS-MAC).
+message carries the Key Set Identifier (KSI), the NAS sequence number,
+and the NAS-MAC.
 
 . The *eNodeB* forwards the NAS message to the *MME* inside an S1AP
 `Initial UE Message`, which establishes the UE-associated logical S1
 connection. The message carries the NAS-PDU, the S-TMSI, the TAI and the
-E-UTRAN Cell Global Identifier (ECGI) of the serving cell, and the RRC
-establishment cause, for example "mo-Data" or "mo-Signalling".
+ECGI of the serving cell, and the RRC establishment cause, for example
+"mo-Data" or "mo-Signalling".
 
 . If the UE's security context is missing or no longer valid, the *MME*
 and the *UE* perform the Authentication and Security Procedures,
@@ -69,13 +69,13 @@ each PDN connection, carrying the Bearer Contexts to be modified, that
 is the EPS Bearer Identity (EBI) and the S1-U eNodeB F-TEID, the User
 Location Information, and the RAT type.
 
-. If the network deploys dynamic Policy and Charging Control (PCC), the
-*S-GW* forwards the GTPv2 `Modify Bearer Request` message to the *P-GW*.
-The P-GW then starts a Diameter `Credit-Control-Request`/
-`Credit-Control-Answer` (Update) exchange with the *PCRF* over the Gx
-interface, carrying the CC-Request-Type set to UPDATE_REQUEST, the
-3GPP-User-Location-Info, and the RAT-Type, before returning a GTPv2
-`Modify Bearer Response` message to the S-GW.
+. If the network deploys dynamic PCC, the *S-GW* forwards the GTPv2
+`Modify Bearer Request` message to the *P-GW*. The P-GW then starts a
+Diameter `Credit-Control-Request`/ `Credit-Control-Answer` (Update)
+exchange with the *PCRF* over the Gx interface, carrying the
+CC-Request-Type set to UPDATE_REQUEST, the 3GPP-User-Location-Info, and
+the RAT-Type, before returning a GTPv2 `Modify Bearer Response` message
+to the S-GW.
 
 . Whether or not the network deployed dynamic PCC, the *S-GW* returns a
 GTPv2 `Modify Bearer Response` message to the *MME*, carrying a Cause
@@ -91,7 +91,8 @@ Authentication failure:: If the UE fails the authentication check that
 the MME starts during the Service Request procedure, the MME sends a
 NAS `Authentication Reject` message, with EMM Cause #3, "Illegal UE", or
 EMM Cause #6, "Illegal ME". The UE then stops the procedure, considers
-its USIM or SIM invalid for EPS services, and enters the
+its Universal Subscriber Identity Module (USIM) or Subscriber Identity
+Module (SIM) invalid for EPS services, and enters the
 EMM-DEREGISTERED state.
 
 MME congestion:: If the MME is overloaded and cannot process the

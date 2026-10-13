@@ -1,14 +1,14 @@
 [#_5gc_architecture_and_specifications]
 == Architecture and Specifications
 
-The 5G Core Network (5GC) is the core network of the 5G System (5GS).
+The 5GC is the core network of the 5G System (5GS).
 TS 23.501 clause 4.2.3 describes the non-roaming 5GS architecture in two
 equivalent representations: a service-based representation, in which
 each control-plane network function (NF) exposes its services over a
 service-based interface (SBI), and a reference point representation, in
 which a named reference point connects each pair of NFs that interact.
 This chapter shows the 5GC in both representations, with 3GPP access
-through the Next Generation Radio Access Network (NG-RAN). Roaming
+through the NG-RAN. Roaming
 (TS 23.501 clause 4.2.4) and non-3GPP access (TS 23.501 clause 4.2.8)
 are outside the scope of both figures.
 
@@ -22,9 +22,10 @@ control-plane NF to the common service-based interconnect through the SBI
 that the NF exposes, for example Namf for the AMF (TS 23.501 clause
 4.2.6). Any NF can consume the services of any other NF over this
 interconnect, so the figure shows which NFs are part of the 5GC rather
-than which pairs of NFs interact. The NF services use HTTP/2 over TCP,
-as TS 29.500 specifies for the technical realization of the service-based
-architecture. The UE, the NG-RAN, and the DN do not expose an SBI and
+than which pairs of NFs interact. The NF services use version 2 of the
+Hypertext Transfer Protocol (HTTP), HTTP/2, over the Transmission
+Control Protocol (TCP), as TS 29.500 specifies for the technical
+realization of the service-based architecture. The UE, the NG-RAN, and the DN do not expose an SBI and
 therefore connect to the 5GC through the reference points N1, N2, N3, and
 N6. The SMF controls the UPF over the N4 reference point; the Nupf SBI of
 the UPF only serves specific exposure features (TS 23.501 clause 4.2.16)
@@ -34,9 +35,13 @@ Compared with TS 23.501 figure 4.2.3-1, the figure adds the UDR and the
 NWDAF, which NOTE 4 and NOTE 5 of TS 23.501 clause 4.2.3 leave out of the
 TS 23.501 figures for clarity, and the UDSF, the CHF, and the 5G-EIR,
 which TS 23.501 figure 4.2.3-1 does not show either. The figure leaves
-out the EASDF, which TS 23.501 figure 4.2.3-1 shows, together with the
-NFs of other specific features, for example the UCMF, the TSCTSF, the
-DCCF, the MFAF, and the ADRF (TS 23.501 clause 4.2.2).
+out the Edge Application Server Discovery Function (EASDF), which TS
+23.501 figure 4.2.3-1 shows, together with the NFs of other specific
+features, for example the UE radio Capability Management Function
+(UCMF), the Time Sensitive Communication and Time Synchronization
+Function (TSCTSF), the Data Collection Coordination Function (DCCF), the
+Messaging Framework Adaptor Function (MFAF), and the Analytics Data
+Repository Function (ADRF) (TS 23.501 clause 4.2.2).
 
 === Reference Point Representation
 
@@ -68,7 +73,7 @@ and the user-plane path from the NG-RAN through the UPF to the DN.
 
 The NRF, the SCP, and the UDSF are grouped in a frame because every NF
 can interact with them. The NRF and the SCP have no reference point to a
-specific NF in a non-roaming PLMN, apart from N116 between the SCP and the
+specific NF in a non-roaming Public Land Mobile Network (PLMN), apart from N116 between the SCP and the
 NWDAF, and N18 connects any NF to the UDSF, so the figure does not draw
 these reference points.
 
@@ -87,7 +92,7 @@ communicates with the NG-RAN over the Uu radio interface and with the AMF
 over N1, which carries the Non-Access Stratum (NAS) protocol of TS 24.501.
 
 NG-RAN (Next Generation Radio Access Network):: The NG-RAN is the 5G radio
-access network, made up of gNBs and ng-eNBs (TS 38.300). The NG-RAN
+access network, made up of NR Node Bs (gNBs) and ng-eNBs (TS 38.300). The NG-RAN
 relays control-plane signaling to the AMF over N2 and user-plane traffic
 to the UPF over N3, and NG-RAN nodes interconnect over Xn.
 
@@ -98,14 +103,14 @@ authorization (TS 23.501 clause 6.2.1). The AMF relays session management
 messages between the UE and the SMF and exposes the Namf SBI (TS 29.518).
 
 SMF (Session Management Function):: The SMF establishes, modifies, and
-releases PDU sessions, allocates the UE IP address, and selects and
-controls the UPF over N4 (TS 23.501 clause 6.2.2). The SMF exposes the
+releases Protocol Data Unit (PDU) sessions, allocates the Internet
+Protocol (IP) address of the UE, and selects and controls the UPF over N4 (TS 23.501 clause 6.2.2). The SMF exposes the
 Nsmf SBI (TS 29.502).
 
 UPF (User Plane Function):: The UPF is the anchor point of the PDU session
 in the user plane. The UPF routes and forwards packets between the NG-RAN
-and the DN and applies the packet detection, QoS, and usage reporting
-rules that the SMF provisions over N4 (TS 23.501 clause 6.2.3). Two UPFs
+and the DN and applies the packet detection, Quality of Service (QoS), and usage
+reporting rules that the SMF provisions over N4 (TS 23.501 clause 6.2.3). Two UPFs
 interconnect over N9, for example when an intermediate UPF serves a PDU
 session.
 
@@ -176,8 +181,8 @@ UE, for example to check that the PEI is not prohibited (TS 23.501 clause
 
 CHF (Charging Function):: The CHF performs converged online and offline
 charging for the charging data that the SMF and the AMF report (TS 32.240,
-TS 32.255 for the SMF, and TS 32.256 for the AMF), and it provides the policy counters for spending limit
-control to the PCF (TS 29.594). The CHF exposes the Nchf SBI (TS 32.291).
+TS 32.255 for the SMF, and TS 32.256 for the AMF), and it provides the
+policy counters for spending limit control to the PCF (TS 29.594). The CHF exposes the Nchf SBI (TS 32.291).
 
 NWDAF (Network Data Analytics Function):: The NWDAF collects data from the
 NFs, from the AF, and from operations, administration, and maintenance
@@ -209,12 +214,12 @@ NG-RAN.
 |===
 |Reference point |Between |Specification |Protocol
 
-|Uu |UE and NG-RAN |TS 38.331 |RRC
-|Xn |Two NG-RAN nodes |TS 38.423 |XnAP
+|Uu |UE and NG-RAN |TS 38.331 |Radio Resource Control (RRC)
+|Xn |Two NG-RAN nodes |TS 38.423 |Xn Application Protocol (XnAP)
 |N1 |UE and AMF |TS 24.501 |NAS
-|N2 |NG-RAN and AMF |TS 38.413 |NGAP
-|N3 |NG-RAN and UPF |TS 29.281 |GTPv1-U
-|N4 |SMF and UPF |TS 29.244 |PFCP
+|N2 |NG-RAN and AMF |TS 38.413 |NG Application Protocol (NGAP)
+|N3 |NG-RAN and UPF |TS 29.281 |GTP version 1 for the user plane (GTPv1-U)
+|N4 |SMF and UPF |TS 29.244 |Packet Forwarding Control Protocol (PFCP)
 |N5 |PCF and AF |TS 29.514 |HTTP/2
 |N6 |UPF and DN |TS 29.561 |IP
 |N7 |SMF and PCF |TS 29.512 |HTTP/2

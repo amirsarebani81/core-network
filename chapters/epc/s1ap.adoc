@@ -4,9 +4,9 @@
 
 The S1 Application Protocol (S1AP) is the radio network layer signaling
 protocol of the S1-MME interface between the E-UTRAN and the MME, a
-scope that TS 36.413 clause 1 defines. S1AP carries UE mobility and
-session control, and it relays NAS messages between the UE and the MME
-without inspecting their content.
+scope that TS 36.413 clause 1 defines. S1AP carries UE mobility and session control, and it relays
+Non-Access Stratum (NAS) messages between the UE and the MME without inspecting their
+content.
 
 S1AP consists of Elementary Procedures (EPs), where an EP is a unit of
 interaction between an eNodeB and the MME that comprises an initiating
@@ -42,9 +42,10 @@ provides in-sequence delivery of S1AP messages and notifies S1AP if the
 signaling connection breaks. TS 36.413 clause 6 defines this transport
 requirement; TS 36.410 defines the S1 transport network layer in detail.
 
-Unlike NAS, GTPv2-C, and PFCP, S1AP does not encode its messages with a
-fixed-position byte header. S1AP messages use the Packed Encoding Rules
-(PER) of ASN.1, as defined in ITU-T Recommendation X.691, so a message's
+Unlike NAS, PFCP, and the GPRS Tunnelling Protocol (GTP), S1AP does not
+encode its messages with a fixed-position byte header. S1AP messages use
+the Packed Encoding Rules (PER) of Abstract Syntax Notation One (ASN.1),
+as defined in ITU-T Recommendation X.691, so a message's
 on-the-wire layout depends on the abstract syntax of its information
 elements rather than on fixed octet positions. The Message Format
 section below describes the message structure at the ASN.1 level
@@ -262,7 +263,7 @@ them.
 | MME → eNodeB
 
 | `UE Context Resume Request`
-| Tells the MME that the UE resumed its suspended RRC connection, and asks the MME to resume the UE context.
+| Tells the MME that the UE resumed its suspended Radio Resource Control (RRC) connection, and asks the MME to resume the UE context.
 | eNodeB → MME
 
 | `UE Context Resume Response`
@@ -278,7 +279,7 @@ them.
 | MME → eNodeB
 
 | `Retrieve UE Information`
-| Asks the MME for the UE information of an NB-IoT UE that uses Control Plane CIoT EPS Optimisation.
+| Asks the MME for the UE information of a Narrowband Internet of Things (NB-IoT) UE that uses Control Plane Cellular Internet of Things (CIoT) EPS Optimisation.
 | eNodeB → MME
 
 | `UE Information Transfer`
@@ -298,7 +299,8 @@ them.
 
 These messages prepare, execute, confirm, and cancel a handover of a UE
 between eNodeBs or between radio access technologies, and transfer
-PDCP status between the source and the target eNodeB.
+Packet Data Convergence Protocol (PDCP) status between the source and
+the target eNodeB.
 
 [cols="2,4,1",options="header"]
 |===
@@ -353,7 +355,7 @@ PDCP status between the source and the target eNodeB.
 | MME → eNodeB
 
 | `eNB Status Transfer`
-| Transfers the uplink and downlink PDCP-SN and Hyper Frame Number (HFN) status from the source eNodeB to the target eNodeB via the MME.
+| Transfers the uplink and downlink PDCP Sequence Number (PDCP-SN) and Hyper Frame Number (HFN) status from the source eNodeB to the target eNodeB via the MME.
 | eNodeB → MME
 
 | `MME Status Transfer`
@@ -361,11 +363,11 @@ PDCP status between the source and the target eNodeB.
 | MME → eNodeB
 
 | `Handover Success`
-| Tells the source eNodeB, during a Dual Active Protocol Stacks (DAPS) handover, that the UE successfully accessed the target eNodeB.
+| Tells the source eNodeB, during a Dual Active Protocol Stack (DAPS) handover, that the UE successfully accessed the target eNodeB.
 | MME → eNodeB
 
 | `eNB Early Status Transfer`
-| Transfers, during a DAPS handover, the COUNT of the first downlink SDU that the source eNodeB forwards to the target eNodeB.
+| Transfers, during a DAPS handover, the COUNT of the first downlink Service Data Unit (SDU) that the source eNodeB forwards to the target eNodeB.
 | eNodeB → MME
 
 | `MME Early Status Transfer`
@@ -643,7 +645,7 @@ between an eNodeB and the Evolved Serving Mobile Location Centre
 | Message | Functionality | Direction
 
 | `Downlink UE Associated LPPa Transport`
-| Forwards a UE-associated LPPa message from the MME to the eNodeB, for example to support E-CID or UTDOA positioning of that UE.
+| Forwards a UE-associated LPPa message from the MME to the eNodeB, for example to support Enhanced Cell-ID (E-CID) or Uplink Time Difference Of Arrival (UTDOA) positioning of that UE.
 | MME → eNodeB
 
 | `Uplink UE Associated LPPa Transport`
@@ -651,7 +653,7 @@ between an eNodeB and the Evolved Serving Mobile Location Centre
 | eNodeB → MME
 
 | `Downlink Non UE Associated LPPa Transport`
-| Forwards a non-UE-associated LPPa message from the MME to the eNodeB, for example to obtain OTDOA assistance data.
+| Forwards a non-UE-associated LPPa message from the MME to the eNodeB, for example to obtain Observed Time Difference Of Arrival (OTDOA) assistance data.
 | MME → eNodeB
 
 | `Uplink Non UE Associated LPPa Transport`
@@ -666,7 +668,7 @@ between an eNodeB and the Evolved Serving Mobile Location Centre
 | Message | Functionality | Direction
 
 | `Secondary RAT Data Usage Report`
-| Reports the resources used on a secondary RAT, for example NR resources during EN-DC operation.
+| Reports the resources used on a secondary Radio Access Technology (RAT), for example New Radio (NR) resources during E-UTRA-NR Dual Connectivity (EN-DC) operation.
 | eNodeB → MME
 |===
 
@@ -720,7 +722,7 @@ a|
 * Clause 9.3.3 — PDU Definitions, covering the `S1AP-PDU` choice and the `InitiatingMessage`, `SuccessfulOutcome`, and `UnsuccessfulOutcome` types
 * Clause 10.3.2 — Criticality information
 | ITU-T X.691
-| ASN.1 encoding rules: Specification of Packed Encoding Rules (PER), used to encode S1AP messages
+| ASN.1 encoding rules: Specification of PER, used to encode S1AP messages
 
 | TS 36.410
 | E-UTRAN; S1 general aspects and principles: defines the S1 transport network layer
@@ -729,5 +731,5 @@ a|
 | Subscriber and equipment trace; Trace control and configuration management: defines the trace and MDT sessions that the Trace Messages control
 
 | TS 36.455
-| E-UTRA; LTE Positioning Protocol A (LPPa): the protocol relayed transparently between the eNodeB and the E-SMLC by the LPPa Transport messages
+| LPPa, the protocol relayed transparently between the eNodeB and the E-SMLC by the LPPa Transport messages
 |===

@@ -1,7 +1,7 @@
 = Core Network: Architecture and Signaling Procedures
 Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :doctype: book
-:revnumber: 2.0.1
+:revnumber: 2.0.2
 :revdate: 2026-10-13
 :toc: left
 :toclevels: 3
@@ -16,7 +16,7 @@ Amir Hossein Sarebani <amirsarebani1381@gmail.com>
 :kroki-server-url: http://localhost:8000
 :sectanchors:
 :sectlinks:
-:description: A reference to the architecture of the GPRS core network, the Evolved Packet Core (EPC), and the 5G Core (5GC), and to the signaling procedures between their network elements, with call flows and 3GPP TS clause citations.
+:description: A reference to the architecture of the GPRS core network, the Evolved Packet Core (EPC), and the 5G Core Network (5GC), and to the signaling procedures between their network elements, with call flows and 3GPP TS clause citations.
 :favicon: favicon.svg
 :copyright: © 2026 Amir Hossein Sarebani. Licensed under CC BY-NC-ND 4.0.
 :license-url: https://creativecommons.org/licenses/by-nc-nd/4.0/
@@ -98,3 +98,5 @@ between the network functions, and the signaling procedures that run
 over those protocols.
 
 include::chapters/5gc/architecture-and-specifications.adoc[]
+
+include::chapters/glossary.adoc[]

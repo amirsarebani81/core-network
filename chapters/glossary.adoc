@@ -1,0 +1,286 @@
+[glossary]
+[#_glossary]
+= Glossary
+
+This glossary lists the abbreviations that this book uses, together with
+their expanded forms. The text spells out each abbreviation at its first
+use in each part and uses only the abbreviation after that, so a reader
+who starts in the middle of a part can look up an abbreviation here.
+3GPP TR 21.905 defines the common vocabulary of the 3GPP specifications,
+and the specification that each chapter cites defines the abbreviations
+that are specific to one protocol or procedure.
+
+[horizontal,labelwidth=20]
+3GPP:: Third Generation Partnership Project
+5G-EIR:: 5G Equipment Identity Register
+5GC:: 5G Core Network
+5GS:: 5G System
+AAA:: Authentication, Authorization, and Accounting
+ADC:: Application Detection and Control
+ADRF:: Analytics Data Repository Function
+AF:: Application Function
+AMBR:: Aggregate Maximum Bit Rate
+AMF:: Access and Mobility Management Function
+API:: Application Programming Interface
+APN:: Access Point Name
+APN-AMBR:: APN Aggregate Maximum Bit Rate
+ARP:: Allocation and Retention Priority
+ASN.1:: Abstract Syntax Notation One
+AUSF:: Authentication Server Function
+AUTN:: Authentication Token
+AVP:: Attribute-Value Pair
+BAR:: Buffering Action Rule
+BCM:: Bearer Control Mode
+BM-SC:: Broadcast Multicast Service Centre
+BSS:: Base Station Subsystem
+CAMEL:: Customised Applications for Mobile network Enhanced Logic
+CBC:: Cell Broadcast Centre
+CCA:: Credit-Control-Answer (Diameter command)
+CCR:: Credit-Control-Request (Diameter command)
+CDR:: Charging Data Record
+CGI:: Cell Global Identification
+CHAP:: Challenge Handshake Authentication Protocol
+CHF:: Charging Function
+CIoT:: Cellular Internet of Things
+CLA:: Cancel-Location-Answer (Diameter command)
+CLR:: Cancel-Location-Request (Diameter command)
+CN:: Core Network
+CP:: Control Plane
+CS:: Circuit-Switched
+CSG:: Closed Subscriber Group
+CUPS:: Control and User Plane Separation
+DAPS:: Dual Active Protocol Stack
+DCCF:: Data Collection Coordination Function
+DCN:: Dedicated Core Network
+DDN:: Downlink Data Notification (GTPv2-C message)
+DN:: Data Network
+DNS:: Domain Name System
+DRB:: Data Radio Bearer
+DRX:: Discontinuous Reception
+DTI:: Direct Tunnel Indicator
+DTM:: Dual Transfer Mode
+E-CID:: Enhanced Cell-ID
+E-RAB:: E-UTRAN Radio Access Bearer
+E-SMLC:: Evolved Serving Mobile Location Centre
+E-UTRA:: Evolved Universal Terrestrial Radio Access
+E-UTRAN:: Evolved Universal Terrestrial Radio Access Network
+EASDF:: Edge Application Server Discovery Function
+EBI:: EPS Bearer Identity
+ECA:: ME-Identity-Check-Answer (Diameter command)
+ECGI:: E-UTRAN Cell Global Identifier
+ECM:: EPS Connection Management
+ECR:: ME-Identity-Check-Request (Diameter command)
+EDGE:: Enhanced Data rates for GSM Evolution
+eDRX:: Extended Discontinuous Reception
+EEA0:: EPS Encryption Algorithm 0
+EHPLMN:: Equivalent HPLMN
+EIR:: Equipment Identity Register
+eKSI:: Key Set Identifier for E-UTRAN
+EMM:: EPS Mobility Management
+eMPS:: Enhanced Multimedia Priority Service
+EN-DC:: E-UTRA-NR Dual Connectivity
+eNodeB, eNB:: E-UTRAN Node B
+EP:: Elementary Procedure
+EPC:: Evolved Packet Core
+ePDG:: Evolved Packet Data Gateway
+EPS:: Evolved Packet System
+ESM:: EPS Session Management
+ETSI:: European Telecommunications Standards Institute
+F-TEID:: Fully Qualified Tunnel Endpoint Identifier
+FAR:: Forwarding Action Rule
+GBR:: Guaranteed Bit Rate
+GERAN:: GSM EDGE Radio Access Network
+GGSN:: Gateway GPRS Support Node
+gNB:: NR Node B
+GPRS:: General Packet Radio Service
+GSM:: Global System for Mobile communications
+GSN:: GPRS Support Node
+GTP:: GPRS Tunnelling Protocol
+GTP-C:: GTP for the control plane
+GTP-U:: GTP for the user plane
+GTPv0:: GTP version 0
+GTPv1:: GTP version 1
+GTPv1-C:: GTP version 1 for the control plane
+GTPv1-U:: GTP version 1 for the user plane
+GTPv2:: GTP version 2
+GTPv2-C:: GTP version 2 for the control plane
+GUMMEI:: Globally Unique MME Identifier
+GUTI:: Globally Unique Temporary UE Identity
+HFN:: Hyper Frame Number
+HLR:: Home Location Register
+HPLMN:: Home PLMN
+HRPD:: High Rate Packet Data
+HSS:: Home Subscriber Server
+HTTP:: Hypertext Transfer Protocol
+IDA:: Insert-Subscriber-Data-Answer (Diameter command)
+IDR:: Insert-Subscriber-Data-Request (Diameter command)
+IE:: Information Element
+IETF:: Internet Engineering Task Force
+IGMP:: Internet Group Management Protocol
+IMEI:: International Mobile Equipment Identity
+IMEISV:: International Mobile Equipment Identity and Software Version Number
+IMS:: IP Multimedia Subsystem
+IMSI:: International Mobile Subscriber Identity
+IoT:: Internet of Things
+IP:: Internet Protocol
+IP-CAN:: IP Connectivity Access Network
+ISR:: Idle mode Signalling Reduction
+ITU-T:: International Telecommunication Union, Telecommunication Standardization Sector
+KSI:: Key Set Identifier
+KSI_ASME:: Key Set Identifier for the Access Security Management Entity
+LAPI:: Low Access Priority Indicator
+LBI:: Linked EPS Bearer Identity
+LCI:: Load Control Information
+LLC:: Logical Link Control
+LPPa:: LTE Positioning Protocol Annex
+LTE:: Long Term Evolution
+MAC:: Medium Access Control
+MAP:: Mobile Application Part
+MBMS:: Multimedia Broadcast Multicast Service
+MBR:: Maximum Bit Rate
+MDT:: Minimization of Drive Tests
+ME:: Mobile Equipment
+MFAF:: Messaging Framework Adaptor Function
+MLD:: Multicast Listener Discovery
+MM:: Mobility Management
+MME:: Mobility Management Entity
+MNOP:: Measurement of Number of Packets
+MNRG:: Mobile station Not Reachable for GPRS
+MS:: Mobile Station
+MSISDN:: Mobile Station International Subscriber Directory Number
+NAS:: Non-Access Stratum
+NAS-MAC:: NAS Message Authentication Code
+NAS-PDU:: NAS Protocol Data Unit
+NB-IoT:: Narrowband Internet of Things
+NEF:: Network Exposure Function
+NF:: Network Function
+NG-RAN:: Next Generation Radio Access Network
+NGAP:: NG Application Protocol
+NOA:: Notify-Answer (Diameter command)
+NOR:: Notify-Request (Diameter command)
+NR:: New Radio
+NRF:: Network Repository Function
+NSACF:: Network Slice Admission Control Function
+NSAPI:: Network layer Service Access Point Identifier
+NSSAAF:: Network Slice-specific and SNPN Authentication and Authorization Function
+NSSF:: Network Slice Selection Function
+NWDAF:: Network Data Analytics Function
+OAM:: Operations, Administration, and Maintenance
+OCI:: Overload Control Information
+OCS:: Online Charging System
+OFCS:: Offline Charging System
+OTDOA:: Observed Time Difference Of Arrival
+P-CSCF:: Proxy Call Session Control Function
+P-GW, PGW:: PDN Gateway
+P-TMSI:: Packet Temporary Mobile Subscriber Identity
+PAA:: PDN Address Allocation
+PAP:: Password Authentication Protocol
+PCC:: Policy and Charging Control
+PCEF:: Policy and Charging Enforcement Function
+PCF:: Policy Control Function
+PCO:: Protocol Configuration Options
+PCRF:: Policy and Charging Rules Function
+PDCP:: Packet Data Convergence Protocol
+PDCP-SN:: PDCP Sequence Number
+PDI:: Packet Detection Information
+PDN:: Packet Data Network
+PDP:: Packet Data Protocol
+PDR:: Packet Detection Rule
+PDU:: Protocol Data Unit
+PEI:: Permanent Equipment Identifier
+PER:: Packed Encoding Rules
+PFCP:: Packet Forwarding Control Protocol
+PFD:: Packet Flow Description
+PGW-C:: PDN Gateway - Control Plane
+PGW-U:: PDN Gateway - User Plane
+PLMN:: Public Land Mobile Network
+ProSe:: Proximity-based Services
+PS:: Packet-Switched
+PSCell:: Primary SCG Cell
+PTI:: Procedure Transaction Identity
+PWS:: Public Warning System
+QCI:: QoS Class Identifier
+QER:: QoS Enforcement Rule
+QoS:: Quality of Service
+RAA:: Re-Auth-Answer (Diameter command)
+RAB:: Radio Access Bearer
+RADIUS:: Remote Authentication Dial-In User Service
+RAI:: Routeing Area Identity
+RAN:: Radio Access Network
+RANAP:: Radio Access Network Application Part
+RAND:: Random Challenge
+RAR:: Re-Auth-Request (Diameter command)
+RAT:: Radio Access Technology
+RAU:: Routeing Area Update
+RB:: Radio Bearer
+RES:: Authentication Response
+RFC:: Request for Comments
+RIM:: RAN Information Management
+RLC:: Radio Link Control
+RNC:: Radio Network Controller
+RNS:: Radio Network Subsystem
+RRC:: Radio Resource Control
+S-GW, SGW:: Serving Gateway
+S-TMSI:: S-Temporary Mobile Subscriber Identity
+S1AP:: S1 Application Protocol
+SAE:: System Architecture Evolution
+SAI:: Service Area Identifier
+SAPI:: Service Access Point Identifier
+SBI:: Service-Based Interface
+SCG:: Secondary Cell Group
+SCP:: Service Communication Proxy
+SCTP:: Stream Control Transmission Protocol
+SDF:: Service Data Flow
+SDU:: Service Data Unit
+SEID:: Session Endpoint Identifier
+SGSN:: Serving GPRS Support Node
+SGW-C:: Serving Gateway - Control Plane
+SGW-U:: Serving Gateway - User Plane
+SIM:: Subscriber Identity Module
+SIPTO:: Selected IP Traffic Offload
+SM:: Session Management
+SMF:: Session Management Function
+SMS:: Short Message Service
+SNDCP:: Subnetwork Dependent Convergence Protocol
+SNPN:: Standalone Non-Public Network
+SON:: Self-Organizing Network
+SRNS:: Serving Radio Network Subsystem
+SRVCC:: Single Radio Voice Call Continuity
+SS7:: Signalling System No. 7
+TAI:: Tracking Area Identity
+TAU:: Tracking Area Update
+TCP:: Transmission Control Protocol
+TDF:: Traffic Detection Function
+TDF-C:: Traffic Detection Function - Control Plane
+TDF-U:: Traffic Detection Function - User Plane
+TEID:: Tunnel Endpoint Identifier
+TFT:: Traffic Flow Template
+TI:: Transaction Identifier
+TLV:: Type-Length-Value
+TMGI:: Temporary Mobile Group Identity
+TMSI:: Temporary Mobile Subscriber Identity
+TS:: Technical Specification
+TSCTSF:: Time Sensitive Communication and Time Synchronization Function
+TV:: Type-Value
+TWAN:: Trusted WLAN Access Network
+UCI:: User CSG Information
+UCMF:: UE radio Capability Management Function
+UDM:: Unified Data Management
+UDP:: User Datagram Protocol
+UDR:: Unified Data Repository
+UDSF:: Unstructured Data Storage Function
+UE:: User Equipment
+UE-AMBR:: UE Aggregate Maximum Bit Rate
+ULA:: Update-Location-Answer (Diameter command)
+ULI:: User Location Information
+ULR:: Update-Location-Request (Diameter command)
+UMTS:: Universal Mobile Telecommunications System
+UP:: User Plane
+UPF:: User Plane Function
+URR:: Usage Reporting Rule
+USIM:: Universal Subscriber Identity Module
+UTDOA:: Uplink Time Difference Of Arrival
+UTRAN:: Universal Terrestrial Radio Access Network
+VoLTE:: Voice over LTE
+WLAN:: Wireless Local Area Network
+XnAP:: Xn Application Protocol

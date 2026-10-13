@@ -2,12 +2,10 @@
 
 ==== Technical Overview
 
-The Packet Forwarding Control Protocol (PFCP) is the protocol on the
-interface between a control plane function (CP function) and a user
-plane function (UP function). In the EPC, the CP functions are the
-SGW-C, the PGW-C, and the Traffic Detection Function control plane
-(TDF-C), and the UP functions are the SGW-U, the PGW-U, and the Traffic
-Detection Function user plane (TDF-U).
+PFCP is the protocol on the interface between a control plane (CP)
+function and a user plane (UP) function. In the EPC, the CP functions
+are the SGW-C, the PGW-C, and the TDF-C, and the UP functions are the
+SGW-U, the PGW-U, and the TDF-U.
 
 PFCP applies over the Sxa, Sxb, and Sxc reference points and the
 combined Sxa/Sxb reference point of the EPC, and over the N4 and N4mb
@@ -25,8 +23,8 @@ packets references a Buffering Action Rule (BAR), which the CP function
 creates at the level of the PFCP session. TS 29.244 clause 5.2.1
 defines this packet forwarding model.
 
-PFCP runs over the User Datagram Protocol (UDP), and a request message
-uses the registered UDP destination port 8805. Because UDP does not guarantee delivery, a PFCP
+PFCP runs over UDP, and a request message uses the registered UDP
+destination port 8805. Because UDP does not guarantee delivery, a PFCP
 entity retransmits a request message when it does not receive a
 response before timer T1 expires, until the number of retransmissions
 reaches N1. TS 29.244 clause 4.2 defines the UDP port numbers, and
@@ -209,7 +207,7 @@ session.
 | Sxb, Sxc, N4.
 
 | `PFCP Node Report Request`
-| Reports information that does not relate to a specific PFCP session to the CP function, for example a user plane path failure that affects all PFCP sessions towards a remote GTP-U peer.
+| Reports information that does not relate to a specific PFCP session to the CP function, for example a user plane path failure that affects all PFCP sessions towards a remote peer of GTP for the user plane (GTP-U).
 | Sxa, Sxb, Sxc, N4, N4mb.
 
 | `PFCP Node Report Response`

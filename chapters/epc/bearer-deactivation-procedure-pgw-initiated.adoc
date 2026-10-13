@@ -2,38 +2,35 @@
 
 ==== Technical Overview
 
-The Evolved Packet Core (EPC) starts the P-GW-initiated Bearer
-Deactivation procedure to deactivate an active Evolved Packet System
-(EPS) bearer context. The procedure can also disconnect a User Equipment
-(UE) from a Packet Data Network (PDN), in which case it deactivates all
-bearer contexts of that PDN connection.
+The EPC starts the P-GW-initiated Bearer Deactivation procedure to
+deactivate an active EPS bearer context. The procedure can also
+disconnect a UE from a PDN, in which case it deactivates all bearer
+contexts of that PDN connection.
 
-Three events can trigger the procedure: a local Quality of Service (QoS)
-policy in the PDN Gateway (P-GW), the expiry of an inactivity timer for
-specific PDN types such as emergency services, or an explicit policy
-enforcement action from the Policy and Charging Rules Function (PCRF).
+Three events can trigger the procedure: a local QoS policy in the P-GW,
+the expiry of an inactivity timer for specific PDN types such as
+emergency services, or an explicit policy enforcement action from the
+PCRF.
 
 The procedure tears down dedicated or default user-plane resources,
 releasing them on the radio interface and on the logical network tunnels,
 and at the same time synchronizes the session management states in all
 involved nodes. The procedure has these high-level effects:
 
-On the UE:: The UE releases the designated Data Radio Bearer (DRB) and
-deletes the related Traffic Flow Template (TFT) filters, moving the EPS
-Session Management (ESM) state of the bearer to `BEARER CONTEXT
+On the UE:: The UE releases the designated DRB and deletes the related
+TFT filters, moving the ESM state of the bearer to `BEARER CONTEXT
 INACTIVE`. If the deactivated bearer is the default bearer of a PDN
 connection, the UE deletes all associated dedicated bearers as well, and
 when the network does not support EMM-REGISTERED without PDN
 connectivity, the UE also starts a local detach or an explicit detach.
 
 On the EPC:: The eNodeB (Evolved Node B) deallocates the radio resources
-and the S1-U uplink transport resources, while the Serving Gateway (S-GW)
-and the P-GW delete their user-plane contexts, for example the Fully
-Qualified Tunnel Endpoint Identifiers (F-TEIDs), and stop the packet
-count and the packet forwarding for the deactivated bearer. When the
-network deploys dynamic Policy and Charging Control (PCC), the Policy and
-Charging Enforcement Function (PCEF) in the P-GW reports the successful
-enforcement outcome to the PCRF, which closes the dynamic session.
+and the S1-U uplink transport resources, while the S-GW and the P-GW
+delete their user-plane contexts, for example the F-TEIDs, and stop the
+packet count and the packet forwarding for the deactivated bearer. When
+the network deploys dynamic PCC, the PCEF in the P-GW reports the
+successful enforcement outcome to the PCRF, which closes the dynamic
+session.
 
 ==== Call Flow
 
@@ -50,10 +47,9 @@ plantuml::diagrams/bearer-deactivation-pgw-initiated-call-flow.puml[svg]
 deactivation by sending a Diameter `Re-Auth-Request` (RAR) message over
 the Gx interface to the PCEF, which is collocated in the *P-GW*. The
 message removes authorized PCC rules and instructs the PCEF to delete
-the specific service data flow (SDF) filters of the bearer that the
-network deactivates. The message carries these Attribute-Value Pairs
-(AVPs): the `Session-Id`, the `Auth-Application-Id`, set to the
-vendor-specific Gx Application ID `16777238`, the
+the specific SDF filters of the bearer that the network deactivates. The
+message carries these AVPs: the `Session-Id`, the `Auth-Application-Id`,
+set to the vendor-specific Gx Application ID `16777238`, the
 `Re-Auth-Request-Type`, set to `AUTHORIZE_ONLY`, and the
 `Charging-Rule-Remove`. The `Charging-Rule-Remove` AVP encapsulates the
 `Charging-Rule-Name` or the `Charging-Rule-Base-Name`, which identify
@@ -68,51 +64,46 @@ bearer deactivation on the access network. The message carries the
 transaction.
 
 . The *P-GW* maps the removed PCC rules to the related bearer context
-and sends a GPRS Tunnelling Protocol version 2 control plane (GTPv2-C)
-`Delete Bearer Request` message to the *S-GW* over the S5/S8 interface.
-The message starts the deallocation of the downlink S5/S8-U transport
-parameters and identifies the bearer that the network deactivates. The
-message carries these Information Elements (IEs): the EPS Bearer IDs,
-which identify the specific dedicated bearer to delete, or the Linked
-EPS Bearer ID (LBI), if the network deactivates the complete PDN
-connection, the Procedure Transaction Id (PTI), which correlates the
-message with a UE-initiated modification if applicable, and the Cause.
-The Cause IE carries the specific release trigger, for example "Regular
-deactivation" or "RAT changed from 3GPP to Non-3GPP".
+and sends a GTPv2-C `Delete Bearer Request` message to the *S-GW* over
+the S5/S8 interface. The message starts the deallocation of the downlink
+S5/S8-U transport parameters and identifies the bearer that the network
+deactivates. The message carries these IEs: the EPS Bearer IDs, which
+identify the specific dedicated bearer to delete, or the LBI, if the
+network deactivates the complete PDN connection, the PTI, which
+correlates the message with a UE-initiated modification if applicable,
+and the Cause. The Cause IE carries the specific release trigger, for
+example "Regular deactivation" or "RAT changed from 3GPP to Non-3GPP".
 
 . After processing the request of the P-GW, the *S-GW* starts the
 release of its local S5/S8-U user-plane tunnel resources and forwards
-the GTPv2 `Delete Bearer Request` message to the *MME* (Mobility
-Management Entity) over the S11 interface. The message prompts the MME
-to start the E-UTRAN resource release and the Non-Access-Stratum (NAS)
-signaling to the UE, and carries the EPS Bearer IDs with the target EPS
-Bearer Identity (EBI), the PTI, and the Cause.
+the GTPv2 `Delete Bearer Request` message to the *MME* over the S11
+interface. The message prompts the MME to start the E-UTRAN resource
+release and the NAS signaling to the UE, and carries the EPS Bearer IDs
+with the target EBI, the PTI, and the Cause.
 
 . To terminate the logical S1-U connection and the radio resources of
-the bearer, the *MME* starts the S1 Application Protocol (S1AP) E-RAB
-Release procedure and sends an S1AP `E-RAB Release Command` message to
-the *eNodeB*. The message instructs the eNodeB to release the radio
-resources on the Uu interface and the uplink user-plane tunnels on the
-S1-U interface, and carries the MME UE S1AP ID, the eNB UE S1AP ID, and
-the E-RAB To Be Released List, which contains the E-RAB To Be Released
-Item with the target E-RAB ID and the Cause. The message also carries a
-NAS-PDU (NAS Protocol Data Unit), which encapsulates the NAS `Deactivate
-EPS Bearer Context Request` message. The embedded NAS ESM message
-carries the EPS bearer identity, the PTI, and the ESM cause, for example
-ESM Cause #36, "regular deactivation", or ESM Cause #39, "reactivation
-requested".
+the bearer, the *MME* starts the S1AP E-RAB Release procedure and sends
+an S1AP `E-RAB Release Command` message to the *eNodeB*. The message
+instructs the eNodeB to release the radio resources on the Uu interface
+and the uplink user-plane tunnels on the S1-U interface, and carries the
+MME UE S1AP ID, the eNB UE S1AP ID, and the E-RAB To Be Released List,
+which contains the E-RAB To Be Released Item with the target E-RAB ID
+and the Cause. The message also carries a NAS-PDU, which
+encapsulates the NAS `Deactivate EPS Bearer Context
+Request` message. The embedded NAS ESM message carries the EPS bearer
+identity, the PTI, and the ESM cause, for example ESM Cause #36,
+"regular deactivation", or ESM Cause #39, "reactivation requested".
 
 . The *eNodeB* maps the received S1AP E-RAB release information to the
-radio bearer parameters and sends an RRC (Radio Resource Control)
-`Connection Reconfiguration` message to the *UE* over the Uu interface.
+radio bearer parameters and sends an RRC `Connection
+Reconfiguration` message to the *UE* over the Uu interface.
 The message requests the UE to release the physical layer resources, the
-Medium Access Control (MAC) layer resources, and the Radio Link Control
-(RLC) layer resources of the designated DRB, and carries the
-`rrc-TransactionIdentifier` and the `radioResourceConfigDedicated`
-container. This container carries the `drb-ToReleaseList` with the
-assigned DRB identity to release. The message also carries the
-`dedicatedInfoNASList`, which contains the NAS `Deactivate EPS Bearer
-Context Request` message.
+MAC layer resources, and the RLC layer resources of the designated DRB,
+and carries the `rrc-TransactionIdentifier` and the
+`radioResourceConfigDedicated` container. This container carries the
+`drb-ToReleaseList` with the assigned DRB identity to release. The
+message also carries the `dedicatedInfoNASList`, which contains the NAS
+`Deactivate EPS Bearer Context Request` message.
 
 . The *UE* tears down the physical radio resources, removes the uplink
 packet filters in its TFT that match the deactivated EPS bearer, and
@@ -126,11 +117,10 @@ endpoints and of the Uu interface radio resources, the *eNodeB* sends an
 S1AP `E-RAB Release Response` message to the *MME* over the S1-MME
 interface. The message carries the MME UE S1AP ID, the eNB UE S1AP ID,
 and the E-RAB Release List, which encloses the E-RAB Release Item with
-the E-RAB ID, together with the User Location Information with the
-E-UTRAN Cell Global Identifier (ECGI) and the Tracking Area Identity
-(TAI) of the serving cell. If the network releases secondary RAT (Radio
-Access Technology) resources, the message also carries the Secondary RAT
-Usage Report List.
+the E-RAB ID, together with the User Location Information with the ECGI
+and the TAI of the serving cell. If the network releases secondary RAT
+resources, the message also carries the
+Secondary RAT Usage Report List.
 
 . The NAS layer of the *UE* builds the ESM response that acknowledges
 the bearer context deactivation and encapsulates this response in an RRC
@@ -155,10 +145,9 @@ step 10, the MME deletes the local bearer context and acknowledges the
 bearer deactivation to the *S-GW* with a GTPv2 `Delete Bearer Response`
 message over the S11 interface. The message carries the Cause, set to
 "Request accepted", the EPS Bearer ID, which is grouped in the Bearer
-Contexts IE, the User Location Information (ULI) with the ECGI and the
-TAI, and the RAN/NAS Cause, which indicates the release cause of the
-access network. If the data is available, the message also carries the
-Secondary RAT Usage Data Report.
+Contexts IE, the ULI with the ECGI and the TAI, and the RAN/NAS Cause,
+which indicates the release cause of the access network. If the data is
+available, the message also carries the Secondary RAT Usage Data Report.
 
 . After processing the response of the MME, the *S-GW* deallocates its
 downlink user-plane tunnel resources, that is the S1-U F-TEID, and its

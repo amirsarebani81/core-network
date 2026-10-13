@@ -3,21 +3,16 @@
 ===== Technical Overview
 
 The P-GW-initiated Bearer Modification procedure updates the parameters
-of an active default or dedicated EPS bearer, and the PDN Gateway (P-GW)
-starts the procedure.
+of an active default or dedicated EPS bearer, and the P-GW starts the
+procedure.
 
-The procedure changes the Quality of Service (QoS) of the bearer, that
-is the QoS Class Identifier (QCI), the Guaranteed Bit Rate (GBR), the
-Maximum Bit Rate (MBR), and the Allocation and Retention Priority (ARP),
-and it can also update the Traffic Flow Template (TFT), the APN
-Aggregate Maximum Bit Rate (APN-AMBR), and the Protocol Configuration
-Options (PCO).
+The procedure changes the QoS of the bearer, that is the QCI, the GBR,
+the MBR, and the ARP, and it can also update the TFT, the APN-AMBR, and
+the PCO.
 
 The procedure keeps the radio and core network resources aligned with
-the Policy and Charging Control (PCC) rules that the Policy and Charging
-Rules Function (PCRF) authorizes, reconfiguring the Data Radio Bearer
-(DRB) at the UE and updating the EPS bearer contexts at the P-GW, the
-Serving Gateway (S-GW), and the MME.
+the PCC rules that the PCRF authorizes, reconfiguring the DRB at the UE
+and updating the EPS bearer contexts at the P-GW, the S-GW, and the MME.
 
 ===== Call Flow
 
@@ -36,10 +31,9 @@ the Gx interface, to provision new PCC rules, and the *P-GW* returns a
 Diameter `Re-Auth-Answer` (RAA) message to acknowledge the new policy
 decision.
 
-. The *P-GW* derives the new EPS Bearer QoS from the PCC rules and
-sends a GTPv2 `Update Bearer Request` message to the *S-GW*, carrying
-the Procedure Transaction Id (PTI), the EPS Bearer Identity (EBI), the
-EPS Bearer QoS, the APN-AMBR, and the TFT.
+. The *P-GW* derives the new EPS Bearer QoS from the PCC rules and sends
+a GTPv2 `Update Bearer Request` message to the *S-GW*, carrying the PTI,
+the EBI, the EPS Bearer QoS, the APN-AMBR, and the TFT.
 
 . The *S-GW* forwards the GTPv2 `Update Bearer Request` message to the
 *MME*, without changes.
@@ -51,11 +45,10 @@ the *eNodeB*, which pages the *UE* over the radio interface with an RRC
 to the eNodeB, and the eNodeB forwards the request to the MME inside an
 S1AP `Initial UE Message`.
 
-. The *MME* builds a NAS `Modify EPS Bearer Context Request` message
-and sends it to the *eNodeB* inside an S1AP `E-RAB Modify Request`
-message, carrying the E-RAB ID, the E-RAB Level QoS Parameters, the
-NAS-PDU, and, if the APN-AMBR changed, the UE Aggregate Maximum Bit Rate
-(UE-AMBR).
+. The *MME* builds a NAS `Modify EPS Bearer Context Request` message and
+sends it to the *eNodeB* inside an S1AP `E-RAB Modify Request` message,
+carrying the E-RAB ID, the E-RAB Level QoS Parameters, the NAS-PDU, and,
+if the APN-AMBR changed, the UE-AMBR.
 
 . The *eNodeB* maps the new EPS Bearer QoS to the Radio Bearer QoS and
 sends an RRC `Connection Reconfiguration` message to the *UE*, carrying
@@ -75,10 +68,10 @@ EPS Bearer Context Accept` message, inside an RRC `Direct Transfer`
 message, to the *eNodeB*, which forwards it to the *MME* inside an
 S1AP `Uplink NAS Transport` message.
 
-. When the *MME* receives both the S1AP and the NAS acknowledgements,
-it sends a GTPv2 `Update Bearer Response` message to the *S-GW*,
-carrying the EBI, a Cause set to "Request Accepted", the User Location
-Information (ULI), that is the ECGI, and the PSCell ID.
+. When the *MME* receives both the S1AP and the NAS acknowledgements, it
+sends a GTPv2 `Update Bearer Response` message to the *S-GW*, carrying
+the EBI, a Cause set to "Request Accepted", the ULI, that is the ECGI,
+and the PSCell ID.
 
 . The *S-GW* forwards the GTPv2 `Update Bearer Response` message to the
 *P-GW* over the S5/S8 interface, carrying the EBI and the ULI.
@@ -110,8 +103,8 @@ if it detects a mismatch, can start a procedure to re-align the bearer
 context.
 
 UE temporarily not reachable:: When the MME tries to modify a bearer
-for a UE in ECM-IDLE mode with extended idle mode DRX (eDRX) active,
-the UE can fail to respond to paging before the paging timer expires.
+for a UE in ECM-IDLE mode with Extended Discontinuous Reception (eDRX)
+active, the UE can fail to respond to paging before the paging timer expires.
 In this case, the MME sends a GTPv2 `Update Bearer Response` message to
 the S-GW, with GTP Cause #123, "UE is temporarily not reachable due to
 power saving", and sets the "Pending Network Initiated PDN Connection

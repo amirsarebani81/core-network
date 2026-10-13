@@ -2,15 +2,15 @@
 
 ===== Technical Overview
 
-The UE-initiated Detach procedure lets a UE inform the network that it no
-longer needs access to the Evolved Packet System (EPS), and it deactivates
-all active EPS bearer contexts, including the default bearer.
+The UE-initiated Detach procedure lets a UE inform the network that it
+no longer needs access to the EPS, and it deactivates all active EPS
+bearer contexts, including the default bearer.
 
 The procedure removes the UE's mobility management and security contexts
 from the MME and from the UE, moving the UE to the EMM-DEREGISTERED state.
 
-Across the S1, S11, and S5/S8 interfaces, the Evolved Packet Core (EPC)
-releases all associated user-plane and control-plane resources.
+Across the S1, S11, and S5/S8 interfaces, the EPC releases all
+associated user-plane and control-plane resources.
 
 ===== Call Flow
 
@@ -28,22 +28,23 @@ message triggers the establishment of a NAS signalling connection. The
 message carries the GUTI, the Detach type, which shows the kind of
 detach, for example EPS detach or combined EPS/IMSI detach, the Switch
 off indicator, which shows whether the UE is powering down, and the NAS
-key set identifier (eKSI).
+key set identifier, that is the eKSI.
 
 . The *eNodeB* forwards the NAS message to the *MME* inside an S1AP
 `Uplink NAS Transport` message, including the User Location Information
 of the serving cell, that is the ECGI and the TAI, and the NAS-PDU.
 
-. If Idle mode Signalling Reduction (ISR) is active for the UE, the *MME*
-sends a GTPv2 `Detach Notification` message to the associated *SGSN* to
-detach the UE from GERAN/UTRAN access as well. The message carries a
-Cause value set to "Complete Detach" and the Detach Type.
+. If ISR is active for the UE, the *MME* sends a GTPv2 `Detach
+Notification` message to the associated *SGSN* to detach the UE from
+GSM EDGE Radio Access Network (GERAN) and Universal Terrestrial Radio
+Access Network (UTRAN) access as well. The message carries a Cause value set to
+"Complete Detach" and the Detach Type.
 
 . On receiving the Detach Notification, the *SGSN* deactivates the UE's
 active Packet Data Protocol (PDP) contexts and sends a GTPv2 `Delete
 Session Request` message to the *S-GW*. The message carries the LBI, the
-User Location Information, that is the Cell Global Identity (CGI) and the
-Service Area Identity (SAI), and the UE Time Zone.
+User Location Information, that is the Cell Global Identification (CGI)
+and the Service Area Identifier (SAI), and the UE Time Zone.
 
 . The *S-GW* acknowledges the deletion of the SGSN-related bearer
 contexts by returning a GTPv2 `Delete Session Response` message, carrying
@@ -55,8 +56,8 @@ sending a GTPv2 `Detach Acknowledge` message, carrying a Cause, to the
 
 . To deactivate all active EPS bearers, the *MME* sends a GTPv2 `Delete
 Session Request` message to the *S-GW* for each PDN connection, carrying
-the LBI, the User Location Information (ECGI), the Secondary RAT usage
-data, and the UE Time Zone. If ISR was active, the S-GW does not release
+the LBI, the User Location Information, that is the ECGI, the Secondary
+RAT usage data, and the UE Time Zone. If ISR was active, the S-GW does not release
 its control-plane TEID until it receives this message.
 
 . For each PDN connection that the procedure releases, the *S-GW* sends a
@@ -109,12 +110,11 @@ example T3421, and enters the EMM-DEREGISTERED state. The MME can
 deactivate all non-emergency bearers and mark the UE as detached.
 
 Detach through an unauthorized CSG cell:: The UE can send a Detach
-Request, without the Switch off indicator, while connected to a Closed
-Subscriber Group (CSG) cell for which its subscription has expired. In
-this case, the MME responds with EMM Cause #25, "Not authorized for this
-CSG", and starts a network-initiated detach procedure. The UE removes the
-CSG ID from its Allowed CSG list and, if needed, performs a new Public
-Land Mobile Network (PLMN) selection.
+Request, without the Switch off indicator, while connected to a CSG cell
+for which its subscription has expired. In this case, the MME responds
+with EMM Cause #25, "Not authorized for this CSG", and starts a
+network-initiated detach procedure. The UE removes the CSG ID from its
+Allowed CSG list and, if needed, performs a new Public Land Mobile Network (PLMN) selection.
 
 T3421 timer expiry:: The UE can send a Detach Request, without the Switch
 off indicator, and not receive a Detach Accept message before timer

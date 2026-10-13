@@ -2,12 +2,11 @@
 
 ==== Technical Overview
 
-The Attach procedure registers a User Equipment (UE) with the network, a
-registration the UE needs before it can use services that require it.
+The Attach procedure registers a UE with the network, a registration the
+UE needs before it can use services that require it.
 
-The procedure establishes an EPS Mobility Management (EMM) context in the
-Mobility Management Entity (MME) and, in most cases, a default EPS bearer
-that gives the UE always-on IP connectivity.
+The procedure establishes an EMM context in the MME and, in most cases,
+a default EPS bearer that gives the UE always-on IP connectivity.
 
 The procedure moves the UE from the EMM-DEREGISTERED state to the
 EMM-REGISTERED state, and during the procedure the network authenticates
@@ -23,60 +22,58 @@ plantuml::diagrams/attach-call-flow.puml[svg]
 
 ==== Step-by-Step Description
 
-. The *UE* sends an `Attach Request` message to the *eNodeB (Evolved Node B)*,
-carrying this Non-Access Stratum (NAS) message inside the Radio Resource
-Control (RRC) connection establishment procedure. The message carries the
-International Mobile Subscriber Identity (IMSI) or the old Globally Unique
-Temporary Identifier (GUTI), the old GUTI type, and the last visited Tracking
-Area Identity (TAI), which helps the MME allocate a TAI list, as well as the
-UE Core Network Capability, an EPS Session Management (ESM) message container
-with a Packet Data Network (PDN) Connectivity Request, the Key Set Identifier
-for the Access Security Management Entity (KSI_ASME), the NAS sequence
-number, and the NAS Message Authentication Code (NAS-MAC).
+. The *UE* sends an `Attach Request` message to the *eNodeB*, carrying
+this NAS message inside the RRC connection establishment procedure. The
+message carries the IMSI or the old GUTI, the old GUTI type, and the
+last visited TAI, which helps the MME allocate a TAI list, as well as
+the UE Core Network Capability, an ESM message container with a PDN
+Connectivity Request, the Key Set Identifier for the Access Security
+Management Entity (KSI_ASME), the NAS sequence number, and the NAS
+Message Authentication Code (NAS-MAC).
 
-. On receiving the Attach Request, the *eNodeB* derives the target MME address
-from the old Globally Unique MME Identifier (GUMMEI), or, if no association
-exists, selects a new MME, and forwards the NAS message to the *New MME* over
-the S1-MME interface, inside an S1 Application Protocol (S1AP) `Initial UE
-Message`. This message carries the NAS Protocol Data Unit (NAS-PDU) with the
-Attach Request, the Selected Network, the TAI, and the E-UTRAN Cell Global
-Identifier (ECGI), as well as the SAE Temporary Mobile Subscriber Identity
-(S-TMSI), the GUMMEI, and the RRC establishment cause.
+. On receiving the Attach Request, the *eNodeB* derives the target MME
+address from the old Globally Unique MME Identifier (GUMMEI), or, if no
+association exists, selects a new MME, and forwards the NAS message to
+the *New MME* over the S1-MME interface, inside an S1AP `Initial UE
+Message`. This message carries the NAS Protocol Data Unit (NAS-PDU) with
+the Attach Request, the Selected Network, the TAI, and the E-UTRAN Cell
+Global Identifier (ECGI), as well as the S-Temporary Mobile Subscriber
+Identity (S-TMSI), the GUMMEI, and the RRC establishment cause.
 
 . If the UE identified itself with an old GUTI and the MME changed since the
 last detach, the *New MME* derives the address of the previous serving node
-from the old GUTI and sends a GPRS Tunnelling Protocol version 2 (GTPv2)
-`Identification Request` message to the *Old MME/SGSN (Serving GPRS Support
-Node)*, to retrieve the IMSI and the Mobility Management (MM) context from
+from the old GUTI and sends a GTP version 2 (GTPv2) `Identification
+Request` message to the *Old MME/SGSN*, to retrieve the IMSI and the Mobility Management (MM) context from
 that node. This message carries the old GUTI and the complete Attach Request
 message.
 
-. The *Old MME/SGSN* verifies the Attach Request message, using the NAS-MAC or
-the Packet TMSI (P-TMSI) signature, and responds with a GTPv2 `Identification
-Response` message that, if the integrity check succeeds, carries the IMSI,
-the MM Context, and the Cause.
+. The *Old MME/SGSN* verifies the Attach Request message, using the
+NAS-MAC or the Packet Temporary Mobile Subscriber Identity (P-TMSI)
+signature, and responds with a GTPv2 `Identification Response` message
+that, if the integrity check succeeds, carries the IMSI, the MM Context,
+and the Cause.
 
 . If the IMSI is unknown to both the new and the old serving nodes, the *New
 MME* sends a NAS `Identity Request` message to the *UE*, carrying the
 identity type IMSI, to ask the UE for its permanent identity.
 
-. The *UE* responds with a NAS `Identity Response` message that carries its
-IMSI, letting the New MME proceed with authentication and with subscription
-retrieval from the Home Subscriber Server (HSS).
+. The *UE* responds with a NAS `Identity Response` message that carries
+its IMSI, letting the New MME proceed with authentication and with
+subscription retrieval from the HSS.
 
-. The *New MME* and the *UE* then perform the Authentication and Security
-Procedures, carrying the RAND, the Authentication Token (AUTN), the
-Authentication Response (RES), the selected NAS algorithms, the Key Set
-Identifier (eKSI), the UE Security Capability, and the NAS-MAC. These
+. The *New MME* and the *UE* then perform the Authentication and
+Security Procedures, carrying the RAND, the AUTN, the Authentication
+Response (RES), the selected NAS algorithms, the Key Set Identifier
+for E-UTRAN (eKSI), the UE Security Capability, and the NAS-MAC. These
 procedures activate integrity protection and NAS ciphering, establish a
 secure NAS connection, and confirm the legitimacy of the UE and the network.
 
 . The *New MME* can check the Mobile Equipment (ME) identity with the
 *Equipment Identity Register (EIR)* by sending a Diameter
-`ME-Identity-Check-Request` (ECR) message over the S13 interface, carrying the
-ME Identity, that is the International Mobile Equipment Identity Software
-Version (IMEISV), and the IMSI, to confirm that the equipment is not stolen or
-unauthorized.
+`ME-Identity-Check-Request` (ECR) message over the S13 interface,
+carrying the ME Identity, that is the International Mobile Equipment
+Identity and Software Version Number (IMEISV), and the IMSI, to confirm that
+the equipment is not stolen or unauthorized.
 
 . The *EIR* responds with a Diameter `ME-Identity-Check-Answer` (ECA) message
 that carries a Result-Code, stating the status of the ME, for example
@@ -88,11 +85,10 @@ session that was not properly detached, it releases the stale user-plane
 resources by sending a GTPv2 `Delete Session Request` message to the *S-GW
 (Serving Gateway)*, carrying the Linked EPS Bearer Identity (LBI).
 
-. The *S-GW* forwards the GTPv2 `Delete Session Request` message, carrying the
-LBI, to the *P-GW (PDN Gateway)* to complete the session release, and, if the
-network deploys a Policy and Charging Rules Function (PCRF), the P-GW also
-starts an IP Connectivity Access Network (IP-CAN) Session Termination
-procedure.
+. The *S-GW* forwards the GTPv2 `Delete Session Request` message,
+carrying the LBI, to the *P-GW (PDN Gateway)* to complete the session
+release, and, if the network deploys a PCRF, the P-GW also starts an IP
+Connectivity Access Network (IP-CAN) Session Termination procedure.
 
 . The *P-GW* acknowledges the deletion by returning a GTPv2 `Delete Session
 Response` message that carries a Cause to the *S-GW*.
@@ -117,18 +113,16 @@ IMSI and the Cancellation Type.
 `Cancel-Location-Answer` (CLA) message, carrying the IMSI, to the *HSS*.
 
 . The *HSS* acknowledges the location update by sending a Diameter
-`Update-Location-Answer` (ULA) message to the *New MME*, carrying the IMSI,
-the ULA-Flags, and the Subscription Data, including the PDN subscription
-contexts, the Quality of Service (QoS) profile, and the APN Aggregate
-Maximum Bit Rate (APN-AMBR), covering the authorized Access Point Names
-(APNs).
+`Update-Location-Answer` (ULA) message to the *New MME*, carrying the
+IMSI, the ULA-Flags, and the Subscription Data, including the PDN
+subscription contexts, the QoS profile, and the APN Aggregate Maximum
+Bit Rate (APN-AMBR), covering the authorized APNs.
 
-. The *New MME* selects an S-GW and sends it a GTPv2 `Create Session Request`
-message to establish the default EPS bearer, carrying the IMSI, the Mobile
-Station International Subscriber Directory Number (MSISDN), the MME Tunnel
-Endpoint Identifier (TEID) for the control plane, the PDN GW address, the
-Access Point Name (APN), the Radio Access Technology (RAT) type, the Default
-EPS Bearer QoS, and the EPS Bearer Identity.
+. The *New MME* selects an S-GW and sends it a GTPv2 `Create Session
+Request` message to establish the default EPS bearer, carrying the IMSI,
+the Mobile Station International Subscriber Directory Number (MSISDN),
+the MME TEID for the control plane, the PDN GW address, the APN, the
+RAT type, the Default EPS Bearer QoS, and the EPS Bearer Identity.
 
 . The *S-GW* creates an entry in its EPS bearer table and forwards the GTPv2
 `Create Session Request` message to the P-GW that the MME indicated, carrying
@@ -137,12 +131,12 @@ the SGW TEID for the control plane, the RAT type, the Default EPS Bearer QoS,
 and the EPS Bearer Identity.
 
 . If the network deploys dynamic Policy and Charging Control (PCC), the
-*P-GW*, acting as the Policy and Charging Enforcement Function (PCEF),
-retrieves the PCC rules for the new IP-CAN session by sending a Diameter
-`Credit-Control-Request` (CCR) message to the *PCRF* over the Gx interface.
-The message carries the CC-Request-Type INITIAL_REQUEST, the
-Subscription-Id, that is the IMSI, the Called-Station-Id, that is the APN,
-the IP-CAN-Type, the RAT-Type, the Default-EPS-Bearer-QoS, and the APN-AMBR.
+*P-GW*, acting as the Policy and Charging Enforcement Function (PCEF), retrieves the PCC rules for
+the new IP-CAN session by sending a Diameter `Credit-Control-Request`
+(CCR) message to the *PCRF* over the Gx interface. The message carries
+the CC-Request-Type INITIAL_REQUEST, the Subscription-Id, that is the
+IMSI, the Called-Station-Id, that is the APN, the IP-CAN-Type, the
+RAT-Type, the Default-EPS-Bearer-QoS, and the APN-AMBR.
 
 . The *PCRF* determines the policy and returns a Diameter
 `Credit-Control-Answer` (CCA) message to the *P-GW*, carrying the PCC rules,
@@ -163,8 +157,8 @@ Identity, the EPS Bearer QoS, and the P-GW TEID for uplink traffic.
 . To establish the UE context in the Radio Access Network (RAN) and request
 the setup of the radio bearers and the S1-U bearers, the *New MME* sends an
 S1AP `Initial Context Setup Request` message to the *eNodeB*, carrying the
-MME UE S1AP ID, the UE Aggregate Maximum Bitrate, the E-UTRAN Radio Access
-Bearer (E-RAB) To Be Setup List, with the EPS Bearer QoS, the SGW TEID, and
+MME UE S1AP ID, the UE Aggregate Maximum Bitrate, the E-RAB To Be Setup
+List, with the EPS Bearer QoS, the SGW TEID, and
 the SGW Address, and the NAS-PDU with the `Attach Accept` message.
 
 . The *eNodeB* sets up the radio bearer by sending an RRC `Connection

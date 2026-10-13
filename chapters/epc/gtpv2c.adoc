@@ -2,13 +2,13 @@
 
 ==== Technical Overview
 
-The GPRS Tunnelling Protocol version 2 - Control plane (GTPv2-C) is the
-control-plane signaling protocol of the EPC, and network nodes use it
-to create, modify, and delete GTP tunnels and EPS bearers, and to
-exchange mobility management information.
+GTP version 2 for the control plane (GTPv2-C) is the control-plane
+signaling protocol of the EPC, and network nodes use it to create,
+modify, and delete GTP tunnels and EPS bearers, and to exchange mobility
+management information.
 
-GTPv2-C runs over UDP, on port 2123, and because UDP does not guarantee
-delivery, a GTPv2-C entity retransmits a request message if it does not
+GTPv2-C runs over the User Datagram Protocol (UDP), on port 2123, and
+because UDP does not guarantee delivery, a GTPv2-C entity retransmits a request message if it does not
 receive a response before a timer expires.
 
 GTPv2-C messages fall into eight categories: Path Management Messages,
@@ -26,7 +26,7 @@ the same IP/UDP packet, to avoid an extra signaling round trip; the
 network uses piggybacking for two message pairs, a `Create Session
 Response` that carries a piggybacked `Create Bearer Request` and a
 `Create Bearer Response` that carries a piggybacked `Modify Bearer
-Request`. The network uses these combinations during the EUTRAN Initial
+Request`. The network uses these combinations during the E-UTRAN Initial
 Attach procedure, a handover from non-3GPP access to E-UTRAN, and the
 UE-requested PDN connectivity procedure.
 
@@ -45,7 +45,7 @@ Indication` messages use the header without a Tunnel Endpoint Identifier
 [width=500,role=packet-diagram]
 packetdiag::diagrams/gtpv2c-header-no-teid.diag[svg]
 
-`Version`:: Bits 8 to 6 of octet 1. This field states the GTP-C
+`Version`:: Bits 8 to 6 of octet 1. This field states the GTP
 version, and GTPv2-C sets it to decimal 2.
 
 `P`:: Bit 5 of octet 1. This is the Piggybacking flag; a value of 0
@@ -74,8 +74,8 @@ GTPv2-C message uses the header with a TEID, which is 12 octets long.
 packetdiag::diagrams/gtpv2c-header-with-teid.diag[svg]
 
 `TEID`:: Octets 5 to 8. This field identifies a tunnel endpoint in the
-receiving GTP-C entity, and the sending entity sets it to the value
-that the receiving entity provided.
+receiving entity of GTP for the control plane (GTP-C), and the sending
+entity sets it to the value that the receiving entity provided.
 
 `MP`:: Bit 3 of octet 1. This is the Message Priority flag; a value of
 1 means octet 12 carries a valid `Message Priority` value. The Load and
@@ -113,8 +113,8 @@ reachable.
 ===== Tunnel Management Messages
 
 Tunnel management messages create, modify, and delete GTP tunnels and
-EPS bearers, and carry other session-level signaling between the
-MME/SGSN, the SGW-C, and the PGW-C.
+EPS bearers, and carry other session-level signaling between the MME
+or the Serving GPRS Support Node (SGSN), the SGW-C, and the PGW-C.
 
 [cols="2,3,2",options="header"]
 |===
@@ -189,7 +189,7 @@ MME/SGSN, the SGW-C, and the PGW-C.
 | S11, S4.
 
 | `Modify Bearer Command`
-| Asks the PGW-C to apply a subscribed QoS change that the Home Subscriber Server (HSS) pushed down for a UE's default bearer.
+| Asks the PGW-C to apply a subscribed QoS change that the HSS pushed down for a UE's default bearer.
 | S11, S4, S5, S8, S2a, S2b.
 
 | `Modify Bearer Failure Indication`
@@ -197,7 +197,7 @@ MME/SGSN, the SGW-C, and the PGW-C.
 | S11, S4, S5, S8, S2a, S2b.
 
 | `Update Bearer Request`
-| Changes the QoS or the traffic flow template (TFT) of an existing EPS bearer, at the request of the PGW-C or the Policy and Charging Rules Function (PCRF).
+| Changes the QoS or the TFT of an existing EPS bearer, at the request of the PGW-C or the PCRF.
 | S11, S4, S5, S8, S2a, S2b.
 
 | `Update Bearer Response`
@@ -241,7 +241,7 @@ MME/SGSN, the SGW-C, and the PGW-C.
 | S11.
 
 | `Remote UE Report Notification`
-| Tells the SGW-C/PGW-C that a remote UE, reached through a Proximity Services (ProSe) UE-to-Network Relay, connected or disconnected.
+| Tells the SGW-C/PGW-C that a remote UE, reached through a ProSe UE-to-Network Relay, connected or disconnected.
 | S11, S5, S8.
 
 | `Remote UE Report Acknowledge`
@@ -319,7 +319,7 @@ interface.
 | S3.
 
 | `Change Notification Request`
-| Reports a change in a UE's location or Closed Subscriber Group (CSG) membership to the SGW-C, for location-dependent charging.
+| Reports a change in a UE's location or CSG membership to the SGW-C, for location-dependent charging.
 | S11, S4, S5, S8.
 
 | `Change Notification Response`
@@ -347,7 +347,7 @@ interface.
 | S3.
 
 | `UE Registration Query Request`
-| Asks a candidate MME whether a given UE is registered there, to coordinate CS and PS service in a shared radio access network.
+| Asks a candidate MME whether a given UE is registered there, to coordinate CS and packet-switched (PS) service in a shared radio access network.
 | S3.
 
 | `UE Registration Query Response`
@@ -357,11 +357,10 @@ interface.
 
 ===== CS Fallback and SRVCC Related Messages
 
-These messages support CS Fallback and Single Radio Voice Call
-Continuity (SRVCC): they suspend and resume a UE's non-Guaranteed Bit
-Rate (non-GBR) bearers around a move to the CS domain, and coordinate
-paging and activity reporting between an MME and an ISR-associated
-SGSN.
+These messages support CS Fallback and SRVCC: they suspend and resume a
+UE's non-Guaranteed Bit Rate (non-GBR) bearers around a move to the CS
+domain, and coordinate paging and activity reporting between an MME and
+an ISR-associated SGSN.
 
 [cols="2,3,2",options="header"]
 |===
@@ -407,7 +406,8 @@ SGSN.
 ===== Non-3GPP Access Related Messages
 
 These messages set up an indirect data-forwarding tunnel at the SGW-C
-for a handover between E-UTRAN and CDMA2000 HRPD access.
+for a handover between E-UTRAN and CDMA2000 High Rate Packet Data
+(HRPD) access.
 
 [cols="2,3,2",options="header"]
 |===

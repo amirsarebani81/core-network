@@ -4,8 +4,7 @@
 
 The HSS-initiated Subscribed QoS Modification procedure updates the QoS
 of an active EPS bearer after a change in the subscriber's subscription
-data at the Home Subscriber Server (HSS), and the HSS starts the
-procedure.
+data at the HSS, and the HSS starts the procedure.
 
 The procedure changes the Subscribed UE Aggregate Maximum Bit Rate
 (Subscribed-UE-AMBR), the Subscribed APN-AMBR, or the QCI and the ARP of

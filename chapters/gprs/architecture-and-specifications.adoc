@@ -1,10 +1,10 @@
 [#_gprs_architecture_and_specifications]
 == Architecture and Specifications
 
-The General Packet Radio Service (GPRS) core network, which this book
-calls the GPRS Core, provides packet-switched connectivity to a mobile
-subscriber and is the direct predecessor of the EPC architecture that
-Part II describes. This chapter describes the GPRS Core in Iu mode with
+The GPRS core network, which this book calls the GPRS Core, provides
+packet-switched connectivity to a mobile subscriber and is the direct
+predecessor of the Evolved Packet Core (EPC) architecture that Part II
+describes. This chapter describes the GPRS Core in Iu mode with
 Gn/Gp interfaces, based on the configuration that 3GPP TS 23.060 clause
 5.4.0 shows in Figure 2 ("Overview of the GPRS Logical Architecture when
 based on Gn/Gp interfaces"), with the optional PCRF and the charging
@@ -13,18 +13,14 @@ systems of the policy and charging control architecture added.
 .GPRS Core architecture
 image::images/gprs-architecture.svg[GPRS Core Architecture]
 
-The figure above shows the path of packet-switched traffic from the User
-Equipment (UE), through the Universal Mobile Telecommunications System
-(UMTS) Terrestrial Radio Access Network (UTRAN) and the two GPRS Support
-Nodes, to an external packet data network. The figure also shows the
-control-plane nodes that serve the GPRS Support Nodes: the Home
-Subscriber Server/Home Location Register (HSS/HLR), which holds
-subscription data for the SGSN and the GGSN, the Policy and Charging
-Rules Function (PCRF), which provides policy and charging control to the
-GGSN, and the Online Charging System (OCS) and the Offline Charging
-System (OFCS), which charge for the traffic that the GGSN carries. Each
-reference point in the figure carries the 3GPP specification and the
-protocol that it uses.
+The figure above shows the path of packet-switched traffic from the UE,
+through the UTRAN and the two GPRS Support Nodes, to an external packet
+data network. The figure also shows the control-plane nodes that serve
+the GPRS Support Nodes: the HSS/HLR, which holds subscription data for
+the SGSN and the GGSN, the PCRF, which provides policy and charging
+control to the GGSN, and the OCS and the OFCS, which charge for the
+traffic that the GGSN carries. Each reference point in the figure
+carries the 3GPP specification and the protocol that it uses.
 
 [#_gprs_network_elements]
 === Network Elements
@@ -34,19 +30,19 @@ mobile phone or a data modem, that connects to the UTRAN over the Uu
 radio interface. It is the endpoint for all mobility management, session
 management, and user-plane traffic.
 
-UTRAN (UMTS Terrestrial Radio Access Network):: The UTRAN is the UMTS
-radio access network, made up of Radio Network Subsystems (RNSs), each
-of which contains a Radio Network Controller (RNC) and the Node Bs that
-the RNC controls. It provides the Uu radio interface towards the UE and
+UTRAN (Universal Terrestrial Radio Access Network):: The UTRAN is the
+Universal Mobile Telecommunications System (UMTS) radio access network,
+made up of Radio Network Subsystems (RNSs), each of which contains a
+Radio Network Controller (RNC) and the Node Bs that the RNC controls. It provides the Uu radio interface towards the UE and
 relays packet-switched signaling and user data to the SGSN over IuPs.
 Two RNCs interconnect over Iur, for example so that a Drift RNS can
 provide radio resources to the Serving RNS of a UE (TS 25.401 clause 6).
 
 SGSN (Serving GPRS Support Node):: The SGSN is the node that serves the
 UE, handling mobility management, session management, and the
-forwarding of user data between the UTRAN and the GGSN. Unlike the MME
-in the EPC, the SGSN usually carries both control-plane signaling and
-user-plane traffic, and it reaches the GGSN over Gn within the same
+forwarding of user data between the UTRAN and the GGSN. Unlike the
+Mobility Management Entity (MME) in the EPC, the SGSN usually carries
+both control-plane signaling and user-plane traffic, and it reaches the GGSN over Gn within the same
 Public Land Mobile Network (PLMN) or over Gp towards another PLMN. Two
 SGSNs also interconnect over Gn, for example to transfer the context of
 a UE when the serving SGSN changes.

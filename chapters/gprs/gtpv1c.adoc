@@ -3,36 +3,32 @@
 
 ==== Technical Overview
 
-The GPRS Tunnelling Protocol (GTP) is the protocol between the General
-Packet Radio Service (GPRS) Support Nodes (GSNs) of the GPRS Core, and
-TS 29.060 defines both its control plane (GTP-C) and its user plane
-(GTP-U) (TS 29.060 clause 4.1).
-This section describes version 1 of the control plane, GTPv1-C, which
-the Serving GPRS Support Node (SGSN) and the Gateway GPRS Support Node
-(GGSN) use to create, modify, and delete the tunnels that carry the
-Packet Data Protocol (PDP) contexts of a subscriber. TS 29.060 calls the
-subscriber's device the Mobile Station (MS); this section uses the term
-User Equipment (UE) throughout, as the rest of the book does.
+The GPRS Tunnelling Protocol (GTP) is the protocol between the GPRS
+Support Nodes (GSNs) of the GPRS Core, and TS 29.060 defines both GTP for
+the control plane (GTP-C) and GTP for the user plane (GTP-U) (TS 29.060
+clause 4.1). This section describes GTP version 1 for the control plane
+(GTPv1-C), which the SGSN and the GGSN use to create, modify, and delete
+the tunnels that carry the PDP contexts of a subscriber. TS 29.060 calls
+the subscriber's device the Mobile Station (MS); this section uses the
+term UE throughout, as the rest of the book does.
 
-GTPv1-C applies over the Gn interface, between GSNs in the same Public
-Land Mobile Network (PLMN), and over the Gp interface, between GSNs in
-different PLMNs (TS 29.060 clause 4.1). The Iu interface between the
-SGSN and the Universal Mobile Telecommunications System (UMTS)
-Terrestrial Radio Access Network (UTRAN) carries only GTP-U, and on that
-interface the Radio Access Network Application Part (RANAP), together
-with the signaling part of GTP-U, performs the control function for the
-user plane. A Mobility Management Entity (MME) can also use GTPv1-C
-towards a Gn/Gp SGSN, for roaming and for inter-access mobility as
-TS 23.401 Annex D specifies (TS 29.060 clause 4.1).
+GTPv1-C applies over the Gn interface, between GSNs in the same PLMN,
+and over the Gp interface, between GSNs in different PLMNs (TS 29.060
+clause 4.1). The Iu interface between the SGSN and the UTRAN carries
+only GTP-U, and on that interface the Radio Access Network Application
+Part (RANAP), together with the signaling part of GTP-U, performs the
+control function for the user plane. An MME can also use GTPv1-C
+towards a Gn/Gp SGSN, for roaming and for inter-access mobility as TS
+23.401 Annex D specifies (TS 29.060 clause 4.1).
 
 From Release 8 onwards, TS 29.281 is the normative specification of the
-GTPv1 user plane, and it supersedes the GTP-U provisions of TS 29.060
-(TS 29.060 clause 1). TS 29.060 clause 6 still defines one header
-format for both GTP-C and GTP-U. Release 8 also removed the interworking
-between GTPv1 and GTPv0, so a GTPv1 entity of Release 8 or later can
-listen on the GTPv0 port 3386 or not; if it listens on that port, it
-should silently discard any GTPv0 message that it receives (TS 29.060
-clause 4.2).
+user plane of GTP version 1 (GTPv1), and it supersedes the GTP-U
+provisions of TS 29.060 (TS 29.060 clause 1). TS 29.060 clause 6 still
+defines one header format for both GTP-C and GTP-U. Release 8 also
+removed the interworking between GTPv1 and GTP version 0 (GTPv0), so a
+GTPv1 entity of Release 8 or later can listen on the GTPv0 port 3386 or
+not; if it listens on that port, it should silently discard any GTPv0
+message that it receives (TS 29.060 clause 4.2).
 
 ===== Transport
 
@@ -128,11 +124,10 @@ the `S` flag to 1 (TS 29.060 clause 8.2), the GTPv1-C header is at least
 12 octets long, and it grows by the length of any extension headers that
 follow it.
 
-GTP version 2 for the control plane (GTPv2-C), which the Evolved Packet
-Core (EPC) uses, has one header format with a Tunnel Endpoint Identifier
-(TEID) and one without (TS 29.274 clauses 5.1, 5.3, and 5.4). GTPv1-C,
-by contrast, has a single header format in which the `TEID` field is
-always present (TS 29.060 clause 6).
+GTP version 2 for the control plane (GTPv2-C), which the EPC uses, has
+one header format with a Tunnel Endpoint Identifier (TEID) and one
+without (TS 29.274 clauses 5.1, 5.3, and 5.4). GTPv1-C, by contrast, has a single header format in
+which the `TEID` field is always present (TS 29.060 clause 6).
 
 ===== Header
 
@@ -319,9 +314,9 @@ leave these message types out.
 ===== Path Management Messages
 
 Path management messages check that a peer GSN is alive and reachable,
-and report which GTP version and which extension headers a GSN
-supports. Any pair of GSNs, and a GSN and a Radio Network Controller
-(RNC), can exchange these messages (TS 29.060 clause 7.2.0).
+and report which GTP version and which extension headers a GSN supports.
+Any pair of GSNs, and a GSN and an RNC, can exchange these messages (TS
+29.060 clause 7.2.0).
 
 [cols="3,1,2,4",options="header"]
 |===
@@ -381,7 +376,7 @@ network-requested activation of a PDP context (TS 29.060 clause 7.3).
 | `Delete PDP Context Request`
 | 20
 | SGSN to GGSN, or GGSN to SGSN
-| Deactivates a PDP context, or all PDP contexts of a Packet Data Network (PDN) connection, during GPRS Detach or PDP context deactivation. This message takes precedence over any other Tunnel Management message in a collision.
+| Deactivates a PDP context, or all PDP contexts of a PDN connection, during GPRS Detach or PDP context deactivation. This message takes precedence over any other Tunnel Management message in a collision.
 
 | `Delete PDP Context Response`
 | 21
@@ -430,7 +425,7 @@ to the GTP-C port (TS 29.060 clause 10.1.1.4).
 Location management messages are optional. They support the
 Network-Requested PDP Context Activation procedure when the GGSN has no
 Signalling System No. 7 (SS7) Mobile Application Part (MAP) interface,
-the Gc interface, to the Home Location Register (HLR). In this case, the
+the Gc interface, to the HLR. In this case, the
 GGSN exchanges GTPv1-C messages with a GTP-MAP protocol-converting GSN,
 which converts them to and from the MAP messages that it exchanges with
 the HLR (TS 29.060 clause 7.4.0).
@@ -564,7 +559,7 @@ inter-access mobility towards a Gn/Gp SGSN (TS 29.060 clause 7.5.0).
 | `RAN Information Relay`
 | 70
 | SGSN to SGSN or MME
-| Tunnels a RAN INFORMATION message, which the SGSN received from a BSS or a Radio Network Subsystem (RNS), to the destination SGSN or MME.
+| Tunnels a RAN INFORMATION message, which the SGSN received from a BSS or an RNS, to the destination SGSN or MME.
 |===
 
 TS 29.060 clause 7.6 treats `Forward Relocation Complete` and `Forward
@@ -802,7 +797,7 @@ a|
 
 | TS 29.281
 a|
-* GTPv1 user plane (GTP-U), including the `Error Indication`, `End Marker`, and `G-PDU` messages
+* GTPv1 user plane, including the `Error Indication`, `End Marker`, and `G-PDU` messages
 * Clause 5.2.1 and Figure 5.2.1-3 — Extension header types that GTP-U uses
 
 | TS 29.274

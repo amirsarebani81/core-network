@@ -3,19 +3,15 @@
 ==== Technical Overview
 
 The network starts the Dedicated Bearer Activation procedure to
-establish an additional Evolved Packet System (EPS) bearer for an IP
-Connectivity Access Network (IP-CAN) session. A dedicated bearer never
-exists on its own: the network always links it, through the Linked EPS
-Bearer Identity (LBI), to the default bearer that the UE already holds
-for that IP-CAN session. The new bearer has specific Quality of Service
-(QoS) characteristics, for example a Guaranteed Bit Rate (GBR) or a
-non-GBR profile, together with a Traffic Flow Template (TFT).
+establish an additional EPS bearer for an IP-CAN session. A dedicated
+bearer never exists on its own: the network always links it, through the
+LBI, to the default bearer that the UE already holds for that IP-CAN
+session. The new bearer has specific QoS characteristics, for example a
+GBR or a non-GBR profile, together with a TFT.
 
-Policy and Charging Control (PCC) usually triggers the procedure when
-the Policy and Charging Rules Function (PCRF) detects a service data
-flow (SDF) that needs prioritized treatment, for example IP Multimedia
-Subsystem (IMS) Voice over LTE (VoLTE) voice media with the QoS Class
-Identifier (QCI) set to 1.
+PCC usually triggers the procedure when the PCRF detects a service data
+flow (SDF) that needs prioritized treatment, for example IMS Voice over
+LTE (VoLTE) voice media with the QCI set to 1.
 
 The procedure establishes end-to-end user-plane resources that map the
 traffic matching the packet filters of the TFT to dedicated radio
@@ -24,22 +20,19 @@ mode, the network establishes these resources immediately over the
 existing S1 signalling connection. If the UE is in ECM-IDLE mode, the
 MME first pages the UE and waits for a NAS `Service Request` message,
 because the eNodeB needs an active S1 and RRC connection before it can
-set up the new DRB. The procedure has these high-level effects:
+set up the new Data Radio Bearer (DRB). The procedure has these
+high-level effects:
 
-On the User Equipment (UE):: The UE establishes a new Data Radio Bearer
-(DRB), associates the DRB with the assigned EPS Bearer Identity (EBI),
-and stores the uplink packet filters in its TFT to enforce the correct
-uplink bearer binding.
+On the UE:: The UE establishes a new DRB, associates the DRB with the assigned EBI, and stores the uplink packet filters in
+its TFT to enforce the correct uplink bearer binding.
 
-On the Evolved Packet Core (EPC):: The nodes establish logical GPRS
-Tunnelling Protocol User Plane (GTP-U) tunnels: one tunnel connects the
-eNodeB (Evolved Node B) and the Serving Gateway (S-GW) over the S1-U
-interface, while the other connects the S-GW and the PDN Gateway (P-GW)
-over the S5/S8 interface. The user-plane nodes, that is the PGW-U and
-the SGW-U, allocate new Fully Qualified Tunnel Endpoint Identifiers
-(F-TEIDs) to route the downlink data and the uplink data. All nodes obey
-the authorized QoS parameters, that is the QCI, the Allocation and
-Retention Priority (ARP), the GBR, and the Maximum Bit Rate (MBR).
+On the EPC:: The nodes establish logical GTP-U tunnels: one tunnel
+connects the eNodeB and the S-GW over the S1-U interface, while the
+other connects the S-GW and the P-GW over the S5/S8 interface. The
+user-plane nodes, that is the PGW-U and the SGW-U, allocate new Fully
+Qualified Tunnel Endpoint Identifiers (F-TEIDs) to route the downlink
+data and the uplink data. All nodes obey the authorized QoS parameters,
+that is the QCI, the ARP, the GBR, and the Maximum Bit Rate (MBR).
 
 ==== Call Flow
 
@@ -55,19 +48,18 @@ plantuml::diagrams/dedicated-bearer-activation-call-flow.puml[svg]
 
 . If the network deploys dynamic PCC, the *PCRF* starts the IP-CAN
 session modification by sending a Diameter `Re-Auth-Request` (RAR)
-message over the Gx interface to the Policy and Charging Enforcement
-Function (PCEF), which is collocated in the *P-GW*. The message installs
-new PCC rules and provisions the authorized QoS profile and the packet
-filters for the SDF. The message carries these Attribute-Value Pairs
-(AVPs): the `Session-Id`, the `Auth-Application-Id`, set to the
-vendor-specific Gx Application ID `16777238`, the
-`Re-Auth-Request-Type`, set to `AUTHORIZE_ONLY`, and the `Event-Trigger`,
-set to request user location reporting, if the PCRF needs this report.
-The message also carries the `Charging-Rule-Install` AVP, which
-encapsulates the `Charging-Rule-Definition` AVP containing the
-`Charging-Rule-Name`, the `Flow-Information` with the IP 5-tuple filters,
-and the `QoS-Information` that defines the target QCI, the ARP, the GBR,
-and the MBR.
+message over the Gx interface to the PCEF, which is collocated in the
+*P-GW*. The message installs new PCC rules and provisions the authorized
+QoS profile and the packet filters for the SDF. The message carries
+these Attribute-Value Pairs (AVPs): the `Session-Id`, the
+`Auth-Application-Id`, set to the vendor-specific Gx Application ID
+`16777238`, the `Re-Auth-Request-Type`, set to `AUTHORIZE_ONLY`, and the
+`Event-Trigger`, set to request user location reporting, if the PCRF
+needs this report. The message also carries the `Charging-Rule-Install`
+AVP, which encapsulates the `Charging-Rule-Definition` AVP containing
+the `Charging-Rule-Name`, the `Flow-Information` with the IP 5-tuple
+filters, and the `QoS-Information` that defines the target QCI, the ARP,
+the GBR, and the MBR.
 
 . The *P-GW* acknowledges the policy provisioning request by returning a
 Diameter `Re-Auth-Answer` (RAA) message to the *PCRF*. This message
@@ -79,40 +71,36 @@ result code shows that the transaction routing and the command parsing
 were successful.
 
 . The *P-GW* maps the received PCC rules to a dedicated bearer context
-and sends a GPRS Tunnelling Protocol version 2 control plane (GTPv2-C)
-`Create Bearer Request` message to the *S-GW* over the S5/S8
-control-plane interface to start the tunnel allocation. The message
-establishes the downlink S5/S8-U user-plane path at the S-GW and carries
-these Information Elements (IEs): the International Mobile Subscriber
-Identity (IMSI), the Procedure Transaction Id (PTI), set to "no
-procedure transaction identity assigned" unless the P-GW correlates a
-UE-requested modification, the Linked EPS Bearer Identity (LBI), which
-identifies the associated default bearer, and the Protocol Configuration
-Options (PCO), which carry application-level parameters. The message
-also carries the Bearer Contexts grouped IE, which contains the EPS
-Bearer ID, set to `0` for a new allocation, the Bearer TFT with the
-packet filters, the S5/8-U P-GW F-TEID, which contains the uplink IP
-address and the uplink TEID for user data that the PGW-U allocates, the
-Bearer Level QoS, which defines the QCI, the ARP, the GBR, and the MBR,
-and the Charging Id.
+and sends a GTPv2-C `Create Bearer Request` message to the *S-GW* over
+the S5/S8 control-plane interface to start the tunnel allocation. The
+message establishes the downlink S5/S8-U user-plane path at the S-GW and
+carries these IEs: the IMSI, the Procedure Transaction Identity (PTI),
+set to "no procedure transaction identity assigned" unless the P-GW
+correlates a UE-requested modification, the LBI, which identifies the
+associated default bearer, and the Protocol Configuration Options (PCO),
+which carry application-level parameters. The message also carries the
+Bearer Contexts grouped IE, which contains the EPS Bearer ID, set to `0`
+for a new allocation, the Bearer TFT with the packet filters, the S5/8-U
+P-GW F-TEID, which contains the uplink IP address and the uplink TEID
+for user data that the PGW-U allocates, the Bearer Level QoS, which
+defines the QCI, the ARP, the GBR, and the MBR, and the Charging Id.
 
 . After processing the request of the P-GW, the *S-GW* reserves local
 downlink user-plane resources on the S5/S8-U interface and forwards the
-GTPv2 `Create Bearer Request` message to the *MME* (Mobility Management
-Entity) over the S11 interface. The message carries the IMSI, the LBI,
-the PTI, the PCO, and the Bearer Contexts grouped IE, which contains the
-EPS Bearer ID, set to `0`, the Bearer TFT, the S1-U S-GW F-TEID, which
-contains the SGW-U IP address and the downlink TEID that the S-GW
-allocates for downlink user-plane data, the S5/8-U P-GW F-TEID, and the
-Bearer Level QoS.
+GTPv2 `Create Bearer Request` message to the *MME* over the S11
+interface. The message carries the IMSI, the LBI, the PTI, the PCO, and
+the Bearer Contexts grouped IE, which contains the EPS Bearer ID, set to
+`0`, the Bearer TFT, the S1-U S-GW F-TEID, which contains the SGW-U IP
+address and the downlink TEID that the S-GW allocates for downlink
+user-plane data, the S5/8-U P-GW F-TEID, and the Bearer Level QoS.
 
 . If the UE is in ECM-IDLE mode when the *MME* receives the Create
 Bearer Request, the MME buffers the request and pages the UE before it
 continues the dedicated bearer signalling. The MME sends an S1AP
 `Paging` message to every *eNodeB* in the UE's registered Tracking Area
 List, carrying the UE Identity Index Value, for calculating the paging
-frame, the UE Paging ID, that is the S-TMSI, the Paging Discontinuous
-Reception (DRX) cycle, and the List of TAIs.
+frame, the UE Paging ID, that is the S-TMSI, the Paging DRX cycle, and
+the List of TAIs.
 
 . The *eNodeB* broadcasts the paging indication over the radio
 interface, during the UE's paging occasion. The eNodeB sends an RRC
@@ -121,8 +109,8 @@ interface, during the UE's paging occasion. The eNodeB sends an RRC
 . The *UE* matches its S-TMSI in the Paging message and starts the RRC
 connection establishment procedure, sending a NAS `Service Request`
 message to the *eNodeB* inside this procedure. The message carries the
-Protocol Discriminator, the NAS key set identifier (KSI), the NAS
-sequence number, and the NAS Message Authentication Code (NAS-MAC).
+Protocol Discriminator, the NAS KSI, the NAS sequence number, and the
+NAS-MAC.
 
 . The *eNodeB* forwards the NAS message to the *MME* inside an S1AP
 `Initial UE Message`, which completes the UE's transition to
@@ -136,24 +124,24 @@ bearer signalling.
 
 . The *MME* selects an unassigned EBI from its pool, that is a value
 from 5 to 15 because the network reserves values 0 to 4, and builds an
-S1 Application Protocol (S1AP) `E-RAB Setup Request` message, which the
-MME sends to the *eNodeB* to trigger the resource allocation at the
-eNodeB and to encapsulate the NAS (Non-Access Stratum) message for the
-UE. The MME starts the session management guard timer T3485 when it
-sends this message. The message requests the eNodeB to assign Uu radio
-resources and S1-U uplink transport resources, and carries the Message
-Type, the MME UE S1AP ID, the eNB UE S1AP ID, the UE Aggregate Maximum
-Bit Rate (UE-AMBR), and the E-RAB to Be Setup List grouped IE. Each item
-of this list contains the allocated E-RAB ID, that is the EBI, the E-RAB
-Level QoS Parameters, that is the QCI, the ARP, and the GBR and MBR
-limits, the Transport Layer Address, that is the S1-U S-GW IP address,
-the GTP-TEID, that is the S1-U S-GW downlink TEID for the user plane,
-and a NAS-PDU (NAS Protocol Data Unit) that encapsulates the NAS
-`Activate Dedicated EPS Bearer Context Request` message.
+S1AP `E-RAB Setup Request` message, which the MME sends to the *eNodeB*
+to trigger the resource allocation at the eNodeB and to encapsulate the
+NAS message for the UE. The MME starts the session
+management guard timer T3485 when it sends this message. The message
+requests the eNodeB to assign Uu radio resources and S1-U uplink
+transport resources, and carries the Message Type, the MME UE S1AP ID,
+the eNB UE S1AP ID, the UE Aggregate Maximum Bit Rate (UE-AMBR), and the
+E-RAB to Be Setup List grouped IE. Each item of this list contains the
+allocated E-RAB ID, that is the EBI, the E-RAB Level QoS Parameters,
+that is the QCI, the ARP, and the GBR and MBR limits, the Transport
+Layer Address, that is the S1-U S-GW IP address, the GTP-TEID, that is
+the S1-U S-GW downlink TEID for the user plane, and a NAS-PDU that
+encapsulates the NAS `Activate Dedicated EPS
+Bearer Context Request` message.
 
 . After receiving the S1AP `E-RAB Setup Request` message, the *eNodeB*
-maps the QoS parameters to the Radio Bearer QoS and sends an RRC (Radio
-Resource Control) `Connection Reconfiguration` message to the *UE* over
+maps the QoS parameters to the Radio Bearer QoS and sends an RRC
+`Connection Reconfiguration` message to the *UE* over
 the Uu air interface. The message establishes a new DRB and configures
 the physical layer parameters, the Medium Access Control (MAC) layer
 parameters, and the Radio Link Control (RLC) layer parameters. The
@@ -167,12 +155,12 @@ the EPS bearer identity, the LBI, the PTI, the EPS QoS, which excludes
 the ARP parameter, the TFT, and the PCO.
 
 . The *UE* processes the reconfiguration parameters, activates the
-dedicated DRB, binds the DRB to the new dedicated EPS Session Management
-(ESM) bearer context, and returns an RRC `Connection Reconfiguration
-Complete` message to the *eNodeB* over the air interface. This message
-confirms that the UE reconfigured its radio parameters and established
-the new radio bearer, and carries the `rrc-TransactionIdentifier` and
-the `rrcConnectionReconfigurationComplete-r8` field.
+dedicated DRB, binds the DRB to the new dedicated ESM bearer context,
+and returns an RRC `Connection Reconfiguration Complete` message to the
+*eNodeB* over the air interface. This message confirms that the UE
+reconfigured its radio parameters and established the new radio bearer,
+and carries the `rrc-TransactionIdentifier` and the
+`rrcConnectionReconfigurationComplete-r8` field.
 
 . The *eNodeB* sends an S1AP `E-RAB Setup Response` message to the *MME*
 over the S1-MME interface to confirm the successful access-stratum
@@ -180,9 +168,11 @@ bearer establishment, delivering the uplink S1-U transport path
 information that the eNodeB allocates. The message carries the Message
 Type, the MME UE S1AP ID, the eNB UE S1AP ID, and the E-RAB Setup List
 grouped IE, which contains the E-RAB ID, the Transport Layer Address,
-that is the eNodeB downlink user-plane IP address, and the DL GTP-TEID,
-that is the eNodeB downlink TEID for the user plane. If the network uses
-Dual Connectivity, the message also carries the PSCell ID.
+that is the eNodeB downlink user-plane IP address, and the downlink
+GTP-TEID, that is the eNodeB downlink TEID for the user plane. If the network uses
+Dual Connectivity, the message also carries the ID of the Primary SCG
+Cell (PSCell), that is the primary cell of the Secondary Cell Group
+(SCG).
 
 . At the same time as the radio acknowledgement, or immediately after
 it, the NAS layer of the *UE* builds the ESM response and encapsulates
@@ -199,9 +189,8 @@ and forwards the NAS-PDU without changes to the *MME*, inside an S1AP
 `Uplink NAS Transport` message that completes the control-plane ESM
 signaling link between the UE and the MME. The message carries the
 Message Type, the MME UE S1AP ID, the eNB UE S1AP ID, the NAS-PDU with
-the `Activate Dedicated EPS Bearer Context Accept` message, the E-UTRAN
-Cell Global Identifier (ECGI), and the Tracking Area Identity (TAI) of
-the serving cell.
+the `Activate Dedicated EPS Bearer Context Accept` message, the ECGI,
+and the TAI of the serving cell.
 
 . When the *MME* receives both the S1AP `E-RAB Setup Response` message
 of step 13 and the `Uplink NAS Transport` message with the NAS Accept of
@@ -223,7 +212,7 @@ message carries the Bearer Contexts grouped IE, which contains the EPS
 Bearer ID, the Cause, the S5/8-U S-GW F-TEID, that is the downlink IP
 address and the downlink user-plane S5/S8-U TEID that the SGW-U
 allocates, the ULI with the ECGI and the TAI, and, optionally, the
-Secondary RAT (Radio Access Technology) Usage Data Report.
+Secondary RAT Usage Data Report.
 
 . If a policy provisioning step triggered the procedure, the *P-GW*, in
 its PCEF role, reports the enforcement outcome of the installed PCC

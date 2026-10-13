@@ -1,12 +1,12 @@
-=== NAS (Non-Access-Stratum)
+=== NAS (Non-Access Stratum)
 
 ==== Technical Overview
 
-The Non-Access-Stratum (NAS) protocol forms the highest stratum of the
-control plane between the UE and the MME at the LTE-Uu radio interface,
-a scope that TS 24.301 clause 4.1 defines. Between the UE and the MME,
-the E-UTRAN carries each NAS message transparently, and the S1AP chapter
-describes the S1AP messages that carry NAS messages over S1-MME.
+The NAS protocol forms the highest stratum of the control plane between
+the UE and the MME at the LTE-Uu radio interface, a scope that TS 24.301
+clause 4.1 defines. Between the UE and the MME, the E-UTRAN carries each
+NAS message transparently, and the S1AP chapter describes the S1AP
+messages that carry NAS messages over S1-MME.
 
 NAS comprises two protocols: the EPS Mobility Management (EMM) protocol
 and the EPS Session Management (ESM) protocol. The EMM protocol supports
@@ -42,10 +42,10 @@ message. TS 24.301 clause 9.1 defines both organizations.
 
 A plain NAS message carries a Protocol Discriminator, a Security Header
 Type or an EPS Bearer Identity, a Procedure Transaction Identity in an
-ESM message only, a Message Type, and zero or more other information
-elements (IEs). An EMM message and an ESM message use a different header
-layout, because only an ESM message carries an EPS Bearer Identity and a
-Procedure Transaction Identity.
+ESM message only, a Message Type, and zero or more other IEs. An EMM
+message and an ESM message use a different header layout, because only
+an ESM message carries an EPS Bearer Identity and a Procedure
+Transaction Identity.
 
 .NAS header for a plain EMM message
 [width=400,role=packet-diagram]
@@ -176,7 +176,7 @@ and state which entity sends each message.
 | UE → MME
 
 | `Attach Accept`
-| Reports that the network accepted the attach request, and carries the tracking area identity (TAI) list and an ESM message container. The message can also carry a new Globally Unique Temporary Identity (GUTI).
+| Reports that the network accepted the attach request, and carries the tracking area identity (TAI) list and an ESM message container. The message can also carry a new Globally Unique Temporary UE Identity (GUTI).
 | MME → UE
 
 | `Attach Complete`
@@ -234,7 +234,7 @@ and state which entity sends each message.
 | UE → MME
 
 | `Control Plane Service Request`
-| Starts the service request procedure for a UE that uses control plane Cellular Internet of Things (CIoT) EPS optimization, and can carry an `ESM Data Transport` message.
+| Starts the service request procedure for a UE that uses control plane CIoT EPS optimization, and can carry an `ESM Data Transport` message.
 | UE → MME
 
 | `Service Reject`
@@ -269,7 +269,7 @@ and state which entity sends each message.
 | UE → MME
 
 | `Identity Request`
-| Requests the UE to provide a specified identity, for example its IMSI.
+| Requests the UE to provide a specified identity, for example its International Mobile Subscriber Identity (IMSI).
 | MME → UE
 
 | `Identity Response`
@@ -351,7 +351,7 @@ and state which entity sends each message.
 | UE → MME
 
 | `Activate Dedicated EPS Bearer Context Request`
-| Requests the UE to activate a dedicated EPS bearer context that uses the same packet data network (PDN) address and access point name (APN) as an active default EPS bearer context.
+| Requests the UE to activate a dedicated EPS bearer context that uses the same PDN address and access point name (APN) as an active default EPS bearer context.
 | MME → UE
 
 | `Activate Dedicated EPS Bearer Context Accept`
@@ -363,7 +363,7 @@ and state which entity sends each message.
 | UE → MME
 
 | `Modify EPS Bearer Context Request`
-| Requests the UE to modify an active EPS bearer context, for example its quality of service (QoS) or its traffic flow template (TFT).
+| Requests the UE to modify an active EPS bearer context, for example its QoS or its traffic flow template (TFT).
 | MME → UE
 
 | `Modify EPS Bearer Context Accept`
@@ -456,7 +456,7 @@ and state which entity sends each message.
 | MME → UE
 
 | `Remote UE Report`
-| Reports that a remote UE connected to or disconnected from a UE that acts as a Proximity Services (ProSe) UE-to-network relay.
+| Reports that a remote UE connected to or disconnected from a UE that acts as a Proximity-based Services (ProSe) UE-to-network relay.
 | UE → MME
 
 | `Remote UE Report Response`

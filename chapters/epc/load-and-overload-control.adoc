@@ -2,10 +2,9 @@
 
 ===== Technical Overview
 
-GTP version 2 - Control plane (GTPv2-C) load control and GTPv2-C overload
-control are optional, complementary features that manage signaling
-traffic between EPC control-plane nodes and help keep the network
-stable.
+GTPv2-C load control and GTPv2-C overload control are optional,
+complementary features that manage signaling traffic between EPC
+control-plane nodes and help keep the network stable.
 
 Load control is a preventive mechanism: a node uses it to balance the
 distribution of new sessions across its peers before an overload
@@ -34,11 +33,10 @@ and S2b interfaces.
 
 Load control lets a node, typically the SGW-C or the PGW-C, advertise its
 operating status to a peer, for example the MME, the SGSN, the Trusted
-WLAN Access Network (TWAN), or the evolved Packet Data Gateway (ePDG).
+WLAN Access Network (TWAN), or the ePDG.
 The peer uses this status to balance the distribution of new sessions.
 
-The node includes an `LCI` Information Element (IE) in its GTP-C
-messages. The `LCI` IE carries the following parameters:
+The node includes an `LCI` IE in its GTP-C messages. The `LCI` IE carries the following parameters:
 
 `Load Control Sequence Number`:: This number sequences the LCI updates,
 letting the receiving node identify the most recent load information.
@@ -48,9 +46,8 @@ percentage from 0 to 100, where 100 means the node operates at maximum
 load.
 
 `List of APN and Relative Capacity` (PGW-C only):: This list states the
-load status for a specific Access Point Name (APN), and the PGW-C
-includes it when it does not distribute its resources evenly across its
-APNs.
+load status for a specific APN, and the PGW-C includes it when it does
+not distribute its resources evenly across its APNs.
 
 Load control operates at two levels:
 

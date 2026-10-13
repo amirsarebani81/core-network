@@ -31,8 +31,22 @@ These rules apply to any `.adoc` content you write or edit:
   not vary vocabulary for style. If a term is defined once (e.g. "SGW-C"),
   reuse it exactly; don't switch between "SGW-C", "the control-plane SGW",
   and "the S-GW control function" for the same thing.
-- Spell out an acronym on first use per chapter, then use the acronym
-  consistently.
+- Spell out an acronym only at its first use in each book part (GPRS,
+  EPC, 5GC), in book order, then use the bare acronym everywhere else in
+  that part, including on later procedure pages. A description-list term
+  such as `MME (Mobility Management Entity)::` counts as that first use.
+  In an architecture chapter, the Network Elements list is where each
+  element's acronym is expanded: the overview prose above the list and
+  the other list entries use the bare acronym of an element that the list
+  defines, and only the list term carries the expansion. The citation
+  prefixes 3GPP, TS, ETSI, ITU-T, IETF, and RFC need no inline expansion.
+  Every acronym the book uses must have an entry in
+  `chapters/glossary.adoc` (alphabetical, expansion as in 3GPP TR 21.905
+  or the cited spec), and the inline expansion must match the glossary
+  entry exactly. Spec titles in the Technical Specifications lists keep
+  their official wording, and Diameter and GTP message names such as
+  `Credit-Control-Request` (CCR) are message names, not expansions, so
+  keep them.
 - Keep pronouns unambiguous. Where "it" or "this" could point at more than
   one node, message, or information element, repeat the noun instead.
 - No idioms, no figurative language, no humour.
@@ -76,6 +90,9 @@ Treat the documentation as living, not archival:
 - `chapters/gprs/*.adoc`, `chapters/epc/*.adoc`, `chapters/5gc/*.adoc` —
   chapter content, one topic
   per file, grouped by book part.
+- `chapters/glossary.adoc` — the abbreviation glossary, a level-0
+  `[glossary]` section included after the last part; add an entry here
+  whenever new prose introduces an acronym.
 - `images/*.svg` — rendered diagram exports referenced by `image::` macros
   (paths in `.adoc` files are resolved relative to the repo root, i.e.
   `main.adoc`'s directory — not relative to the including chapter file).
