@@ -1,3 +1,4 @@
+[#_epc_dedicated_bearer_activation_procedure]
 === Dedicated Bearer Activation Procedure
 
 ==== Technical Overview

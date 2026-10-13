@@ -1,3 +1,4 @@
+[#_epc_pgw_initiated_bearer_deactivation_procedure]
 === P-GW-Initiated Bearer Deactivation Procedure
 
 ==== Technical Overview
