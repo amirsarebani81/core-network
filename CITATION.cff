@@ -4,7 +4,7 @@ type: generic
 title: "Core Network: Architecture and Signaling Procedures"
 abstract: >-
   A reference book on the architecture of the GPRS core network, the
-  Evolved Packet Core (EPC), and the 5G Core (5GC), and on the signaling
+  Evolved Packet Core (EPC), and the 5G Core Network (5GC), and on the signaling
   procedures between their network elements, with call flows and 3GPP TS clause citations.
 authors:
   - family-names: Sarebani
