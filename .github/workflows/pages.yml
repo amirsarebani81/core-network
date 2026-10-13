@@ -3,6 +3,7 @@ name: Publish to GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -11,8 +12,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.ref) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   THEME: zinc
@@ -23,13 +24,9 @@ jobs:
 
     services:
       kroki:
-        image: yuzutech/kroki
+        image: yuzutech/kroki:0.32.1
         ports:
           - 8000:8000
-        env:
-          KROKI_MERMAID_HOST: mermaid
-      mermaid:
-        image: yuzutech/kroki-mermaid
 
     steps:
       - uses: actions/checkout@v4
@@ -69,7 +66,7 @@ jobs:
           fi
 
       - name: Add GoatCounter analytics
-        if: vars.GOATCOUNTER_CODE != ''
+        if: github.event_name != 'pull_request' && vars.GOATCOUNTER_CODE != ''
         env:
           GOATCOUNTER_CODE: ${{ vars.GOATCOUNTER_CODE }}
         run: |
@@ -88,9 +85,11 @@ jobs:
           fi
 
       - id: pages
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
 
       - name: Add canonical links and sitemap
+        if: github.event_name != 'pull_request'
         env:
           BASE_URL: ${{ steps.pages.outputs.base_url }}
         run: |
@@ -111,11 +110,13 @@ jobs:
           } > site/sitemap.xml
           echo "Sitemap: $(grep -c '<loc>' site/sitemap.xml) URLs under $base"
 
-      - uses: actions/upload-pages-artifact@v3
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:

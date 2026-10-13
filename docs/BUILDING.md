@@ -65,7 +65,10 @@ docker compose up -d
 ```
 
 This starts Kroki on `http://localhost:8000`, which `main.adoc` references
-through its `:kroki-server-url:` attribute.
+through its `:kroki-server-url:` attribute. `docker-compose.yml` and the
+Pages workflow pin the same Kroki image version, so that a local build
+renders the diagrams exactly as the published book does; change both
+together.
 
 If you don't want to run Docker, comment out the `:kroki-server-url:` line
 in `main.adoc`. The Kroki extension then uses the public `https://kroki.io`
@@ -166,6 +169,10 @@ these steps:
    because GitHub Pages redirects the URL without the slash (and every
    `http://` URL) to that address, and Google Search Console reports a
    redirecting URL as not indexed.
+
+For a pull request, the workflow runs steps 1 to 3, including the checks
+in step 3, but doesn't publish the result, so that a warning or a broken
+diagram fails the pull request before it reaches `main`.
 
 One-time setup: go to **Settings → Pages** and set **Source** to
 **GitHub Actions**.
