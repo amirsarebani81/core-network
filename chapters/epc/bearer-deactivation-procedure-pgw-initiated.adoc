@@ -36,7 +36,7 @@ session.
 ==== Call Flow
 
 The call flow has five phases: Gx Policy Provisioning, GTPv2 Bearer
-Resource Release, E-UTRAN Resource Release and NAS Signalling, GTPv2
+Resource Release, E-UTRAN Resource Release and NAS Signaling, GTPv2
 Tunnel Confirmation, and Gx Enforcement Reporting.
 
 .P-GW-initiated bearer deactivation procedure call flow

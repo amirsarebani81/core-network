@@ -85,7 +85,7 @@ for example #36 "regular deactivation", #37 "QoS not accepted", or #25
 the UE deactivates all active PDP contexts that share the same PDP
 address and APN, the UE includes the Tear down indicator IE; the UE then
 deactivates the other PDP contexts locally, without peer-to-peer
-signalling (TS 24.008 clause 6.1.3.4). The UE also includes the Tear
+signaling (TS 24.008 clause 6.1.3.4). The UE also includes the Tear
 down indicator IE when the UE deactivates the PDP context that the PDP
 Context Activation procedure created (TS 23.060 clause 9.2.4.1, step 1),
 and a UE that supports S1 mode always includes the IE when the UE

@@ -47,7 +47,7 @@ an RRC `Paging` message.
 . The *UE* responds to the page with an RRC `Service Request` message to
 the *eNodeB*, which forwards the request to the *MME* inside an S1AP
 `Initial UE Message`, carrying the Service Request; this exchange
-establishes a NAS signalling connection.
+establishes a NAS signaling connection.
 
 . The *MME* sends a NAS `Detach Request` message to the *eNodeB* inside
 an S1AP `Downlink NAS Transport` message, carrying the Detach type,
@@ -91,7 +91,7 @@ eNodeB forwards it to the *MME* inside an S1AP `Uplink NAS Transport`
 message, carrying the NAS-PDU and the User Location Information.
 
 . When the *MME* receives both the Detach Accept and the Delete Session
-Response, it starts the release of the S1-MME signalling connection by
+Response, it starts the release of the S1-MME signaling connection by
 sending an S1AP `UE Context Release Command` message to the *eNodeB*,
 carrying the UE S1AP IDs and a Cause set to "Detach".
 
@@ -108,7 +108,7 @@ T3422 timer expiry:: The MME sends the Detach Request and starts timer
 T3422, with a default value of 6 seconds. If the MME does not receive a
 Detach Accept message before the timer expires, it retransmits the
 Detach Request, up to four times, and on the fifth expiry stops the
-signalling procedure and enters the EMM-DEREGISTERED state for the UE.
+signaling procedure and enters the EMM-DEREGISTERED state for the UE.
 
 Detach in a forbidden satellite E-UTRAN area:: In a network that uses
 satellite E-UTRAN access, the MME can determine that the UE is in a

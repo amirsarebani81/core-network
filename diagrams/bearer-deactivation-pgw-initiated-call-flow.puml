@@ -18,7 +18,7 @@ end
 PGW -> SGW: GTPv2: Delete Bearer Request
 SGW -> MME: GTPv2: Delete Bearer Request
 
-== E-UTRAN Resource Release and NAS Signalling ==
+== E-UTRAN Resource Release and NAS Signaling ==
 MME -> ENB: S1AP: E-RAB Release Command (NAS: Deactivate EPS Bearer Context Request)
 ENB -> UE: RRC: Connection Reconfiguration (NAS: Deactivate EPS Bearer Context Request)
 UE -> ENB: RRC: Connection Reconfiguration Complete

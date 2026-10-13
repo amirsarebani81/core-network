@@ -4,7 +4,7 @@
 
 The Network-Triggered Service Request procedure moves a UE from ECM-IDLE
 mode to ECM-CONNECTED mode when the EPC has downlink user data or
-downlink signalling to deliver. The S-GW starts the
+downlink signaling to deliver. The S-GW starts the
 procedure when it receives a downlink packet for a UE that has no active
 S1 user-plane connection.
 
