@@ -16,7 +16,7 @@ are outside the scope of both figures.
 === Service-Based Representation
 
 .5GC architecture, service-based representation
-image::images/5gc-architecture-sba.svg[5GC Architecture, Service-Based Representation]
+image::images/5gc-architecture-sba.svg["5GC architecture, service-based representation"]
 
 The figure above follows TS 23.501 figure 4.2.3-1 and attaches every
 control-plane NF to the common service-based interconnect through the SBI
@@ -48,7 +48,7 @@ Repository Function (ADRF) (TS 23.501 clause 4.2.2).
 === Reference Point Representation
 
 .5GC architecture, reference point representation
-image::images/5gc-architecture.svg[5GC Architecture, Reference Point Representation]
+image::images/5gc-architecture.svg["5GC architecture, reference point representation"]
 
 The figure above shows the same NFs as the service-based representation
 and connects them with the reference points that TS 23.501 clause 4.2.7
