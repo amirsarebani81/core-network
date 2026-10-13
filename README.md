@@ -19,7 +19,7 @@ The book covers three generations of the packet core:
 - **Part I: GPRS Core**, the General Packet Radio Service core network.
 - **Part II: Evolved Packet Core (EPC)**, with Control and User Plane
   Separation (CUPS).
-- **Part III: 5G Core (5GC)**, the core network of the 5G System.
+- **Part III: 5G Core Network (5GC)**, the core network of the 5G System.
 
 For each generation, the book describes the network elements and the
 interfaces between them, the protocols that carry signaling between the

@@ -89,7 +89,8 @@ include::chapters/epc/protocol-stack.adoc[]
 
 include::chapters/epc/functional-description-and-information-flows.adoc[]
 
-= Part III: 5G Core (5GC)
+[#_part_iii_5g_core_5gc]
+= Part III: 5G Core Network (5GC)
 
 [partintro]
 This part describes the 5G Core Network (5GC): its network functions and
