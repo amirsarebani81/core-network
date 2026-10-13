@@ -30,7 +30,7 @@ opt UE is in ECM-IDLE
     end
 end
 
-== E-UTRAN Resource Establishment and NAS Signalling ==
+== E-UTRAN Resource Establishment and NAS Signaling ==
 MME -> ENB: S1AP: E-RAB Setup Request (NAS: Activate Dedicated EPS Bearer Context Request)
 ENB -> UE: RRC: Connection Reconfiguration (NAS: Activate Dedicated EPS Bearer Context Request)
 UE -> ENB: RRC: Connection Reconfiguration Complete

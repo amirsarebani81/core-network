@@ -18,7 +18,7 @@ The procedure establishes end-to-end user-plane resources that map the
 traffic matching the packet filters of the TFT to dedicated radio
 tunnels and dedicated network tunnels. If the UE is in ECM-CONNECTED
 mode, the network establishes these resources immediately over the
-existing S1 signalling connection. If the UE is in ECM-IDLE mode, the
+existing S1 signaling connection. If the UE is in ECM-IDLE mode, the
 MME first pages the UE and waits for a NAS `Service Request` message,
 because the eNodeB needs an active S1 and RRC connection before it can
 set up the new Data Radio Bearer (DRB). The procedure has these
@@ -39,7 +39,7 @@ that is the QCI, the ARP, the GBR, and the Maximum Bit Rate (MBR).
 
 The call flow has six phases: Gx Policy Provisioning, GTPv2 Bearer
 Resource Allocation, Paging and Service Request, E-UTRAN Resource
-Establishment and NAS Signalling, GTPv2 Tunnel Confirmation, and Gx
+Establishment and NAS Signaling, GTPv2 Tunnel Confirmation, and Gx
 Enforcement Reporting.
 
 .Dedicated bearer activation procedure call flow
@@ -97,7 +97,7 @@ user-plane data, the S5/8-U P-GW F-TEID, and the Bearer Level QoS.
 
 . If the UE is in ECM-IDLE mode when the *MME* receives the Create
 Bearer Request, the MME buffers the request and pages the UE before it
-continues the dedicated bearer signalling. The MME sends an S1AP
+continues the dedicated bearer signaling. The MME sends an S1AP
 `Paging` message to every *eNodeB* in the UE's registered Tracking Area
 List, carrying the UE Identity Index Value, for calculating the paging
 frame, the UE Paging ID, that is the S-TMSI, the Paging DRX cycle, and
@@ -121,7 +121,7 @@ ECM-CONNECTED mode.
 case, the *MME* and the *UE* perform the Authentication and Security
 Mode Control procedures, carrying the RAND, the AUTN, and the selected
 NAS security algorithms, before the MME resumes the buffered dedicated
-bearer signalling.
+bearer signaling.
 
 . The *MME* selects an unassigned EBI from its pool, that is a value
 from 5 to 15 because the network reserves values 0 to 4, and builds an
@@ -271,7 +271,7 @@ Paging timeout:: The UE can be unreachable, for example because it is
 out of coverage or has a depleted battery, and does not respond to the
 S1AP `Paging` message before the MME's paging repetition strategy
 completes. In this case, the MME cancels the buffered dedicated bearer
-signalling and sends a GTPv2 `Create Bearer Response` message to the
+signaling and sends a GTPv2 `Create Bearer Response` message to the
 S-GW with GTP Cause #87, "UE not responding", or, when extended
 idle-mode DRX applies, GTP Cause #123, "UE is temporarily not reachable
 due to power saving", and sets the "Pending Network Initiated PDN

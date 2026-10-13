@@ -24,7 +24,7 @@ plantuml::diagrams/detach-call-flow.puml[svg]
 
 . The *UE* sends a `Detach Request` message to the *eNodeB*, carrying this
 NAS message inside an RRC message; if the UE was in ECM-IDLE mode, this
-message triggers the establishment of a NAS signalling connection. The
+message triggers the establishment of a NAS signaling connection. The
 message carries the GUTI, the Detach type, which shows the kind of
 detach, for example EPS detach or combined EPS/IMSI detach, the Switch
 off indicator, which shows whether the UE is powering down, and the NAS
@@ -87,7 +87,7 @@ S1AP ID.
 . The *eNodeB* delivers the Detach Accept message to the *UE* over the
 radio interface, and the UE stops timer T3421 on receiving it.
 
-. The *MME* starts the release of the S1-MME signalling connection by
+. The *MME* starts the release of the S1-MME signaling connection by
 sending an S1AP `UE Context Release Command` message to the *eNodeB*,
 carrying the UE S1AP IDs and a Cause set to "Detach".
 
@@ -119,7 +119,7 @@ Allowed CSG list and, if needed, performs a new Public Land Mobile Network (PLMN
 T3421 timer expiry:: The UE can send a Detach Request, without the Switch
 off indicator, and not receive a Detach Accept message before timer
 T3421 expires. In this case, the UE retransmits the Detach Request
-message, up to four times, and on the fifth expiry stops the signalling
+message, up to four times, and on the fifth expiry stops the signaling
 procedure, performs a local detach, and enters the EMM-DEREGISTERED
 state.
 

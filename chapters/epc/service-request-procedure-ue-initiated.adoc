@@ -3,9 +3,9 @@
 ===== Technical Overview
 
 The UE-initiated Service Request procedure lets a UE in ECM-IDLE mode
-establish a NAS signalling connection with the network, and the UE
+establish a NAS signaling connection with the network, and the UE
 starts the procedure when it has pending uplink user data or pending
-uplink signalling.
+uplink signaling.
 
 The procedure establishes the radio bearers and the S1 user-plane bearers
 for the UE's active EPS bearers, moving the UE from ECM-IDLE mode to
