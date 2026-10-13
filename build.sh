@@ -99,11 +99,13 @@ case "$THEME" in
     ;;
 esac
 
-EXTRA_ATTRS=()
-[ -n "$TABLE_FRAME" ] && EXTRA_ATTRS+=(-a "table-frame=$TABLE_FRAME")
-[ -n "$TABLE_GRID" ] && EXTRA_ATTRS+=(-a "table-grid=$TABLE_GRID")
-[ -n "$TABLE_STRIPES" ] && EXTRA_ATTRS+=(-a "table-stripes=$TABLE_STRIPES")
-[ -n "$ROUGE_STYLE" ] && EXTRA_ATTRS+=(-a "rouge-style=$ROUGE_STYLE")
+# --failure-level makes a warning, such as a missing image, fail the build
+# instead of only printing it.
+EXTRA_ARGS=(--failure-level=WARN)
+[ -n "$TABLE_FRAME" ] && EXTRA_ARGS+=(-a "table-frame=$TABLE_FRAME")
+[ -n "$TABLE_GRID" ] && EXTRA_ARGS+=(-a "table-grid=$TABLE_GRID")
+[ -n "$TABLE_STRIPES" ] && EXTRA_ARGS+=(-a "table-stripes=$TABLE_STRIPES")
+[ -n "$ROUGE_STYLE" ] && EXTRA_ARGS+=(-a "rouge-style=$ROUGE_STYLE")
 
 export_diagrams() {
   local src=drawio/core-network.drawio
@@ -122,7 +124,8 @@ export_diagrams() {
       echo "==> drawio export of page $index failed (no display?); using the committed $svg"
       continue
     fi
-    sed -i 's/background: transparent; background-color: transparent;/background: #ffffff; background-color: #ffffff;/' "$svg"
+    sed -i.bak 's/background: transparent; background-color: transparent;/background: #ffffff; background-color: #ffffff;/' "$svg"
+    rm -f "$svg.bak"
   done < <(grep -o '<diagram [^>]*' "$src" | sed -n 's/.* name="\([^"]*\)".*/\1/p')
 }
 
@@ -134,7 +137,7 @@ build_pdf() {
     -a pdf-themesdir=theme \
     -a allow-uri-read \
     -a cache-uri \
-    "${EXTRA_ATTRS[@]}" \
+    "${EXTRA_ARGS[@]}" \
     main.adoc -o output/core-network.pdf
   echo "==> PDF written to output/core-network.pdf"
 }
@@ -153,7 +156,7 @@ build_html() {
     -a docinfodir="$DOCINFODIR" \
     -a multipage-level=2 \
     -a docdatetime="$(git log -1 --format=%cs 2>/dev/null || date +%F)" \
-    "${EXTRA_ATTRS[@]}" \
+    "${EXTRA_ARGS[@]}" \
     main.adoc -D output/html
   cp theme/favicon.svg output/html/
   ruby scripts/postprocess-html.rb output/html
