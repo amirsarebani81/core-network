@@ -94,6 +94,10 @@ and Pagefind. Some attributes that matter:
   diagram in its page. Without them, the pages link to
   `http://localhost:8000/...`, and the diagrams break on any machine that
   doesn't run Kroki.
+- `--failure-level=WARN` makes any Asciidoctor warning, such as a missing
+  image, fail the build, so that a warning can't reach the published book
+  unnoticed. Asciidoctor reports an unresolved cross-reference only as
+  information with `--verbose`, so this option doesn't catch it.
 - `multipage-level=2` splits the HTML at level-2 sections, so each
   protocol or procedure gets its own page. If you change it, keep
   `:toclevels:` in `main.adoc` at or above the new value.
