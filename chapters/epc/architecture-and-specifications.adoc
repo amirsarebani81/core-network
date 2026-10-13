@@ -1,7 +1,7 @@
 [#_epc_architecture_and_specifications]
 == Architecture and Specifications
 
-.EPC architecture and Specification
+.EPC architecture
 image::images/epc-architecture.svg[EPC Architecture]
 
 The figure above shows the network elements of the EPC, the core network of the Evolved Packet System (EPS), and the reference points between them, and it labels each reference point with the 3GPP specification and the protocol that the reference point uses.
