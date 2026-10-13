@@ -196,7 +196,8 @@ Treat the documentation as living, not archival:
   multi-page site to `output/html/` (via `asciidoctor-multipage`, split at
   level-2 sections) — open `output/html/main.html`, not a single file.
 - `.github/workflows/pages.yml` — builds the book on every push to `main`
-  and publishes it to GitHub Pages (the `output/html/` site, with
+  and on every pull request (which it builds and checks but doesn't
+  publish), and publishes it to GitHub Pages (the `output/html/` site, with
   `main.html` also copied to `index.html`, plus the PDF). The HTML must
   stay self-contained: `build.sh` passes `-a data-uri -a allow-uri-read`
   so Kroki diagrams are embedded rather than linked to `localhost:8000`,
