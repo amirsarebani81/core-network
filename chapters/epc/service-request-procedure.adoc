@@ -1,3 +1,4 @@
+[#_epc_service_request_procedure]
 === Service Request Procedure
 
 include::service-request-procedure-ue-initiated.adoc[]

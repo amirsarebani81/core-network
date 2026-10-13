@@ -1,3 +1,4 @@
+[#_epc_architecture_and_specifications]
 == Architecture and Specifications
 
 .EPC architecture and Specification
@@ -5,6 +6,7 @@ image::images/epc-architecture.svg[EPC Architecture]
 
 The figure above shows the network elements of the EPC, the core network of the Evolved Packet System (EPS), and the reference points between them, and it labels each reference point with the 3GPP specification and the protocol that the reference point uses.
 
+[#_epc_network_elements]
 === Network Elements
 
 UE (User Equipment):: The UE is the subscriber's device, for example a smartphone or an Internet of Things (IoT) module, that attaches to the network over the radio interface. It is the endpoint for all mobility management, session management, and user-plane traffic. The UE reaches the E-UTRAN over LTE-Uu, and over an untrusted non-3GPP access network, such as public Wi-Fi, the UE reaches the ePDG over SWu (TS 23.402 clause 4.2.2).
@@ -39,6 +41,7 @@ TDF-U (Traffic Detection Function - User Plane):: The TDF-U is the user-plane fu
 
 PDN (Packet Data Network):: The PDN is the external packet data network, for example the internet, that the UE obtains connectivity to, reached from the TDF-U over SGi.
 
+[#_epc_technical_specifications]
 === Technical Specifications
 
 * *3GPP TS 22.278* _LTE; Service requirements for the Evolved Packet System (EPS)_

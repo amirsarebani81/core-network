@@ -12,6 +12,7 @@ through the NG-RAN. Roaming
 (TS 23.501 clause 4.2.4) and non-3GPP access (TS 23.501 clause 4.2.8)
 are outside the scope of both figures.
 
+[#_5gc_service_based_representation]
 === Service-Based Representation
 
 .5GC architecture, service-based representation
@@ -43,6 +44,7 @@ Function (TSCTSF), the Data Collection Coordination Function (DCCF), the
 Messaging Framework Adaptor Function (MFAF), and the Analytics Data
 Repository Function (ADRF) (TS 23.501 clause 4.2.2).
 
+[#_5gc_reference_point_representation]
 === Reference Point Representation
 
 .5GC architecture, reference point representation
@@ -85,6 +87,7 @@ reference point, and the protocol is HTTP/2. Where a reference point
 crosses another reference point without a connection, the figure draws a
 small arc.
 
+[#_5gc_network_functions]
 === Network Functions
 
 UE (User Equipment):: The UE is the subscriber's device. The UE
