@@ -46,6 +46,9 @@
   var openLightbox = function (img) {
     var box = document.createElement('div');
     box.className = 'cn-lightbox';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-label', img.alt || 'Diagram');
     var big = document.createElement('img');
     big.src = img.src;
     big.alt = img.alt;
@@ -59,12 +62,17 @@
     box.appendChild(big);
     document.body.appendChild(box);
     document.documentElement.classList.add('cn-noscroll');
+    close.focus();
     var dismiss = function () {
       box.remove();
       document.documentElement.classList.remove('cn-noscroll');
       document.removeEventListener('keydown', onKey);
+      img.focus();
     };
-    var onKey = function (e) { if (e.key === 'Escape') dismiss(); };
+    var onKey = function (e) {
+      if (e.key === 'Escape') dismiss();
+      else if (e.key === 'Tab') { e.preventDefault(); close.focus(); }
+    };
     box.addEventListener('click', dismiss);
     document.addEventListener('keydown', onKey);
   };
@@ -80,6 +88,18 @@
     if (img.complete) markZoomable(img);
     else img.addEventListener('load', function () { markZoomable(img); });
     img.addEventListener('click', function () { openLightbox(img); });
+    img.tabIndex = 0;
+    img.setAttribute('role', 'button');
+    img.setAttribute('aria-label', 'Enlarge the diagram: ' + (img.alt || 'diagram'));
+    // Space opens on keyup, as a button does, so that the keyup doesn't
+    // reach the Close button that receives the focus and dismiss the box.
+    img.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); openLightbox(img); }
+      else if (e.key === ' ') e.preventDefault();
+    });
+    img.addEventListener('keyup', function (e) {
+      if (e.key === ' ') openLightbox(img);
+    });
   });
 
   var searchButton = document.querySelector('.cn-topbar-search');
