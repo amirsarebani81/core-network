@@ -45,7 +45,9 @@ gem install asciidoctor asciidoctor-pdf asciidoctor-kroki asciidoctor-multipage 
 ### Optional
 
 - `gem install open-uri-cached` lets the PDF build cache diagrams between
-  runs (`cache-uri`). Without it, every build fetches them again.
+  runs (`cache-uri`). `build.sh` sets `cache-uri` only when the gem is
+  installed, because asciidoctor otherwise warns and `--failure-level=WARN`
+  fails the build. Without the gem, every build fetches the diagrams again.
 - The [draw.io desktop app](https://github.com/jgraph/drawio-desktop)
   provides the `drawio` CLI. Before each build, `build.sh` exports every
   page of `drawio/core-network.drawio` whose name is not a default

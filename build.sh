@@ -105,6 +105,9 @@ EXTRA_ARGS=(--failure-level=WARN)
 [ -n "$TABLE_STRIPES" ] && EXTRA_ARGS+=(-a "table-stripes=$TABLE_STRIPES")
 [ -n "$ROUGE_STYLE" ] && EXTRA_ARGS+=(-a "rouge-style=$ROUGE_STYLE")
 
+CACHE_ARGS=()
+ruby -e 'require "open-uri/cached"' 2>/dev/null && CACHE_ARGS=(-a cache-uri)
+
 export_diagrams() {
   local src=drawio/core-network.drawio
   if ! command -v drawio >/dev/null 2>&1; then
@@ -134,8 +137,8 @@ build_pdf() {
     -a pdf-theme="$PDF_THEME" \
     -a pdf-themesdir=theme \
     -a allow-uri-read \
-    -a cache-uri \
     "${EXTRA_ARGS[@]}" \
+    ${CACHE_ARGS[@]+"${CACHE_ARGS[@]}"} \
     main.adoc -o output/core-network.pdf
   echo "==> PDF written to output/core-network.pdf"
 }
